@@ -1,0 +1,79 @@
+name: build_dll
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+  
+env:
+  ZIP_NAME: Texconv-Custom-DLL
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Check tag
+        id: check-tag
+        run: |
+          if [[ ${{ github.ref }} == refs/tags/v* ]]; then
+            VERSION=-$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          else
+            VERSION=""
+          fi
+          echo "::set-output name=version::$VERSION"
+        shell: bash
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+        
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: build exe
+        run: |
+          cd batch_files
+          ./build.bat
+
+      - name: Copy files
+        run: |
+          mkdir -p ../release
+          cp Texconv.dll ../release/
+          cp changelog.txt ../release/
+          cp LICENSE ../release/
+        shell: bash
+
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
+        with:
+          directory: '../release'
+          type: 'zip'
+          filename: '${{ env.ZIP_NAME }}.zip'
+          exclusions: '*.git* .gitignore'
+          
+      - name: Create Release Draft
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            Changelog
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ../release/${{ env.ZIP_NAME }}.zip
+          asset_name: ${{ env.ZIP_NAME }}${{ steps.check-tag.outputs.version }}.zip
+          asset_content_type: application/zip

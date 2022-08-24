@@ -5,10 +5,15 @@ cmake_minimum_required (VERSION 3.13)
 
 set(DIRECTXTEX_VERSION 1.9.7)
 
+# for exe build
+option(TEXCONV_BUILD_AS_EXE "Build texconv as .exe" OFF)
+option(TEXCONV_USE_ICON_FOR_EXE "Use directx.ico for .exe" OFF)
+
 # for texture formats
 option(TEXCONV_USE_WIC "Use WIC-supported format (bmp, jpg, png, jxr, etc.)" OFF)
 option(TEXCONV_USE_PPM "Use .ppm and .pfm" OFF)
 option(TEXCONV_USE_PLANAR "Use planar dds formats" OFF)
+option(TEXCONV_USE_3D "Use 3D textures" OFF)
 
 # for printing
 option(TEXCONV_USE_LOGO "Use PrintLogo()" OFF)
@@ -26,6 +31,12 @@ option(TEXCONV_USE_ADDRESSING "Use -wrap and -mirror" OFF)
 option(TEXCONV_USE_TONEMAP "Use -tonemap" OFF)
 option(TEXCONV_USE_MULTIPLE_FILES "Use -r and -flist" OFF)
 option(TEXCONV_USE_NMAP_CONFIG "Use -nmap and -nmapamp" OFF)
+option(TEXCONV_USE_MINOR_DDS_CONFIG "Use -tu, -tf, -dword, -badtails, -fixbc4x4, -xlum, -dx10, and -dx9" OFF)
+option(TEXCONV_USE_FEATURE_LEVEL "Use -fl" OFF)
+option(TEXCONV_USE_BC_CONFIG "Use -bc" OFF)
+option(TEXCONV_USE_SRGB "Use -srgb, -srgbi, and -srgbo" OFF)
+option(TEXCONV_USE_NAME_CONFIG "Use -px and -sx" OFF)
+
 
 project (DirectXTex
   VERSION ${DIRECTXTEX_VERSION}
@@ -91,17 +102,21 @@ set(LIBRARY_SOURCES
     DirectXTex/DirectXTex/BC4BC5.cpp
     DirectXTex/DirectXTex/BC6HBC7.cpp
     DirectXTex/DirectXTex/DirectXTexCompress.cpp
-    DirectXTex/DirectXTex/DirectXTexConvert.cpp
-    DirectXTex/DirectXTex/DirectXTexDDS.cpp
+    TexconvDLL/DirectXTexConvert_Custom.cpp
+    TexconvDLL/DirectXTexDDS_Custom.cpp
     DirectXTex/DirectXTex/DirectXTexHDR.cpp
-    DirectXTex/DirectXTex/DirectXTexImage.cpp
-    DirectXTex/DirectXTex/DirectXTexMipmaps.cpp
-    DirectXTex/DirectXTex/DirectXTexMisc.cpp
+    TexconvDLL/DirectXTexImage_Custom.cpp
+    TexconvDLL/DirectXTexMipmaps_Custom.cpp
+    TexconvDLL/DirectXTexMisc_Custom.cpp
     DirectXTex/DirectXTex/DirectXTexNormalMaps.cpp
-    DirectXTex/DirectXTex/DirectXTexPMAlpha.cpp
-    DirectXTex/DirectXTex/DirectXTexResize.cpp
+    TexconvDLL/DirectXTexResize_Custom.cpp
     DirectXTex/DirectXTex/DirectXTexTGA.cpp
     DirectXTex/DirectXTex/DirectXTexUtil.cpp)
+
+if(TEXCONV_USE_ALPHA_CONFIG)
+  set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
+    DirectXTex/DirectXTex/DirectXTexPMAlpha.cpp)
+endif()
 
 if(WIN32)
   if(TEXCONV_USE_FLIP OR TEXCONV_USE_WIC)
@@ -119,7 +134,7 @@ if(BUILD_DX11 AND WIN32)
    set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
        DirectXTex/DirectXTex/BCDirectCompute.h
        DirectXTex/DirectXTex/BCDirectCompute.cpp
-       DirectXTex/DirectXTex/DirectXTexCompressGPU.cpp
+       TexconvDLL/DirectXTexCompressGPU_Custom.cpp
        DirectXTex/DirectXTex/DirectXTexD3D11.cpp)
 endif()
 
@@ -242,30 +257,32 @@ install(FILES
 
 #--- Command-line tools
 if(BUILD_TOOLS AND WIN32 AND (NOT WINDOWS_STORE))
-  set(TOOL_EXES Texconv)
+  set(TOOL_EXES texconv)
 
   configure_file(TexconvDLL/config.h.in TexconvDLL/config.h @ONLY)
   include_directories(${CMAKE_CURRENT_BINARY_DIR})
-  if (TEXCONV_USE_WIC OR TEXCONV_USE_PPM)
-    add_library(Texconv SHARED
-      TexconvDLL/config.h
-      TexconvDLL/TexconvDLL.cpp
-      DirectXTex/Texconv/ExtendedBMP.cpp
-      DirectXTex/Texconv/PortablePixMap.cpp)
-    source_group(Texconv FILES 
-      TexconvDLL/config.h
-      TexconvDLL/TexconvDLL.cpp
-      DirectXTex/Texconv/ExtendedBMP.cpp
-      DirectXTex/Texconv/PortablePixMap.cpp)
-  else()
-    add_library(Texconv SHARED
-      TexconvDLL/config.h
-      TexconvDLL/TexconvDLL.cpp)
-    source_group(Texconv FILES 
-      TexconvDLL/config.h
-      TexconvDLL/TexconvDLL.cpp)
+  set(TEXCONV_FILES
+    TexconvDLL/config.h
+    TexconvDLL/TexconvDLL.cpp)
+  if (TEXCONV_USE_WIC)
+    set(TEXCONV_FILES ${TEXCONV_FILES}
+      DirectXTex/Texconv/ExtendedBMP.cpp)
   endif()
-  target_link_libraries(Texconv ${PROJECT_NAME} ole32.lib shell32.lib version.lib)
+  if (TEXCONV_USE_PPM)
+    set(TEXCONV_FILES ${TEXCONV_FILES}
+      DirectXTex/Texconv/PortablePixMap.cpp)
+  endif()
+  if (TEXCONV_BUILD_AS_EXE)
+    if (TEXCONV_USE_ICON_FOR_EXE)
+      set(TEXCONV_FILES ${TEXCONV_FILES}
+        TexconvDLL/TexconvDLL.rc)
+    endif()
+    add_executable(texconv ${TEXCONV_FILES})
+  else()
+    add_library(texconv SHARED ${TEXCONV_FILES})
+  endif()
+  source_group(texconv FILES ${TEXCONV_FILES})
+  target_link_libraries(texconv ${PROJECT_NAME} ole32.lib shell32.lib version.lib)
 
   if(ENABLE_OPENEXR_SUPPORT)
     foreach(t IN LISTS TOOL_EXES)
@@ -363,7 +380,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(BC_USE_OPENMP)
         target_compile_options(${PROJECT_NAME} PRIVATE /openmp /Zc:twoPhase-)
         if(BUILD_TOOLS AND WIN32 AND (NOT WINDOWS_STORE))
-          target_compile_options(Texconv PRIVATE /openmp /Zc:twoPhase-)
+          target_compile_options(texconv PRIVATE /openmp /Zc:twoPhase-)
         endif()
     endif()
 

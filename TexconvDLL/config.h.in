@@ -5,6 +5,9 @@
 //--------------------------------------------------------------------------------------
 #define __ON__ 1
 #define __OFF__ 0
+
+#define BUILD_AS_EXE __@TEXCONV_BUILD_AS_EXE@__
+
 //--------------------------------------------------------------------------------------
 // Texture formats
 //--------------------------------------------------------------------------------------
@@ -16,6 +19,9 @@
 
 // Use planar dds formats
 #define USE_PLANAR __@TEXCONV_USE_PLANAR@__
+
+// Use 3D textures
+#define USE_3D __@TEXCONV_USE_3D@__
 
 //--------------------------------------------------------------------------------------
 // Printing
@@ -61,3 +67,18 @@
 
 // Use -nmap and -nmapamp
 #define USE_NMAP_CONFIG __@TEXCONV_USE_NMAP_CONFIG@__
+
+// Use -tu, -tf, -dword, -badtails, -fixbc4x4, -xlum, -dx10, and -dx9
+#define USE_MINOR_DDS_CONFIG __@TEXCONV_USE_MINOR_DDS_CONFIG@__
+
+// Use -fl
+#define USE_FEATURE_LEVEL __@TEXCONV_USE_FEATURE_LEVEL@__
+
+// Use -bc
+#define USE_BC_CONFIG __@TEXCONV_USE_BC_CONFIG@__
+
+// Use -srgb, -srgbi, and -srgbo
+#define USE_SRGB __@TEXCONV_USE_SRGB@__
+
+// Use -px and -sx
+#define USE_NAME_CONFIG __@TEXCONV_USE_NAME_CONFIG@__

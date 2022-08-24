@@ -13,10 +13,11 @@ mkdir ..\build
 
 cmake -G "%VS_VERSION%"^
  -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded^
+ -D TEXCONV_BUILD_AS_EXE=ON^
  ../
 
 msbuild texconv.vcxproj /t:build /p:configuration=Release /p:platform=x64 -maxcpucount
 
 @popd
 
-copy ..\build\bin\CMake\Release\texconv.dll ..\
+copy ..\build\bin\CMake\Release\texconv.exe ..\

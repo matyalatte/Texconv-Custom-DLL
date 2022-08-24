@@ -1,43 +1,20 @@
-# Texconv-Custom-DLL v0.1.0
-Customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) as a shared library<br>
-You can remove some features from Texconv to reduce the file size.
+# Texconv-Custom-DLL v0.1.1
+Customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).<br>
+You can remove many features from Texconv to reduce the file size.<br>
+And you can use it as a DLL.
 
 ## What's Texconv?
 [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv)
 is a texture converter developed by Microsoft.<br>
-It supports all dds formats except for non-2D textures (e.g. cube maps).<br>
-There are some dds formats common texture tools can't handle properly, but Texconv can.
+It supports all dds formats.<br>
+There are some dds formats common tools can't handle properly, but Texconv can.
 
-## How the dll will be small
-It'll be about 20% smaller than the original exe.
+## How small is the dll?
+It'll be about 25% smaller than the original exe.
 - The original exe: 686KB
-- The custom dll: 550KB
-
-## Cmake options
-There are some cmake options to restore removed features.<br>
-You can enable them with `-D` option (e.g. `-D TEXCONV_USE_WIC=ON`).<br>
-But it'll make the dll larger.<br>
-If you enable all options, the dll will be almost the same size as the original Texconv.<br>
-- `TEXCONV_USE_WIC`: Enable to use WIC-supported format (bmp, jpg, png, jxr, etc.)
-- `TEXCONV_USE_PPM`: Enable to use .ppm and .pfm
-- `TEXCONV_USE_PLANAR`:Enable to use planar dds formats
-- `TEXCONV_USE_LOGO`: Enable to use PrintLogo()
-- `TEXCONV_USE_USAGE`: Enable to use PrintUsage()
-- `TEXCONV_USE_PRINT_INFO`: Enable to use PrintInfo() and PrintFormat()
-- `TEXCONV_USE_TIMING`: Enable to use -timing
-- `TEXCONV_USE_FLIP`: Enable to use -hflip and -vflip
-- `TEXCONV_USE_SWIZZLE`: Enable to use -swizzle
-- `TEXCONV_USE_ROTATE_COLOR`: Enable to use -rotatecolor
-- `TEXCONV_USE_COLORKEY`: Enable to use -c
-- `TEXCONV_USE_ALPHA_CONFIG`: Enable to use -pmalpha, -alpha, -keepcoverage, -aw, and -at
-- `TEXCONV_USE_ADDRESSING`: Enable to use -wrap and -mirror
-- `TEXCONV_USE_TONEMAP`: Enable to use -tonemap
-- `TEXCONV_USE_MULTIPLE_FILES`: Enable to use -r and -flist
-- `TEXCONV_USE_NMAP_CONFIG`: Enable to use -nmap and -nmapamp
-
+- The custom dll: 509KB
 
 ## Available functions
-
 ### texconv
 ```
 int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true,  bool initCOM = false);
@@ -52,24 +29,64 @@ See [the document of texconv](https://github.com/microsoft/DirectXTex/wiki/Texco
 
 ## Sample code for Python
 Here is a sample code for Python.<br>
-It'll convert `test.dds` to `outdir/test.png`
+It'll convert `test.dds` to `outdir/test.tga`
 ```
 import ctypes as c
 import os
 
 # Get DLL
-dll_path = os.path.abspath('Texconv.dll')
+dll_path = os.path.abspath('texconv.dll')
 dll = c.cdll.LoadLibrary(dll_path)
 
 # Make arguments
 dds_file = 'test.dds'
-argv = ['-ft', 'png', '-o', 'outdir', '-y', dds_file]
+argv = ['-ft', 'tga', '-o', 'outdir', '-y', dds_file]
 argc = len(args)
 argv = [c.c_wchar_p(arg) for arg in argv]
 argv = (c.c_wchar_p*len(argv))(*argv)
 verbose = c.c_bool(True)
 initCOM = c.c_bool(True)
 
-# Convert DDS to PNG
+# Convert DDS to TGA
 result = dll.texcov(argc, argv, verbose, initCOM)
 ```
+
+## Removed features
+Many features are removed from the custom build to reduce the file size.<br>
+- WIC-support (.bmp, .jpg, .png, etc.)
+- 3D textures support
+- ppm support (.ppm and .pfm)
+- Print functions
+- Mutilple files processing
+- Many optional arguments
+If you want to restore them, you need to use cmake options.
+
+## Cmake options
+There are many cmake options to restore removed features.<br>
+You can enable them with `-D` option (e.g. `-D TEXCONV_USE_WIC=ON`).<br>
+But it'll make the dll larger.<br>
+If you enable all options, the dll will be almost the same size as the original Texconv.<br>
+- `TEXCONV_BUILD_AS_EXE`: Build Texconv as .exe
+- `TEXCONV_USE_ICON_FOR_EXE`: Use `directx.ico` when TEXCONV_BUILD_AS_EXE is ON
+- `TEXCONV_USE_WIC`: Enable to use WIC-supported format (bmp, jpg, png, jxr, etc.)
+- `TEXCONV_USE_PPM`: Enable to use .ppm and .pfm
+- `TEXCONV_USE_PLANAR`: Enable to use planar dds formats
+- `TEXCONV_USE_3D`: Support 3D textures
+- `TEXCONV_USE_LOGO`: Enable to use PrintLogo()
+- `TEXCONV_USE_USAGE`: Enable to use -help
+- `TEXCONV_USE_PRINT_INFO`: Enable to use PrintInfo() and PrintFormat()
+- `TEXCONV_USE_TIMING`: Enable to use -timing
+- `TEXCONV_USE_FLIP`: Enable to use -hflip and -vflip
+- `TEXCONV_USE_SWIZZLE`: Enable to use -swizzle
+- `TEXCONV_USE_ROTATE_COLOR`: Enable to use -rotatecolor
+- `TEXCONV_USE_COLORKEY`: Enable to use -c
+- `TEXCONV_USE_ALPHA_CONFIG`: Enable to use -pmalpha, -alpha, -keepcoverage, -aw, and -at
+- `TEXCONV_USE_ADDRESSING`: Enable to use -wrap and -mirror
+- `TEXCONV_USE_TONEMAP`: Enable to use -tonemap
+- `TEXCONV_USE_MULTIPLE_FILES`: Enable to use -r and -flist
+- `TEXCONV_USE_NMAP_CONFIG`: Enable to use -nmap and -nmapamp
+- `TEXCONV_USE_MINOR_DDS_CONFIG`: Enable to use -tu, -tf, -dword, -badtails, -fixbc4x4, -xlum, -dx10, and -dx9
+- `TEXCONV_USE_FEATURE_LEVEL`: Enable to use -fl
+- `TEXCONV_USE_BC_CONFIG`: Enable to use -bc
+- `TEXCONV_USE_SRGB`: Enable to use -srgb, -srgbi, and -srgbo
+- `TEXCONV_USE_NAME_CONFIG`: Enable to use -px and -sx

@@ -2,6 +2,7 @@
 build
 *.so
 *.dll
+*.exe
 .vs
 
 # test

@@ -82,11 +82,15 @@ namespace
         OPT_MIPLEVELS,
         OPT_FORMAT,
         OPT_FILTER,
+    #if USE_SRGB
         OPT_SRGBI,
         OPT_SRGBO,
         OPT_SRGB,
+    #endif
+    #if USE_NAME_CONFIG
         OPT_PREFIX,
         OPT_SUFFIX,
+    #endif
         OPT_OUTPUTDIR,
         OPT_TOLOWER,
         OPT_OVERWRITE,
@@ -95,10 +99,12 @@ namespace
         OPT_HFLIP,
         OPT_VFLIP,
     #endif
+    #if USE_MINOR_DDS_CONFIG
         OPT_DDS_DWORD_ALIGN,
         OPT_DDS_BAD_DXTN_TAILS,
         OPT_USE_DX10,
         OPT_USE_DX9,
+    #endif
         OPT_TGA20,
     #if USE_WIC
         OPT_WIC_QUALITY,
@@ -117,13 +123,17 @@ namespace
     #if USE_WIC
         OPT_NO_WIC,
     #endif
+    #if USE_MINOR_DDS_CONFIG
         OPT_TYPELESS_UNORM,
         OPT_TYPELESS_FLOAT,
+    #endif
     #if USE_ALPHA_CONFIG
         OPT_PREMUL_ALPHA,
         OPT_DEMUL_ALPHA,
     #endif
+    #if USE_MINOR_DDS_CONFIG
         OPT_EXPAND_LUMINANCE,
+    #endif
     #if USE_ADDRESSING
         OPT_TA_WRAP,
         OPT_TA_MIRROR,
@@ -131,7 +141,9 @@ namespace
         OPT_FORCE_SINGLEPROC,
         OPT_GPU,
         OPT_NOGPU,
+    #if USE_FEATURE_LEVEL
         OPT_FEATURE_LEVEL,
+    #endif
         OPT_FIT_POWEROF2,
     #if USE_ALPHA_CONFIG
         OPT_ALPHA_THRESHOLD,
@@ -141,7 +153,9 @@ namespace
         OPT_NORMAL_MAP,
         OPT_NORMAL_MAP_AMPLITUDE,
     #endif
+    #if USE_BC_CONFIG
         OPT_BC_COMPRESS,
+    #endif
     #if USE_COLORKEY
         OPT_COLORKEY,
     #endif
@@ -160,7 +174,9 @@ namespace
     #if USE_ROTATE_COLOR
         OPT_PAPER_WHITE_NITS,
     #endif
+    #if USE_MINOR_DDS_CONFIG
         OPT_BCNONMULT4FIX,
+    #endif
     #if USE_SWIZZLE
         OPT_SWIZZLE,
     #endif
@@ -207,11 +223,15 @@ namespace
         { L"m",             OPT_MIPLEVELS },
         { L"f",             OPT_FORMAT },
         { L"if",            OPT_FILTER },
+    #if USE_SRGB
         { L"srgbi",         OPT_SRGBI },
         { L"srgbo",         OPT_SRGBO },
         { L"srgb",          OPT_SRGB },
+    #endif
+    #if USE_NAME_CONFIG
         { L"px",            OPT_PREFIX },
         { L"sx",            OPT_SUFFIX },
+    #endif
         { L"o",             OPT_OUTPUTDIR },
         { L"l",             OPT_TOLOWER },
         { L"y",             OPT_OVERWRITE },
@@ -220,10 +240,12 @@ namespace
         { L"hflip",         OPT_HFLIP },
         { L"vflip",         OPT_VFLIP },
     #endif
+    #if USE_MINOR_DDS_CONFIG
         { L"dword",         OPT_DDS_DWORD_ALIGN },
         { L"badtails",      OPT_DDS_BAD_DXTN_TAILS },
         { L"dx10",          OPT_USE_DX10 },
         { L"dx9",           OPT_USE_DX9 },
+    #endif
         { L"tga20",         OPT_TGA20 },
     #if USE_WIC
         { L"wicq",          OPT_WIC_QUALITY },
@@ -243,13 +265,17 @@ namespace
     #if USE_WIC
         { L"nowic",         OPT_NO_WIC },
     #endif
+    #if USE_MINOR_DDS_CONFIG
         { L"tu",            OPT_TYPELESS_UNORM },
         { L"tf",            OPT_TYPELESS_FLOAT },
+    #endif
     #if USE_ALPHA_CONFIG
         { L"pmalpha",       OPT_PREMUL_ALPHA },
         { L"alpha",         OPT_DEMUL_ALPHA },
     #endif
+    #if USE_MINOR_DDS_CONFIG
         { L"xlum",          OPT_EXPAND_LUMINANCE },
+    #endif
     #if USE_ADDRESSING
         { L"wrap",          OPT_TA_WRAP },
         { L"mirror",        OPT_TA_MIRROR },
@@ -257,7 +283,9 @@ namespace
         { L"singleproc",    OPT_FORCE_SINGLEPROC },
         { L"gpu",           OPT_GPU },
         { L"nogpu",         OPT_NOGPU },
+    #if USE_FEATURE_LEVEL
         { L"fl",            OPT_FEATURE_LEVEL },
+    #endif
         { L"pow2",          OPT_FIT_POWEROF2 },
     #if USE_ALPHA_CONFIG
         { L"at",            OPT_ALPHA_THRESHOLD },
@@ -267,7 +295,9 @@ namespace
         { L"nmap",          OPT_NORMAL_MAP },
         { L"nmapamp",       OPT_NORMAL_MAP_AMPLITUDE },
     #endif
+    #if USE_BC_CONFIG
         { L"bc",            OPT_BC_COMPRESS },
+    #endif
     #if USE_COLORKEY
         { L"c",             OPT_COLORKEY },
     #endif
@@ -283,7 +313,9 @@ namespace
     #if USE_ROTATE_COLOR
         { L"nits",          OPT_PAPER_WHITE_NITS },
     #endif
+    #if USE_MINOR_DDS_CONFIG
         { L"fixbc4x4",      OPT_BCNONMULT4FIX },
+    #endif
     #if USE_SWIZZLE
         { L"swizzle",       OPT_SWIZZLE },
     #endif
@@ -400,6 +432,7 @@ namespace
         { nullptr, DXGI_FORMAT_UNKNOWN }
     };
 
+#if USE_PRINT_INFO
     const SValue<uint32_t> g_pReadOnlyFormats[] =
     {
         DEFFMT(R32G32B32A32_TYPELESS),
@@ -448,6 +481,7 @@ namespace
 
         { nullptr, DXGI_FORMAT_UNKNOWN }
     };
+#endif
 
     const SValue<uint32_t> g_pFilters[] =
     {
@@ -489,11 +523,18 @@ namespace
 
 #define CODEC_DDS 0xFFFF0001
 #define CODEC_TGA 0xFFFF0002
+
+#if USE_WIC
 #define CODEC_HDP 0xFFFF0003
 #define CODEC_JXR 0xFFFF0004
+#endif
+
 #define CODEC_HDR 0xFFFF0005
+
+#if USE_PPM
 #define CODEC_PPM 0xFFFF0006
 #define CODEC_PFM 0xFFFF0007
+#endif
 
 #ifdef USE_OPENEXR
 #define CODEC_EXR 0xFFFF0008
@@ -501,28 +542,37 @@ namespace
 
     const SValue<uint32_t> g_pSaveFileTypes[] =   // valid formats to write to
     {
+    #if USE_WIC
         { L"bmp",   WIC_CODEC_BMP  },
         { L"jpg",   WIC_CODEC_JPEG },
         { L"jpeg",  WIC_CODEC_JPEG },
         { L"png",   WIC_CODEC_PNG  },
+    #endif
         { L"dds",   CODEC_DDS      },
         { L"tga",   CODEC_TGA      },
         { L"hdr",   CODEC_HDR      },
+    #if USE_WIC
         { L"tif",   WIC_CODEC_TIFF },
         { L"tiff",  WIC_CODEC_TIFF },
         { L"wdp",   WIC_CODEC_WMP  },
         { L"hdp",   CODEC_HDP      },
         { L"jxr",   CODEC_JXR      },
+    #endif
+    #if USE_PPM
         { L"ppm",   CODEC_PPM      },
         { L"pfm",   CODEC_PFM      },
+    #endif
     #ifdef USE_OPENEXR
         { L"exr",   CODEC_EXR      },
     #endif
+    #if USE_WIC
         { L"heic",  WIC_CODEC_HEIF },
         { L"heif",  WIC_CODEC_HEIF },
+    #endif
         { nullptr,  CODEC_DDS      }
     };
 
+#if USE_FEATURE_LEVEL
     const SValue<uint32_t> g_pFeatureLevels[] =   // valid feature levels for -fl for maximimum size
     {
         { L"9.1",  2048 },
@@ -537,6 +587,7 @@ namespace
         { L"12.2", 16384 },
         { nullptr, 0 },
     };
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1006,7 +1057,9 @@ namespace
             L"   -at <threshold>     Alpha threshold used for BC1, RGBA5551, and WIC\n"
             L"                       (defaults to 0.5)\n");
     #endif
+    #if USE_FEATURE_LEVEL
         wprintf(L"\n   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n");
+    #endif
         wprintf(L"   -pow2               resize to fit a power-of-2, respecting aspect ratio\n");
     #if USE_NMAP_CONFIG
         wprintf(
@@ -1016,6 +1069,7 @@ namespace
         wprintf(L"   -nmapamp <weight>   normal map amplitude (defaults to 1.0)\n");
         wprintf(L"\n                       (DDS input only)\n");
     #endif
+    #if USE_MINOR_DDS_CONFIG
         wprintf(L"   -t{u|f}             TYPELESS format is treated as UNORM or FLOAT\n");
         wprintf(L"   -dword              Use DWORD instead of BYTE alignment\n");
         wprintf(L"   -badtails           Fix for older DXTn with bad mipchain tails\n");
@@ -1025,6 +1079,7 @@ namespace
         wprintf(L"   -dx10               Force use of 'DX10' extended header\n");
         wprintf(L"   -dx9                Force use of legacy DX9 header\n");
         wprintf(L"\n                       (TGA output only)\n");
+    #endif
         wprintf(L"   -tga20              Write file including TGA 2.0 extension area\n");
         wprintf(L"\n                       (BMP, PNG, JPG, TIF, WDP output only)\n");
     #if USE_WIC
@@ -1086,8 +1141,10 @@ namespace
         wprintf(L"\n   <filetype>: ");
         PrintList(15, g_pSaveFileTypes);
 
+    #if USE_FEATURE_LEVEL
         wprintf(L"\n   <feature-level>: ");
         PrintList(13, g_pFeatureLevels);
+    #endif
 
         ComPtr<IDXGIFactory1> dxgiFactory;
         if (GetDXGIFactory(dxgiFactory.GetAddressOf()))
@@ -1478,8 +1535,15 @@ namespace
 #pragma prefast(disable : 28198, "Command-line tool, frees all memory on exit")
 #endif
 
+#if BUILD_AS_EXE
+int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+{
+    bool verbose = true;
+    bool initCOM = true;
+#else
 extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
+#endif
     // Parameters and defaults
     size_t width = 0;
     size_t height = 0;
@@ -1586,12 +1650,16 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             case OPT_MIPLEVELS:
             case OPT_FORMAT:
             case OPT_FILTER:
+        #if USE_NAME_CONFIG
             case OPT_PREFIX:
             case OPT_SUFFIX:
+        #endif
             case OPT_OUTPUTDIR:
             case OPT_FILETYPE:
             case OPT_GPU:
+        #if USE_FEATURE_LEVEL
             case OPT_FEATURE_LEVEL:
+        #endif
         #if USE_ALPHA_CONFIG
             case OPT_ALPHA_THRESHOLD:
             case OPT_ALPHA_WEIGHT:
@@ -1603,7 +1671,9 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
         #if USE_WIC
             case OPT_WIC_QUALITY:
         #endif
+        #if USE_BC_CONFIG
             case OPT_BC_COMPRESS:
+        #endif
         #if USE_COLORKEY
             case OPT_COLORKEY:
         #endif
@@ -1720,7 +1790,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 }
                 break;
         #endif
-
+        #if USE_SRGB
             case OPT_SRGBI:
                 dwSRGB |= TEX_FILTER_SRGB_IN;
                 break;
@@ -1732,6 +1802,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             case OPT_SRGB:
                 dwSRGB |= TEX_FILTER_SRGB;
                 break;
+        #endif
         #if USE_ALPHA_CONFIG
             case OPT_SEPALPHA:
                 dwFilterOpts |= TEX_FILTER_SEPARATE_ALPHA;
@@ -1744,6 +1815,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 break;
         #endif
 
+        #if USE_NAME_CONFIG
             case OPT_PREFIX:
                 wcscpy_s(szPrefix, MAX_PATH, pValue);
                 break;
@@ -1751,6 +1823,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             case OPT_SUFFIX:
                 wcscpy_s(szSuffix, MAX_PATH, pValue);
                 break;
+        #endif
 
             case OPT_OUTPUTDIR:
                 wcscpy_s(szOutputDir, MAX_PATH, pValue);
@@ -1920,6 +1993,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 }
                 break;
 
+        #if USE_FEATURE_LEVEL
             case OPT_FEATURE_LEVEL:
                 maxSize = LookupByName(pValue, g_pFeatureLevels);
                 if (!maxSize)
@@ -1932,6 +2006,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     return 1;
                 }
                 break;
+        #endif
 
         #if USE_ALPHA_CONFIG
             case OPT_ALPHA_THRESHOLD:
@@ -1971,6 +2046,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 break;
         #endif
 
+        #if USE_BC_CONFIG
             case OPT_BC_COMPRESS:
                 {
                     dwCompress = TEX_COMPRESS_DEFAULT;
@@ -2016,6 +2092,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     }
                 }
                 break;
+        #endif
 
         #if USE_WIC
             case OPT_WIC_QUALITY:
@@ -2052,6 +2129,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 dwConvert |= TEX_FILTER_FLOAT_X2BIAS;
                 break;
 
+        #if USE_MINOR_DDS_CONFIG
             case OPT_USE_DX10:
                 if (dwOptions & (uint64_t(1) << OPT_USE_DX9))
                 {
@@ -2073,6 +2151,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     return 1;
                 }
                 break;
+        #endif
 
         #if USE_MULTIPLE_FILES
             case OPT_RECURSIVE:
@@ -2273,12 +2352,14 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
         if (_wcsicmp(ext, L".dds") == 0)
         {
             DDS_FLAGS ddsFlags = DDS_FLAGS_ALLOW_LARGE_FILES;
+            #if USE_MINOR_DDS_CONFIG
             if (dwOptions & (uint64_t(1) << OPT_DDS_DWORD_ALIGN))
                 ddsFlags |= DDS_FLAGS_LEGACY_DWORD;
             if (dwOptions & (uint64_t(1) << OPT_EXPAND_LUMINANCE))
                 ddsFlags |= DDS_FLAGS_EXPAND_LUMINANCE;
             if (dwOptions & (uint64_t(1) << OPT_DDS_BAD_DXTN_TAILS))
                 ddsFlags |= DDS_FLAGS_BAD_DXTN_TAILS;
+            #endif
 
             hr = LoadFromDDSFile(pConv->szSrc, ddsFlags, &info, *image);
             if (FAILED(hr))
@@ -2290,6 +2371,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 
             if (IsTypeless(info.format))
             {
+                #if USE_MINOR_DDS_CONFIG
                 if (dwOptions & (uint64_t(1) << OPT_TYPELESS_UNORM))
                 {
                     info.format = MakeTypelessUNORM(info.format);
@@ -2298,6 +2380,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 {
                     info.format = MakeTypelessFLOAT(info.format);
                 }
+                #endif
 
                 if (IsTypeless(info.format))
                 {
@@ -2488,6 +2571,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             // Direct3D can only create BC resources with multiple-of-4 top levels
             if ((info.width % 4) != 0 || (info.height % 4) != 0)
             {
+                #if USE_MINOR_DDS_CONFIG
                 if (dwOptions & (uint64_t(1) << OPT_BCNONMULT4FIX))
                 {
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
@@ -2543,6 +2627,9 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     image.swap(timage);
                 }
                 else if (IsCompressed(tformat))
+                #else
+                if (IsCompressed(tformat))
+                #endif
                 {
                     non4bc = true;
                 }
@@ -3435,7 +3522,9 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
     #endif
 
         // --- Generate mips -----------------------------------------------------------
+        #if USE_3D
         TEX_FILTER_FLAGS dwFilter3D = dwFilter;
+        #endif
         if (!ispow2(info.width) || !ispow2(info.height) || !ispow2(info.depth))
         {
             if (!tMips || info.mipLevels != 1)
@@ -3443,11 +3532,13 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 nonpow2warn = true;
             }
 
+            #if USE_3D
             if (info.dimension == TEX_DIMENSION_TEXTURE3D)
             {
                 // Must force triangle filter for non-power-of-2 volume textures to get correct results
                 dwFilter3D = TEX_FILTER_TRIANGLE;
             }
+            #endif
         }
 
     #if USE_ALPHA_CONFIG
@@ -3478,6 +3569,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 
             if (info.dimension == TEX_DIMENSION_TEXTURE3D)
             {
+                #if USE_3D
                 for (size_t d = 0; d < info.depth; ++d)
                 {
                     hr = CopyRectangle(*image->GetImage(0, 0, d), Rect(0, 0, info.width, info.height),
@@ -3489,6 +3581,10 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                         return 1;
                     }
                 }
+                #else
+                wprintf(L"3D textures are unsupported.");
+                return 1;
+                #endif
             }
             else
             {
@@ -3521,6 +3617,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 
                 if (mdata.dimension == TEX_DIMENSION_TEXTURE3D)
                 {
+                    #if USE_3D
                     for (size_t d = 0; d < mdata.depth; ++d)
                     {
                         auto simg = cimage->GetImage(0, 0, d);
@@ -3528,6 +3625,10 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 
                         memcpy_s(dimg->pixels, dimg->slicePitch, simg->pixels, simg->slicePitch);
                     }
+                    #else
+                    wprintf(L"3D textures are unsupported.");
+                    return 1;
+                    #endif
                 }
                 else
                 {
@@ -3559,7 +3660,12 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 
             if (info.dimension == TEX_DIMENSION_TEXTURE3D)
             {
+                #if USE_3D
                 hr = GenerateMipMaps3D(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwFilter3D | dwFilterOpts, tMips, *timage);
+                #else
+                wprintf(L"3D textures are unsupported.");
+                return 1;
+                #endif
             }
             else
             {
@@ -3926,6 +4032,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             case CODEC_DDS:
                 {
                     DDS_FLAGS ddsFlags = DDS_FLAGS_NONE;
+                    #if USE_MINOR_DDS_CONFIG
                     if (dwOptions & (uint64_t(1) << OPT_USE_DX10))
                     {
                         ddsFlags |= DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2;
@@ -3934,6 +4041,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     {
                         ddsFlags |= DDS_FLAGS_FORCE_DX9_LEGACY;
                     }
+                    #endif
 
                     hr = SaveToDDSFile(img, nimg, info, ddsFlags, szDest);
                     break;

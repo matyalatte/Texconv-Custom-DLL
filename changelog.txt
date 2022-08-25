@@ -1,13 +1,7 @@
 v0.1.1
 - Enabled to build as exe (added "TEXCONV_BUILD_AS_EXE" option)
 - Removed more lines for WIC
-- Added "TEXCONV_USE_ICON_FOR_EXE" option
-- Added "TEXCONV_USE_3D" option
-- Added "TEXCONV_USE_MINOR_DDS_CONFIG" option
-- Added "TEXCONV_USE_FEATURE_LEVEL" option
-- Added "TEXCONV_USE_BC_CONFIG" option
-- Added "TEXCONV_USE_NAME_CONFIG" option
-- Added "TEXCONV_USE_SRGB" option
+- Removed more features
 
 v0.1.0
 - Initial release

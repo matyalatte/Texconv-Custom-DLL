@@ -92,7 +92,9 @@ namespace
         OPT_SUFFIX,
     #endif
         OPT_OUTPUTDIR,
+    #if USE_NAME_CONFIG
         OPT_TOLOWER,
+    #endif
         OPT_OVERWRITE,
         OPT_FILETYPE,
     #if USE_FLIP
@@ -105,7 +107,9 @@ namespace
         OPT_USE_DX10,
         OPT_USE_DX9,
     #endif
+    #if USE_TGA20
         OPT_TGA20,
+    #endif
     #if USE_WIC
         OPT_WIC_QUALITY,
         OPT_WIC_LOSSLESS,
@@ -138,9 +142,13 @@ namespace
         OPT_TA_WRAP,
         OPT_TA_MIRROR,
     #endif
+    #if USE_SINGLEPROC
         OPT_FORCE_SINGLEPROC,
+    #endif
+    #if USE_GPU_CONFIG
         OPT_GPU,
         OPT_NOGPU,
+    #endif
     #if USE_FEATURE_LEVEL
         OPT_FEATURE_LEVEL,
     #endif
@@ -162,7 +170,9 @@ namespace
     #if USE_TONEMAP
         OPT_TONEMAP,
     #endif
+    #if USE_X2BIAS
         OPT_X2_BIAS,
+    #endif
     #if USE_ALPHA_CONFIG
         OPT_PRESERVE_ALPHA_COVERAGE,
     #endif
@@ -233,7 +243,9 @@ namespace
         { L"sx",            OPT_SUFFIX },
     #endif
         { L"o",             OPT_OUTPUTDIR },
+    #if USE_NAME_CONFIG
         { L"l",             OPT_TOLOWER },
+    #endif
         { L"y",             OPT_OVERWRITE },
         { L"ft",            OPT_FILETYPE },
     #if USE_FLIP
@@ -246,7 +258,9 @@ namespace
         { L"dx10",          OPT_USE_DX10 },
         { L"dx9",           OPT_USE_DX9 },
     #endif
+    #if USE_TGA20
         { L"tga20",         OPT_TGA20 },
+    #endif
     #if USE_WIC
         { L"wicq",          OPT_WIC_QUALITY },
         { L"wiclossless",   OPT_WIC_LOSSLESS },
@@ -280,9 +294,13 @@ namespace
         { L"wrap",          OPT_TA_WRAP },
         { L"mirror",        OPT_TA_MIRROR },
     #endif
+    #if USE_SINGLEPROC
         { L"singleproc",    OPT_FORCE_SINGLEPROC },
+    #endif
+    #if USE_GPU_CONFIG
         { L"gpu",           OPT_GPU },
         { L"nogpu",         OPT_NOGPU },
+    #endif
     #if USE_FEATURE_LEVEL
         { L"fl",            OPT_FEATURE_LEVEL },
     #endif
@@ -304,7 +322,9 @@ namespace
     #if USE_TONEMAP
         { L"tonemap",       OPT_TONEMAP },
     #endif
+    #if USE_X2BIAS
         { L"x2bias",        OPT_X2_BIAS },
+    #endif
         { L"inverty",       OPT_INVERT_Y },
         { L"reconstructz",  OPT_RECONSTRUCT_Z },
     #if USE_ROTATE_COLOR
@@ -491,6 +511,7 @@ namespace
         { L"FANT",                      TEX_FILTER_FANT },
         { L"BOX",                       TEX_FILTER_BOX },
         { L"TRIANGLE",                  TEX_FILTER_TRIANGLE },
+    #if USE_DITHER
         { L"POINT_DITHER",              TEX_FILTER_POINT | TEX_FILTER_DITHER },
         { L"LINEAR_DITHER",             TEX_FILTER_LINEAR | TEX_FILTER_DITHER },
         { L"CUBIC_DITHER",              TEX_FILTER_CUBIC | TEX_FILTER_DITHER },
@@ -503,6 +524,7 @@ namespace
         { L"FANT_DITHER_DIFFUSION",     TEX_FILTER_FANT | TEX_FILTER_DITHER_DIFFUSION },
         { L"BOX_DITHER_DIFFUSION",      TEX_FILTER_BOX | TEX_FILTER_DITHER_DIFFUSION },
         { L"TRIANGLE_DITHER_DIFFUSION", TEX_FILTER_TRIANGLE | TEX_FILTER_DITHER_DIFFUSION },
+    #endif USE_DITHER
         { nullptr,                      TEX_FILTER_DEFAULT                              }
     };
 
@@ -1028,11 +1050,17 @@ namespace
         wprintf(L"   -m <n>              miplevels\n");
         wprintf(L"   -f <format>         format\n");
         wprintf(L"\n   -if <filter>        image filtering\n");
+    #if USE_SRGB
         wprintf(L"   -srgb{i|o}          sRGB {input, output}\n");
+    #endif
+    #if USE_NAME_CONFIG
         wprintf(L"\n   -px <string>        name prefix\n");
         wprintf(L"   -sx <string>        name suffix\n");
+    #endif
         wprintf(L"   -o <directory>      output directory\n");
+    #if USE_NAME_CONFIG
         wprintf(L"   -l                  force output filename to lower case\n");
+    #endif
         wprintf(L"   -y                  overwrite existing output file (if any)\n");
         wprintf(L"   -ft <filetype>      output file type\n");
     #if USE_FLIP
@@ -1080,8 +1108,10 @@ namespace
         wprintf(L"   -dx9                Force use of legacy DX9 header\n");
         wprintf(L"\n                       (TGA output only)\n");
     #endif
+    #if USE_TGA20
         wprintf(L"   -tga20              Write file including TGA 2.0 extension area\n");
         wprintf(L"\n                       (BMP, PNG, JPG, TIF, WDP output only)\n");
+    #endif
     #if USE_WIC
         wprintf(L"   -wicq <quality>     When writing images with WIC use quality (0.0 to 1.0)\n");
         wprintf(L"   -wiclossless        When writing images with WIC use lossless mode\n");
@@ -1094,14 +1124,20 @@ namespace
         wprintf(L"   -timing             Display elapsed processing time\n\n");
     #endif
     #ifdef _OPENMP
+    #if USE_SINGLEPROC
         wprintf(L"   -singleproc         Do not use multi-threaded compression\n");
     #endif
+    #endif
+    #if USE_GPU_CONFIG
         wprintf(L"   -gpu <adapter>      Select GPU for DirectCompute-based codecs (0 is default)\n");
         wprintf(L"   -nogpu              Do not use DirectCompute-based codecs\n");
+    #endif
+    #if USE_BC_CONFIG
         wprintf(
             L"\n   -bc <options>       Sets options for BC compression\n"
             L"                       options must be one or more of\n"
             L"                          d, u, q, x\n");
+    #endif
     #if UES_ALPHA
         wprintf(
             L"   -aw <weight>        BC7 GPU compressor weighting for alpha error metric\n"
@@ -1119,12 +1155,13 @@ namespace
     #if USE_TONEMAP
         wprintf(L"   -tonemap            Apply a tonemap operator based on maximum luminance\n");
     #endif
+    #if USE_X2BIAS
         wprintf(L"   -x2bias             Enable *2 - 1 conversion cases for unorm/pos-only-float\n");
+    #endif
         wprintf(L"   -inverty            Invert Y (i.e. green) channel values\n");
         wprintf(L"   -reconstructz       Rebuild Z (blue) channel assuming X/Y are normals\n");
     #if USE_SWIZZLE
         wprintf(L"   -swizzle <rgba>     Swizzle image channels using HLSL-style mask\n");
-    #endif
         wprintf(L"\n   <format>: ");
         PrintList(13, g_pFormats);
         wprintf(L"      ");
@@ -1132,6 +1169,7 @@ namespace
 
         wprintf(L"\n   <filter>: ");
         PrintList(13, g_pFilters);
+    #endif
 
     #if USE_ROTATE_COLOR
         wprintf(L"\n   <rot>: ");
@@ -1350,6 +1388,7 @@ namespace
         return mipLevels;
     }
 
+#if USE_3D
     constexpr size_t CountMips3D(_In_ size_t width, _In_ size_t height, _In_ size_t depth) noexcept
     {
         size_t mipLevels = 1;
@@ -1370,6 +1409,7 @@ namespace
 
         return mipLevels;
     }
+#endif
 
 #if USE_ROTATE_COLOR
     const XMVECTORF32 c_MaxNitsFor2084 = { { { 10000.0f, 10000.0f, 10000.0f, 1.f } } };
@@ -1656,7 +1696,9 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
         #endif
             case OPT_OUTPUTDIR:
             case OPT_FILETYPE:
+        #if USE_GPU_CONFIG
             case OPT_GPU:
+        #endif
         #if USE_FEATURE_LEVEL
             case OPT_FEATURE_LEVEL:
         #endif
@@ -1974,6 +2016,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 break;
         #endif
 
+        #if USE_GPU_CONFIG
             case OPT_GPU:
                 if (swscanf_s(pValue, L"%d", &adapter) != 1)
                 {
@@ -1992,6 +2035,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     return 1;
                 }
                 break;
+        #endif
 
         #if USE_FEATURE_LEVEL
             case OPT_FEATURE_LEVEL:
@@ -2058,11 +2102,13 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                         found = true;
                     }
 
+                    #if USE_DITHER
                     if (wcschr(pValue, L'd'))
                     {
                         dwCompress |= TEX_COMPRESS_DITHER;
                         found = true;
                     }
+                    #endif
 
                     if (wcschr(pValue, L'q'))
                     {
@@ -2124,10 +2170,11 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 colorKey &= 0xFFFFFF;
                 break;
         #endif
-
+        #if USE_X2BIAS
             case OPT_X2_BIAS:
                 dwConvert |= TEX_FILTER_FLOAT_X2BIAS;
                 break;
+        #endif
 
         #if USE_MINOR_DDS_CONFIG
             case OPT_USE_DX10:
@@ -2468,8 +2515,10 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
         {
         #if USE_WIC
             // WIC shares the same filter values for mode and dither
+            #if USE_DITHER
             static_assert(static_cast<int>(WIC_FLAGS_DITHER) == static_cast<int>(TEX_FILTER_DITHER), "WIC_FLAGS_* & TEX_FILTER_* should match");
             static_assert(static_cast<int>(WIC_FLAGS_DITHER_DIFFUSION) == static_cast<int>(TEX_FILTER_DITHER_DIFFUSION), "WIC_FLAGS_* & TEX_FILTER_* should match");
+            #endif
             static_assert(static_cast<int>(WIC_FLAGS_FILTER_POINT) == static_cast<int>(TEX_FILTER_POINT), "WIC_FLAGS_* & TEX_FILTER_* should match");
             static_assert(static_cast<int>(WIC_FLAGS_FILTER_LINEAR) == static_cast<int>(TEX_FILTER_LINEAR), "WIC_FLAGS_* & TEX_FILTER_* should match");
             static_assert(static_cast<int>(WIC_FLAGS_FILTER_CUBIC) == static_cast<int>(TEX_FILTER_CUBIC), "WIC_FLAGS_* & TEX_FILTER_* should match");
@@ -2834,9 +2883,17 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 
             if (tMips > 0)
             {
+                #if USE_3D
                 const size_t maxMips = (info.depth > 1)
                     ? CountMips3D(info.width, info.height, info.depth)
                     : CountMips(info.width, info.height);
+                #else
+                if (info.depth > 1){
+                    wprintf(L"3D textures are unsupported.");
+                    return 1;
+                }
+                const size_t maxMips = CountMips(info.width, info.height);
+                #endif
 
                 if (tMips > maxMips)
                 {
@@ -3846,15 +3903,19 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                         {
                             s_tryonce = true;
 
+                            #if USE_GPU_CONFIG
                             if (!(dwOptions & (uint64_t(1) << OPT_NOGPU)))
+                            #endif
                             {
                                 if (!CreateDevice(adapter, pDevice.GetAddressOf()))
                                     wprintf(L"\nWARNING: DirectCompute is not available, using BC6H / BC7 CPU codec\n");
                             }
+                            #if USE_GPU_CONFIG
                             else
                             {
                                 wprintf(L"\nWARNING: using BC6H / BC7 CPU codec\n");
                             }
+                            #endif
                         }
                     }
                     break;
@@ -3865,10 +3926,12 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 
                 TEX_COMPRESS_FLAGS cflags = dwCompress;
             #ifdef _OPENMP
+            #if USE_SINGLEPROC
                 if (!(dwOptions & (uint64_t(1) << OPT_FORCE_SINGLEPROC)))
                 {
                     cflags |= TEX_COMPRESS_PARALLEL;
                 }
+            #endif
             #endif
 
                 if ((img->width % 4) != 0 || (img->height % 4) != 0)
@@ -3999,10 +4062,12 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             if (*szSuffix)
                 wcscat_s(szDest, szSuffix);
 
+            #if USE_NAME_CONFIG           
             if (dwOptions & (uint64_t(1) << OPT_TOLOWER))
             {
                 std::ignore = _wcslwr_s(szDest);
             }
+            #endif
 
             if (wcslen(szDest) > _MAX_PATH)
             {
@@ -4048,7 +4113,11 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                 }
 
             case CODEC_TGA:
+                #if USE_TGA20
                 hr = SaveToTGAFile(img[0], TGA_FLAGS_NONE, szDest, (dwOptions & (uint64_t(1) << OPT_TGA20)) ? &info : nullptr);
+                #else
+                hr = SaveToTGAFile(img[0], TGA_FLAGS_NONE, szDest, nullptr);
+                #endif
                 break;
 
             case CODEC_HDR:

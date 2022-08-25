@@ -14,6 +14,8 @@ option(TEXCONV_USE_WIC "Use WIC-supported format (bmp, jpg, png, jxr, etc.)" OFF
 option(TEXCONV_USE_PPM "Use .ppm and .pfm" OFF)
 option(TEXCONV_USE_PLANAR "Use planar dds formats" OFF)
 option(TEXCONV_USE_3D "Use 3D textures" OFF)
+option(TEXCONV_USE_LEGACY "Use legacy dds formats" OFF)
+option(TEXCONV_USE_16BPP "Use 16bpp format (B5G6R5, B5G5R5A1, B4G4R4A4)" OFF)
 
 # for printing
 option(TEXCONV_USE_LOGO "Use PrintLogo()" OFF)
@@ -35,8 +37,12 @@ option(TEXCONV_USE_MINOR_DDS_CONFIG "Use -tu, -tf, -dword, -badtails, -fixbc4x4,
 option(TEXCONV_USE_FEATURE_LEVEL "Use -fl" OFF)
 option(TEXCONV_USE_BC_CONFIG "Use -bc" OFF)
 option(TEXCONV_USE_SRGB "Use -srgb, -srgbi, and -srgbo" OFF)
-option(TEXCONV_USE_NAME_CONFIG "Use -px and -sx" OFF)
-
+option(TEXCONV_USE_NAME_CONFIG "Use -px, -sx, and -l" OFF)
+option(TEXCONV_USE_DITHER "Use dither filters" OFF)
+option(TEXCONV_USE_GPU_CONFIG "Use -gpu and -nogpu" OFF)
+option(TEXCONV_USE_X2BIAS "Use -x2bias" OFF)
+option(TEXCONV_USE_SINGLEPROC "Use -singleproc" OFF)
+option(TEXCONV_USE_TGA20 "Use -tga20 " OFF)
 
 project (DirectXTex
   VERSION ${DIRECTXTEX_VERSION}

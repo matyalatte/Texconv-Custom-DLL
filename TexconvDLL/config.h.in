@@ -23,6 +23,12 @@
 // Use 3D textures
 #define USE_3D __@TEXCONV_USE_3D@__
 
+// Use legacy dds formats
+#define USE_LEGACY __@TEXCONV_USE_LEGACY@__
+
+// Use 16bpp format (B5G6R5, B5G5R5A1, B4G4R4A4)
+#define USE_16BPP __@TEXCONV_USE_16BPP@__
+
 //--------------------------------------------------------------------------------------
 // Printing
 //--------------------------------------------------------------------------------------
@@ -80,5 +86,20 @@
 // Use -srgb, -srgbi, and -srgbo
 #define USE_SRGB __@TEXCONV_USE_SRGB@__
 
-// Use -px and -sx
+// Use -px, -sx, and -l
 #define USE_NAME_CONFIG __@TEXCONV_USE_NAME_CONFIG@__
+
+// Use dither filters
+#define USE_DITHER __@TEXCONV_USE_DITHER@__
+
+// Use -gpu and -nogpu
+#define USE_GPU_CONFIG __@TEXCONV_USE_GPU_CONFIG@__
+
+// Use -x2bias
+#define USE_X2BIAS __@TEXCONV_USE_X2BIAS@__
+
+// Use -singleproc
+#define USE_SINGLEPROC __@TEXCONV_SINGLEPROC@__
+
+// Use -tga20
+#define USE_TGA20 __@TEXCONV_TGA20@__

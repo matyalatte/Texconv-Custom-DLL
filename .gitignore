@@ -4,6 +4,7 @@ build
 *.dll
 *.exe
 .vs
+.vscode
 
 # test
 python

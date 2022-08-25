@@ -3,7 +3,7 @@
 ## 0. Requirements
 - Visual Studio 2022 (need cmake tools)
 
-## 1-a. Build .exe with Batch Files
+## 1-a. Build .dll with Batch Files
 You can build texconv.dll with batch files.<br>
 The steps are as follows.
 
@@ -11,7 +11,7 @@ The steps are as follows.
 2. Run `build.bat` on the command prompt.
 3. `texconv.dll` will be generated in `Texconv-Custom-DLL/`.
 
-## 1-b. Build .exe with Visual Studio
+## 1-b. Build .dll with Visual Studio
 Of course, you can build the dll with Visual Studio.<br>
 The steps are as follows.
 

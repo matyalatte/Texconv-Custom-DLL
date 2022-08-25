@@ -990,6 +990,7 @@ namespace
                 return false;
 
             case DXGI_FORMAT_B5G6R5_UNORM:
+                #if USE_16BPP
                 // D3DFMT_R3G3B2 -> DXGI_FORMAT_B5G6R5_UNORM
                 if (inSize >= 1 && outSize >= 2)
                 {
@@ -1008,6 +1009,7 @@ namespace
                     }
                     return true;
                 }
+                #endif
                 return false;
 
             default:
@@ -1381,11 +1383,15 @@ namespace
                                     }
                                     else
                                     {
+                                        #if USE_LEGACY
                                         const TEXP_LEGACY_FORMAT lformat = FindLegacyFormat(convFlags);
                                         if (!LegacyExpandScanline(pDest, dpitch, metadata.format,
                                             pSrc, spitch, lformat, pal8,
                                             tflags))
                                             return E_FAIL;
+                                        #else
+                                        return E_FAIL;
+                                        #endif
                                     }
                                 }
                                 else if (convFlags & CONV_FLAGS_SWIZZLE)
@@ -1475,11 +1481,15 @@ namespace
                                     }
                                     else
                                     {
+                                        #if uSE_LEGACY
                                         const TEXP_LEGACY_FORMAT lformat = FindLegacyFormat(convFlags);
                                         if (!LegacyExpandScanline(pDest, dpitch, metadata.format,
                                             pSrc, spitch, lformat, pal8,
                                             tflags))
                                             return E_FAIL;
+                                        #else
+                                        return E_FAIL;
+                                        #endif
                                     }
                                 }
                                 else if (convFlags & CONV_FLAGS_SWIZZLE)

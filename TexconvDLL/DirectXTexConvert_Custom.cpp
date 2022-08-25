@@ -377,6 +377,7 @@ void DirectX::Internal::CopyScanline(
             return;
 
             //-----------------------------------------------------------------------------
+        #if USE_16BPP
         case DXGI_FORMAT_B5G5R5A1_UNORM:
             if (inSize >= 2 && outSize >= 2)
             {
@@ -400,6 +401,7 @@ void DirectX::Internal::CopyScanline(
                 }
             }
             return;
+        #endif
 
             //-----------------------------------------------------------------------------
         case DXGI_FORMAT_A8_UNORM:
@@ -407,6 +409,7 @@ void DirectX::Internal::CopyScanline(
             return;
 
             //-----------------------------------------------------------------------------
+        #if USE_16BPP
         case DXGI_FORMAT_B4G4R4A4_UNORM:
             if (inSize >= 2 && outSize >= 2)
             {
@@ -430,6 +433,7 @@ void DirectX::Internal::CopyScanline(
                 }
             }
             return;
+        #endif
         }
     }
 
@@ -462,6 +466,7 @@ void DirectX::Internal::SwizzleScanline(
     switch (static_cast<int>(format))
     {
         //---------------------------------------------------------------------------------
+    #if USE_LEGACY
     case DXGI_FORMAT_R10G10B10A2_TYPELESS:
     case DXGI_FORMAT_R10G10B10A2_UNORM:
     case DXGI_FORMAT_R10G10B10A2_UINT:
@@ -508,6 +513,7 @@ void DirectX::Internal::SwizzleScanline(
             }
         }
         break;
+    #endif
 
         //---------------------------------------------------------------------------------
     case DXGI_FORMAT_R8G8B8A8_TYPELESS:
@@ -559,6 +565,7 @@ void DirectX::Internal::SwizzleScanline(
         break;
 
         //---------------------------------------------------------------------------------
+    #if USE_LEGACY
     case DXGI_FORMAT_YUY2:
         if (inSize >= 4 && outSize >= 4)
         {
@@ -601,6 +608,7 @@ void DirectX::Internal::SwizzleScanline(
             }
         }
         break;
+    #endif
     }
 
     // Fall-through case is to just use memcpy (assuming this is not an in-place operation)
@@ -634,6 +642,7 @@ bool DirectX::Internal::ExpandScanline(
     switch (inFormat)
     {
     case DXGI_FORMAT_B5G6R5_UNORM:
+        #if USE_16BPP
         if (outFormat != DXGI_FORMAT_R8G8B8A8_UNORM)
             return false;
 
@@ -655,9 +664,11 @@ bool DirectX::Internal::ExpandScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B5G5R5A1_UNORM:
+        #if USE_16BPP
         if (outFormat != DXGI_FORMAT_R8G8B8A8_UNORM)
             return false;
 
@@ -680,9 +691,11 @@ bool DirectX::Internal::ExpandScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B4G4R4A4_UNORM:
+        #if USE_16BPP
         if (outFormat != DXGI_FORMAT_R8G8B8A8_UNORM)
             return false;
 
@@ -705,6 +718,7 @@ bool DirectX::Internal::ExpandScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     default:
@@ -1207,6 +1221,7 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
         return false;
 
     case DXGI_FORMAT_B5G6R5_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMU565))
         {
             static const XMVECTORF32 s_Scale = { { { 1.f / 31.f, 1.f / 63.f, 1.f / 31.f, 1.f } } };
@@ -1221,9 +1236,11 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B5G5R5A1_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMU555))
         {
             static const XMVECTORF32 s_Scale = { { { 1.f / 31.f, 1.f / 31.f, 1.f / 31.f, 1.f } } };
@@ -1237,6 +1254,7 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B8G8R8A8_UNORM:
@@ -1491,6 +1509,7 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
         return false;
 
     case DXGI_FORMAT_B4G4R4A4_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMUNIBBLE4))
         {
             static const XMVECTORF32 s_Scale = { { { 1.f / 15.f, 1.f / 15.f, 1.f / 15.f, 1.f / 15.f } } };
@@ -1504,6 +1523,7 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case XBOX_DXGI_FORMAT_R10G10B10_7E3_A2_FLOAT:
@@ -2060,6 +2080,7 @@ bool DirectX::Internal::StoreScanline(
         return false;
 
     case DXGI_FORMAT_B5G6R5_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMU565))
         {
             static const XMVECTORF32 s_Scale = { { { 31.f, 63.f, 31.f, 1.f } } };
@@ -2073,9 +2094,11 @@ bool DirectX::Internal::StoreScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B5G5R5A1_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMU555))
         {
             static const XMVECTORF32 s_Scale = { { { 31.f, 31.f, 31.f, 1.f } } };
@@ -2091,6 +2114,7 @@ bool DirectX::Internal::StoreScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B8G8R8A8_UNORM:
@@ -2352,6 +2376,7 @@ bool DirectX::Internal::StoreScanline(
         return false;
 
     case DXGI_FORMAT_B4G4R4A4_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMUNIBBLE4))
         {
             static const XMVECTORF32 s_Scale = { { { 15.f, 15.f, 15.f, 15.f } } };
@@ -2365,6 +2390,7 @@ bool DirectX::Internal::StoreScanline(
             }
             return true;
         }
+        #endif
         return false;
 
     case XBOX_DXGI_FORMAT_R10G10B10_7E3_A2_FLOAT:
@@ -3379,6 +3405,7 @@ void DirectX::Internal::ConvertScanline(
             else if (in->flags & CONVF_FLOAT)
             {
                 XMVECTOR* ptr = pBuffer;
+                #if USE_X2BIAS
                 if (!(in->flags & CONVF_POS_ONLY) && (flags & TEX_FILTER_FLOAT_X2BIAS))
                 {
                     // FLOAT -> UNORM (x2 bias)
@@ -3390,6 +3417,7 @@ void DirectX::Internal::ConvertScanline(
                     }
                 }
                 else
+                #endif
                 {
                     // FLOAT -> UNORM
                     for (size_t i = 0; i < count; ++i)
@@ -3416,6 +3444,7 @@ void DirectX::Internal::ConvertScanline(
             else if (in->flags & CONVF_FLOAT)
             {
                 XMVECTOR* ptr = pBuffer;
+                #if USE_X2BIAS
                 if ((in->flags & CONVF_POS_ONLY) && (flags & TEX_FILTER_FLOAT_X2BIAS))
                 {
                     // FLOAT (positive only, x2 bias) -> SNORM
@@ -3427,6 +3456,7 @@ void DirectX::Internal::ConvertScanline(
                     }
                 }
                 else
+                #endif
                 {
                     // FLOAT -> SNORM
                     for (size_t i = 0; i < count; ++i)
@@ -3437,6 +3467,7 @@ void DirectX::Internal::ConvertScanline(
                 }
             }
         }
+        #if USE_X2BIAS
         else if (diffFlags & CONVF_UNORM)
         {
             //--- Converting from a UNORM ---
@@ -3499,6 +3530,7 @@ void DirectX::Internal::ConvertScanline(
                 }
             }
         }
+        #endif
 
         // !CONVF_A -> CONVF_A is handled because LoadScanline ensures alpha defaults to 1.0 for no-alpha formats
 
@@ -4154,6 +4186,7 @@ bool DirectX::Internal::StoreScanlineDither(
         STORE_SCANLINE1(uint8_t, g_Scale8pc, true, true, 0xFF, y, true)
 
     case DXGI_FORMAT_B5G6R5_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMU565))
         {
             XMU565 * __restrict dest = static_cast<XMU565*>(pDestination);
@@ -4200,9 +4233,11 @@ bool DirectX::Internal::StoreScanlineDither(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B5G5R5A1_UNORM:
+        #if USE_16BPP
         if (size >= sizeof(XMU555))
         {
             XMU555 * __restrict dest = static_cast<XMU555*>(pDestination);
@@ -4250,6 +4285,7 @@ bool DirectX::Internal::StoreScanlineDither(
             }
             return true;
         }
+        #endif
         return false;
 
     case DXGI_FORMAT_B8G8R8A8_UNORM:
@@ -4418,11 +4454,13 @@ namespace
             return false;
         }
 
+        #if USE_X2BIAS
         if (filter & TEX_FILTER_FLOAT_X2BIAS)
         {
             // X2 Scale & Bias conversions not supported by WIC code paths
             return false;
         }
+        #endif
 
         // Check for special cases
     #if (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
@@ -4626,6 +4664,7 @@ namespace
 
         size_t width = srcImage.width;
 
+        #if USE_DITHER
         if (filter & TEX_FILTER_DITHER_DIFFUSION)
         {
             // Error diffusion dithering (aka Floyd-Steinberg dithering)
@@ -4651,11 +4690,13 @@ namespace
             }
         }
         else
+        #endif
         {
             auto scanline = make_AlignedArrayXMVECTOR(width);
             if (!scanline)
                 return E_OUTOFMEMORY;
 
+            #if USE_DITHER
             if (filter & TEX_FILTER_DITHER)
             {
                 // Ordered dithering
@@ -4674,6 +4715,7 @@ namespace
                 }
             }
             else
+            #endif
             {
                 // No dithering
                 for (size_t h = 0; h < srcImage.height; ++h)

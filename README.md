@@ -10,9 +10,9 @@ It supports all dds formats.<br>
 There are some dds formats common tools can't handle properly, but Texconv can.
 
 ## How small is the dll?
-It'll be about 25% smaller than the original exe.
+It's 29% smaller than the original exe.
 - The original exe: 686KB
-- The custom dll: 509KB
+- The custom dll: 487KB
 
 ## Available functions
 ### texconv
@@ -52,13 +52,15 @@ result = dll.texcov(argc, argv, verbose, initCOM)
 ```
 
 ## Removed features
-Many features are removed from the custom build to reduce the file size.<br>
-- WIC-support (.bmp, .jpg, .png, etc.)
+Many features are removed from the original build to reduce the file size.<br>
+- WIC support (.bmp, .jpg, .png, etc.)
 - 3D textures support
+- Little-used dds formats support (B5G6R5, B5G5R5A1, etc.)
 - ppm support (.ppm and .pfm)
 - Print functions
 - Mutilple files processing
 - Many optional arguments
+
 If you want to restore them, you need to use cmake options.
 
 ## Cmake options
@@ -66,16 +68,26 @@ There are many cmake options to restore removed features.<br>
 You can enable them with `-D` option (e.g. `-D TEXCONV_USE_WIC=ON`).<br>
 But it'll make the dll larger.<br>
 If you enable all options, the dll will be almost the same size as the original Texconv.<br>
+
+#### exe options
 - `TEXCONV_BUILD_AS_EXE`: Build Texconv as .exe
 - `TEXCONV_USE_ICON_FOR_EXE`: Use `directx.ico` when TEXCONV_BUILD_AS_EXE is ON
+
+#### format options
 - `TEXCONV_USE_WIC`: Enable to use WIC-supported format (bmp, jpg, png, jxr, etc.)
 - `TEXCONV_USE_PPM`: Enable to use .ppm and .pfm
 - `TEXCONV_USE_PLANAR`: Enable to use planar dds formats
-- `TEXCONV_USE_3D`: Support 3D textures
+- `TEXCONV_USE_3D`: Enable to use 3D textures
+- `TEXCONV_USE_LEGACY`: Enable to use legacy dds formats
+- `TEXCONV_USE_16BPP`: Enable to use 16bpp format (B5G6R5, B5G5R5A1, B4G4R4A4)
+
+#### Printing options
 - `TEXCONV_USE_LOGO`: Enable to use PrintLogo()
 - `TEXCONV_USE_USAGE`: Enable to use -help
 - `TEXCONV_USE_PRINT_INFO`: Enable to use PrintInfo() and PrintFormat()
 - `TEXCONV_USE_TIMING`: Enable to use -timing
+
+#### Other options
 - `TEXCONV_USE_FLIP`: Enable to use -hflip and -vflip
 - `TEXCONV_USE_SWIZZLE`: Enable to use -swizzle
 - `TEXCONV_USE_ROTATE_COLOR`: Enable to use -rotatecolor
@@ -89,4 +101,9 @@ If you enable all options, the dll will be almost the same size as the original 
 - `TEXCONV_USE_FEATURE_LEVEL`: Enable to use -fl
 - `TEXCONV_USE_BC_CONFIG`: Enable to use -bc
 - `TEXCONV_USE_SRGB`: Enable to use -srgb, -srgbi, and -srgbo
-- `TEXCONV_USE_NAME_CONFIG`: Enable to use -px and -sx
+- `TEXCONV_USE_NAME_CONFIG`: Enable to use -px, -sx, and -l
+- `TEXCONV_USE_DITHER`: Enable to use dither filters
+- `TEXCONV_USE_GPU_CONFG`: Enable to use -gpu and -nogpu
+- `TEXCONV_USE_X2BIAS`: Enable to use -x2bias
+- `TEXCONV_USE_SINGLEPROC`: Enable to use -singleproc
+- `TEXCONV_USE_TGA20`: Enable to use -tga20

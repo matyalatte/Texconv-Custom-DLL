@@ -1,10 +1,13 @@
+# project
+.vs
+.vscode
+*.json
+
 # build
 build
 *.so
 *.dll
 *.exe
-.vs
-.vscode
 
 # test
 python
@@ -16,3 +19,4 @@ out
 *.bat
 !batch_files/*.bat
 *.sh
+memo*

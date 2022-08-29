@@ -44,7 +44,12 @@
 #include <string>
 #include <tuple>
 
+#ifdef _WIN32
 #include <wrl\client.h>
+#else
+#include <wrl/client.h>
+#endif
+
 
 #ifdef _WIN32
 #include <d3d11.h>
@@ -79,7 +84,9 @@
 
 using namespace DirectX;
 using namespace DirectX::PackedVector;
+#ifdef _WIN32
 using Microsoft::WRL::ComPtr;
+#endif
 
 namespace
 {
@@ -2457,7 +2464,7 @@ extern "C" int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, b
 
     // Work out out filename prefix and suffix
     if (szOutputDir[0] && (SLASH != szOutputDir[wcslen(szOutputDir) - 1]))
-        wcscat_s(szOutputDir, MAX_PATH, WSLASH);
+        wcscat_s(szOutputDir, MAX_PATH, &WSLASH);
 
     auto fileTypeName = LookupByValue(FileType, g_pSaveFileTypes);
 
@@ -2491,7 +2498,9 @@ extern "C" int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, b
 #if USE_ALPHA_CONFIG
     bool preserveAlphaCoverage = false;
 #endif
+#ifdef _WIN32
     ComPtr<ID3D11Device> pDevice;
+#endif
 
     int retVal = 0;
 

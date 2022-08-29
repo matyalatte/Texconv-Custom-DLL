@@ -262,7 +262,7 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
 
 #--- Command-line tools
-if(BUILD_TOOLS AND WIN32 AND (NOT WINDOWS_STORE))
+if(BUILD_TOOLS)
   set(TOOL_EXES texconv)
 
   configure_file(TexconvDLL/config.h.in TexconvDLL/config.h @ONLY)
@@ -304,6 +304,10 @@ endif()
 if (MINGW OR (NOT WIN32) OR VCPKG_TOOLCHAIN)
   foreach(t IN LISTS TOOL_EXES)
     target_link_libraries(${t} Microsoft::DirectXMath)
+    if (NOT WIN32)
+      target_link_libraries(${t} Microsoft::DirectX-Headers)
+      target_compile_definitions(${t} PRIVATE USING_DIRECTX_HEADERS)
+    endif()
   endforeach()
 endif()
 

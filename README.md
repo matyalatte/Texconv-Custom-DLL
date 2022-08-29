@@ -35,7 +35,8 @@ import ctypes as c
 import os
 
 # Get DLL
-dll_path = os.path.abspath('texconv.dll')
+# dll_path = os.path.abspath('libtexconv.so') # for linux
+dll_path = os.path.abspath('texconv.dll') # for windows
 dll = c.cdll.LoadLibrary(dll_path)
 
 # Make arguments

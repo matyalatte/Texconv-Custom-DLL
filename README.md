@@ -41,14 +41,14 @@ dll = c.cdll.LoadLibrary(dll_path)
 # Make arguments
 dds_file = 'test.dds'
 argv = ['-ft', 'tga', '-o', 'outdir', '-y', dds_file]
-argc = len(args)
+argc = len(argv)
 argv = [c.c_wchar_p(arg) for arg in argv]
 argv = (c.c_wchar_p*len(argv))(*argv)
 verbose = c.c_bool(True)
 initCOM = c.c_bool(True)
 
 # Convert DDS to TGA
-result = dll.texcov(argc, argv, verbose, initCOM)
+result = dll.texconv(argc, argv, verbose, initCOM)
 ```
 
 ## Removed features

@@ -21,10 +21,13 @@
 #define NOHELP
 #pragma warning(pop)
 
+#ifdef _WIN32
 #include <ShlObj.h>
+#endif
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -43,11 +46,22 @@
 
 #include <wrl\client.h>
 
+#ifdef _WIN32
 #include <d3d11.h>
 #include <dxgi.h>
 #include <dxgiformat.h>
 
 #include <wincodec.h>
+#else
+#include <directx/d3d12.h>
+#include <directx/dxgiformat.h>
+
+#define swscanf_s swscanf
+#define _MAX_PATH 2048
+#define _MAX_EXT 8
+#define _MAX_FNAME 128
+#define _wcsicmp wcscmp
+#endif
 
 #pragma warning(disable : 4619 4616 26812)
 
@@ -69,6 +83,96 @@ using Microsoft::WRL::ComPtr;
 
 namespace
 {
+#ifdef _WIN32
+    const wchar_t WSLASH = L'\\';
+    const char SLASH = '\\';
+#else
+    const wchar_t WSLASH = L'/';
+    const char SLASH = '/';
+#endif
+
+#ifndef _WIN32
+
+    // Use non-secure functions for linux
+    // Should we modify here?
+    wchar_t *wcscat_s(wchar_t *string1, int smax, const wchar_t *string2)
+    {
+                return wcscat(string1, string2);
+    }
+
+    wchar_t *wcscat_s(wchar_t *string1, const wchar_t *string2)
+    {
+                return wcscat(string1, string2);
+    }
+
+    wchar_t *wcscpy_s(wchar_t* dest, int smax, const wchar_t *src)
+    {
+            return wcscpy(dest, src);
+    }
+    wchar_t *wcscpy_s(wchar_t* dest, const wchar_t *src)
+    {
+            return wcscpy(dest, src);
+    }
+
+    void *memcpy_s(void *buf1, int size, const void *buf2, int count)
+    {
+        return memcpy(buf1, buf2, count);
+    }
+
+    void _wsplitpath_s(const WCHAR* path, WCHAR* drv, int drvnum, WCHAR* dir, int dirnum, WCHAR* name, int namenum, WCHAR* ext, int extnum)
+    {
+        const WCHAR* end; /* end of processed string */
+        const WCHAR* p;      /* search pointer */
+        const WCHAR* s;      /* copy pointer */
+
+        /* extract drive name */
+        if (path[0] && path[1]==':') {
+                if (drv) {
+                        *drv++ = *path++;
+                        *drv++ = *path++;
+                        *drv = '\0';
+                }
+        } else if (drv)
+                *drv = '\0';
+
+        /* search for end of string or stream separator */
+        for(end=path; *end && *end!=':'; )
+                end++;
+
+
+        /* search for begin of file extension */
+        for(p=end; p>path && *--p!='\\' && *p!='/'; )
+                if (*p == '.') {
+                        end = p;
+                        break;
+                }
+
+        if (ext)
+                for(s=end; (*ext=*s++); )
+                        ext++;
+
+        /* search for end of directory name */
+        for(p=end; p>path; )
+                if (*--p=='\\' || *p=='/') {
+                        p++;
+                        break;
+                }
+
+        if (name) {
+                for(s=p; s<end; )
+                        *name++ = *s++;
+
+                *name = '\0';
+        }
+
+        if (dir) {
+                for(s=path; s<p; )
+                        *dir++ = *s++;
+
+                *dir = '\0';
+        }
+    }
+#endif
     enum OPTIONS : uint64_t
     {
     #if USE_MULTIPLE_FILES
@@ -524,7 +628,7 @@ namespace
         { L"FANT_DITHER_DIFFUSION",     TEX_FILTER_FANT | TEX_FILTER_DITHER_DIFFUSION },
         { L"BOX_DITHER_DIFFUSION",      TEX_FILTER_BOX | TEX_FILTER_DITHER_DIFFUSION },
         { L"TRIANGLE_DITHER_DIFFUSION", TEX_FILTER_TRIANGLE | TEX_FILTER_DITHER_DIFFUSION },
-    #endif USE_DITHER
+    #endif //USE_DITHER
         { nullptr,                      TEX_FILTER_DEFAULT                              }
     };
 
@@ -652,11 +756,13 @@ HRESULT __cdecl SaveToPortablePixMapHDR(
 
 namespace
 {
+    #if USE_MULTIPLE_FILES
     inline HANDLE safe_handle(HANDLE h) noexcept { return (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
 
     struct find_closer { void operator()(HANDLE h) noexcept { assert(h != INVALID_HANDLE_VALUE); if (h) FindClose(h); } };
 
     using ScopedFindHandle = std::unique_ptr<void, find_closer>;
+    #endif
 
     constexpr static bool ispow2(size_t x)
     {
@@ -754,8 +860,8 @@ namespace
                     {
                         wchar_t subdir[MAX_PATH] = {};
                         auto subfolder = (folder)
-                            ? (std::wstring(folder) + std::wstring(findData.cFileName) + L"\\")
-                            : (std::wstring(findData.cFileName) + L"\\");
+                            ? (std::wstring(folder) + std::wstring(findData.cFileName) + WSLASH)
+                            : (std::wstring(findData.cFileName) + WSLASH);
                         {
                             wchar_t drive[_MAX_DRIVE] = {};
                             wchar_t dir[_MAX_DIR] = {};
@@ -1005,6 +1111,7 @@ namespace
     }
 #endif
 
+#ifdef _WIN32
     _Success_(return)
         bool GetDXGIFactory(_Outptr_ IDXGIFactory1** pFactory)
     {
@@ -1030,6 +1137,7 @@ namespace
 
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
+#endif
 
 #if USE_USAGE
     void PrintUsage()
@@ -1184,6 +1292,7 @@ namespace
         PrintList(13, g_pFeatureLevels);
     #endif
 
+    #ifdef _WIN32
         ComPtr<IDXGIFactory1> dxgiFactory;
         if (GetDXGIFactory(dxgiFactory.GetAddressOf()))
         {
@@ -1201,11 +1310,13 @@ namespace
                 }
             }
         }
+    #endif
     }
 #endif
 
     const wchar_t* GetErrorDesc(HRESULT hr)
     {
+    #ifdef _WIN32
         static wchar_t desc[1024] = {};
 
         LPWSTR errorText = nullptr;
@@ -1231,8 +1342,12 @@ namespace
         }
 
         return desc;
+    #else
+    	return L"Error!";
+    #endif
     }
 
+#ifdef _WIN32
     _Success_(return)
         bool CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
     {
@@ -1329,6 +1444,7 @@ namespace
         else
             return false;
     }
+#endif
 
     void FitPowerOf2(size_t origx, size_t origy, _Inout_ size_t& targetx, _Inout_ size_t& targety, size_t maxsize)
     {
@@ -1343,7 +1459,7 @@ namespace
             float bestScore = FLT_MAX;
             for (size_t y = maxsize; y > 0; y >>= 1)
             {
-                const float score = fabsf((float(x) / float(y)) - origAR);
+                const float score = std::fabs((float(x) / float(y)) - origAR);
                 if (score < bestScore)
                 {
                     bestScore = score;
@@ -1360,7 +1476,7 @@ namespace
             float bestScore = FLT_MAX;
             for (size_t x = maxsize; x > 0; x >>= 1)
             {
-                const float score = fabsf((float(x) / float(y)) - origAR);
+                const float score = std::fabs((float(x) / float(y)) - origAR);
                 if (score < bestScore)
                 {
                     bestScore = score;
@@ -1581,9 +1697,17 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     bool verbose = true;
     bool initCOM = true;
 #else
+
+#ifdef _WIN32
 extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
-#endif
+#else
+extern "C" int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
+{
+    initCOM = false;
+#endif //_WIN32
+
+#endif //BUILD_AS_EXE
     // Parameters and defaults
     size_t width = 0;
     size_t height = 0;
@@ -2332,8 +2456,8 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 #endif
 
     // Work out out filename prefix and suffix
-    if (szOutputDir[0] && (L'\\' != szOutputDir[wcslen(szOutputDir) - 1]))
-        wcscat_s(szOutputDir, MAX_PATH, L"\\");
+    if (szOutputDir[0] && (SLASH != szOutputDir[wcslen(szOutputDir) - 1]))
+        wcscat_s(szOutputDir, MAX_PATH, WSLASH);
 
     auto fileTypeName = LookupByValue(FileType, g_pSaveFileTypes);
 
@@ -2352,11 +2476,13 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
         mipLevels = 1;
     }
 
+    #ifdef _WIN32
     LARGE_INTEGER qpcFreq = {};
     std::ignore = QueryPerformanceFrequency(&qpcFreq);
 
     LARGE_INTEGER qpcStart = {};
     std::ignore = QueryPerformanceCounter(&qpcStart);
+    #endif
 
     // Convert images
     bool sizewarn = false;
@@ -3899,6 +4025,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     {
                         static bool s_tryonce = false;
 
+                        #ifdef _WIN32
                         if (!s_tryonce)
                         {
                             s_tryonce = true;
@@ -3917,6 +4044,9 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                             }
                             #endif
                         }
+                        #else
+	        	    	wprintf(L"\nWARNING: using BC6H / BC7 CPU codec\n");
+        	    		#endif
                     }
                     break;
 
@@ -3939,11 +4069,13 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     non4bc = true;
                 }
 
+                #ifdef _WIN32
                 if (bc6hbc7 && pDevice)
                 {
                     hr = Compress(pDevice.Get(), img, nimg, info, tformat, dwCompress | dwSRGB, alphaWeight, *timage);
                 }
                 else
+                #endif
                 {
                     hr = Compress(img, nimg, info, tformat, cflags | dwSRGB, alphaThreshold, *timage);
                 }
@@ -4047,13 +4179,13 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             if (*szPrefix)
                 wcscat_s(szDest, szPrefix);
 
-            pchSlash = wcsrchr(pConv->szSrc, L'\\');
+            pchSlash = wcsrchr(pConv->szSrc, SLASH);
             if (pchSlash)
                 wcscat_s(szDest, pchSlash + 1);
             else
                 wcscat_s(szDest, pConv->szSrc);
 
-            pchSlash = wcsrchr(szDest, '\\');
+            pchSlash = wcsrchr(szDest, SLASH);
             pchDot = wcsrchr(szDest, '.');
 
             if (pchDot > pchSlash)
@@ -4082,6 +4214,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             }
             fflush(stdout);
 
+            #ifdef _WIN32
             if (~dwOptions & (uint64_t(1) << OPT_OVERWRITE))
             {
                 if (GetFileAttributesW(szDest) != INVALID_FILE_ATTRIBUTES)
@@ -4091,6 +4224,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
                     continue;
                 }
             }
+            #endif
 
             switch (FileType)
             {
@@ -4220,10 +4354,12 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
             {
                 wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
+                #if USE_WIC
                 if ((hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */) && (FileType == WIC_CODEC_HEIF))
                 {
                     wprintf(L"INFO: This format requires installing the HEIF Image Extensions - https://aka.ms/heif\n");
                 }
+                #endif
                 continue;
             }
             if (verbose){
@@ -4246,6 +4382,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
     if (non4bc)
         wprintf(L"\nWARNING: Direct3D requires BC image to be multiple of 4 in width & height\n");
 
+#ifdef _WIN32
 #if USE_TIMING
     if (dwOptions & (uint64_t(1) << OPT_TIMING))
     {
@@ -4255,6 +4392,7 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
         const LONGLONG delta = qpcEnd.QuadPart - qpcStart.QuadPart;
         wprintf(L"\n Processing time: %f seconds\n", double(delta) / double(qpcFreq.QuadPart));
     }
+#endif
 #endif
 
     return retVal;

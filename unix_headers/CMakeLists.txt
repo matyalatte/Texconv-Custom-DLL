@@ -10,11 +10,11 @@ endif()
 add_library(Microsoft::DirectX-Headers ALIAS DirectX-Headers)
 
 # DirectXMath
-# it needs sal.h for unix (https://github.com/dotnet/corert/blob/master/src/Native/inc/unix/sal.h)
+# it needs sal.h in Texconv-Custom-DLL/unix_headers/sal/ (https://github.com/dotnet/corert/blob/master/src/Native/inc/unix/sal.h)
 add_library(DirectXMath INTERFACE)
 target_include_directories(DirectXMath INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/DirectXMath/Inc
-  ${CMAKE_CURRENT_SOURCE_DIR}/corert/src/Native/inc/unix
+  ${CMAKE_CURRENT_SOURCE_DIR}/sal
   )
 target_compile_features(DirectXMath INTERFACE cxx_std_11)
 

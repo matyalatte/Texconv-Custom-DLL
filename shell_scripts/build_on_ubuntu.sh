@@ -2,7 +2,7 @@
 #Builds texconv with cmake.
 #libtexconv.so will be generated in Texconv-Custom-DLL/
 
-pushd ../
+pushd $(dirname "$0")/../
 rm -rf build
 mkdir build
 cd build

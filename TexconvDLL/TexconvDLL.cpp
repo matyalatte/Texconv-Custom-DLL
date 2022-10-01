@@ -61,8 +61,11 @@
 #include <directx/d3d12.h>
 #include <directx/dxgiformat.h>
 
+extern "C"{
+#include <safe_str_lib.h>
+}
 #define swscanf_s swscanf
-#define _MAX_PATH 2048
+#define _MAX_PATH 1024
 #define _MAX_EXT 8
 #define _MAX_FNAME 128
 #define _wcsicmp wcscmp
@@ -100,32 +103,7 @@ namespace
 
 #ifndef _WIN32
 
-    // Use non-secure functions for linux
-    // Should we modify here?
-    wchar_t *wcscat_s(wchar_t *string1, int smax, const wchar_t *string2)
-    {
-                return wcscat(string1, string2);
-    }
-
-    wchar_t *wcscat_s(wchar_t *string1, const wchar_t *string2)
-    {
-                return wcscat(string1, string2);
-    }
-
-    wchar_t *wcscpy_s(wchar_t* dest, int smax, const wchar_t *src)
-    {
-            return wcscpy(dest, src);
-    }
-    wchar_t *wcscpy_s(wchar_t* dest, const wchar_t *src)
-    {
-            return wcscpy(dest, src);
-    }
-
-    void *memcpy_s(void *buf1, int size, const void *buf2, int count)
-    {
-        return memcpy(buf1, buf2, count);
-    }
-
+    // Secure functions for linux
     void _wsplitpath_s(const WCHAR* path, WCHAR* drv, int drvnum, WCHAR* dir, int dirnum, WCHAR* name, int namenum, WCHAR* ext, int extnum)
     {
         const WCHAR* end; /* end of processed string */
@@ -831,7 +809,7 @@ namespace
                     _wmakepath_s(conv.szSrc, drive, dir, findData.cFileName, nullptr);
                     if (folder)
                     {
-                        wcscpy_s(conv.szFolder, folder);
+                        wcscpy_s(conv.szFolder, MAX_PATH, folder);
                     }
                     files.push_back(conv);
                 }
@@ -875,7 +853,7 @@ namespace
                             wchar_t fname[_MAX_FNAME] = {};
                             wchar_t ext[_MAX_FNAME] = {};
                             _wsplitpath_s(path, drive, dir, fname, ext);
-                            wcscat_s(dir, findData.cFileName);
+                            wcscat_s(dir, _MAX_DIR, findData.cFileName);
                             _wmakepath_s(subdir, drive, dir, fname, ext);
                         }
 
@@ -4157,13 +4135,13 @@ extern "C" int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, b
             // Figure out dest filename
             wchar_t *pchSlash, *pchDot;
 
-            wchar_t szDest[1024] = {};
-            wcscpy_s(szDest, szOutputDir);
+            wchar_t szDest[MAX_PATH] = {};
+            wcscpy_s(szDest, MAX_PATH, szOutputDir);
 
         #if USE_MULTIPLE_FILES
             if (keepRecursiveDirs && *pConv->szFolder)
             {
-                wcscat_s(szDest, pConv->szFolder);
+                wcscat_s(szDest, MAX_PATH, pConv->szFolder);
 
                 wchar_t szPath[MAX_PATH] = {};
                 if (!GetFullPathNameW(szDest, MAX_PATH, szPath, nullptr))
@@ -4186,13 +4164,13 @@ extern "C" int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, b
         #endif
 
             if (*szPrefix)
-                wcscat_s(szDest, szPrefix);
+                wcscat_s(szDest, MAX_PATH, szPrefix);
 
             pchSlash = wcsrchr(pConv->szSrc, SLASH);
             if (pchSlash)
-                wcscat_s(szDest, pchSlash + 1);
+                wcscat_s(szDest, MAX_PATH, pchSlash + 1);
             else
-                wcscat_s(szDest, pConv->szSrc);
+                wcscat_s(szDest, MAX_PATH, pConv->szSrc);
 
             pchSlash = wcsrchr(szDest, SLASH);
             pchDot = wcsrchr(szDest, '.');
@@ -4201,7 +4179,7 @@ extern "C" int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, b
                 *pchDot = 0;
 
             if (*szSuffix)
-                wcscat_s(szDest, szSuffix);
+                wcscat_s(szDest, MAX_PATH, szSuffix);
 
             #if USE_NAME_CONFIG           
             if (dwOptions & (uint64_t(1) << OPT_TOLOWER))

@@ -3,6 +3,10 @@
 
 cmake_minimum_required (VERSION 3.13)
 
+# hidden tons of functions from end users
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
 set(DIRECTXTEX_VERSION 1.9.7)
 
 # for exe build
@@ -117,7 +121,12 @@ set(LIBRARY_SOURCES
     DirectXTex/DirectXTex/DirectXTexNormalMaps.cpp
     TexconvDLL/DirectXTexResize_Custom.cpp
     DirectXTex/DirectXTex/DirectXTexTGA.cpp
-    DirectXTex/DirectXTex/DirectXTexUtil.cpp)
+    TexconvDLL/DirectXTexUtil_Custom.cpp)
+
+if(APPLE)
+  set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
+    unix_headers/mac_system/malloc.h)
+endif()
 
 if(TEXCONV_USE_ALPHA_CONFIG)
   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
@@ -191,6 +200,10 @@ if(BUILD_DX11 AND WIN32)
    target_include_directories(${PROJECT_NAME} PRIVATE ${COMPILED_SHADERS})
 endif()
 
+if(APPLE)
+   target_include_directories(${PROJECT_NAME} PRIVATE unix_headers/mac_system)
+endif()
+
 source_group(${PROJECT_NAME} REGULAR_EXPRESSION DirectXTex/DirectXTex/*.*)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -221,9 +234,14 @@ if(MSVC)
 endif()
 
 if (MINGW OR (NOT WIN32) OR VCPKG_TOOLCHAIN)
-    message("INFO: Using VCPKG for DirectX-Headers and DirectXMath.")
-    find_package(directx-headers CONFIG REQUIRED)
-    find_package(directxmath CONFIG REQUIRED)
+    if (WIN32)
+      message("INFO: Using VCPKG for DirectX-Headers and DirectXMath.")
+      find_package(directx-headers CONFIG REQUIRED)
+      find_package(directxmath CONFIG REQUIRED)
+    else()
+      message("INFO: Using a subdirectory 'unix_headers' for DirectX-Headers and DirectXMath.")
+      add_subdirectory(unix_headers)
+    endif()
     target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectX-Headers Microsoft::DirectXMath)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USING_DIRECTX_HEADERS)
 endif()
@@ -291,6 +309,19 @@ if(BUILD_TOOLS)
   target_link_libraries(texconv ${PROJECT_NAME})
   if(WIN32)
     target_link_libraries(texconv ole32.lib shell32.lib version.lib)
+  else()
+    # Use safestringlib for unix
+    include(FetchContent)
+    FetchContent_Declare(
+      safestringlib
+      GIT_REPOSITORY https://github.com/intel/safestringlib.git
+      GIT_TAG master)
+
+    set(BUILD_UNITTESTS OFF
+        CACHE BOOL "" FORCE)
+
+    FetchContent_MakeAvailable(safestringlib)
+    target_link_libraries(texconv safestring_static)
   endif()
 
   if(ENABLE_OPENEXR_SUPPORT)

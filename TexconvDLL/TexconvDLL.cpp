@@ -1687,7 +1687,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
 #else
-extern "C" int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
+extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
     initCOM = false;
 #endif //_WIN32

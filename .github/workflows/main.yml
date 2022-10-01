@@ -25,11 +25,8 @@ jobs:
         shell: bash
 
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-        
-      - name: Setup msbuild
-        uses: microsoft/setup-msbuild@v1.1
+      - run: |
+          git submodule update --init --recursive DirectXTex
 
       - name: build exe
         run: |

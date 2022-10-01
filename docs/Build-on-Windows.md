@@ -5,9 +5,10 @@
 -   Visual Studio 2022
 -   CMake
 
-## 1. Update submodules
+## 1. Get DirectXTex
 Move to `./Texconv-Custom-DLL`.  
 Then, type `git submodule update --init --recursive DirectXTex` to download DirectXTex.  
+(`git submodule update --init --recursive` will work as well, but it'll downlaod unnecessary repositories for Windows.)  
 
 ## 2-a. Build .dll with Batch Files
 

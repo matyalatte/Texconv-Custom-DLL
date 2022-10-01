@@ -20,4 +20,4 @@ cmake --build . --config Release
 
 @popd
 
-REM copy ..\build\bin\CMake\Release\texconv.dll ..\
+copy ..\build\bin\CMake\Release\texconv.dll ..\

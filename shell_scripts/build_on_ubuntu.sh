@@ -3,7 +3,6 @@
 #libtexconv.so will be generated in Texconv-Custom-DLL/
 
 pushd $(dirname "$0")/../
-rm -rf build
 mkdir build
 cd build
 cmake \

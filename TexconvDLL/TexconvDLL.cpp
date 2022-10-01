@@ -64,11 +64,16 @@
 extern "C"{
 #include <safe_str_lib.h>
 }
+
+// Todo: Use secure function
 #define swscanf_s swscanf
+
+// Todo: Use wcsicmp
+#define _wcsicmp wcscmp
+
 #define _MAX_PATH 1024
 #define _MAX_EXT 8
 #define _MAX_FNAME 128
-#define _wcsicmp wcscmp
 #endif
 
 #pragma warning(disable : 4619 4616 26812)
@@ -93,6 +98,8 @@ using Microsoft::WRL::ComPtr;
 
 namespace
 {
+
+    // Define slash for paths
 #ifdef _WIN32
     const wchar_t WSLASH = L'\\';
     const char SLASH = '\\';
@@ -102,8 +109,7 @@ namespace
 #endif
 
 #ifndef _WIN32
-
-    // Secure functions for linux
+    // Secure function for linux
     void _wsplitpath_s(const WCHAR* path, WCHAR* drv, int drvnum, WCHAR* dir, int dirnum, WCHAR* name, int namenum, WCHAR* ext, int extnum)
     {
         const WCHAR* end; /* end of processed string */
@@ -158,6 +164,7 @@ namespace
         }
     }
 #endif
+
     enum OPTIONS : uint64_t
     {
     #if USE_MULTIPLE_FILES

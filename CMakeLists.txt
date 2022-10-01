@@ -4,6 +4,7 @@
 cmake_minimum_required (VERSION 3.13)
 
 # hidden tons of functions from end users
+set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
@@ -52,7 +53,7 @@ project (DirectXTex
   VERSION ${DIRECTXTEX_VERSION}
   DESCRIPTION "DirectX Texture Library"
   HOMEPAGE_URL "https://go.microsoft.com/fwlink/?LinkId=248926"
-  LANGUAGES CXX)
+  LANGUAGES C CXX)
 
 option(BUILD_TOOLS "Build tex command-line tools" ON)
 
@@ -95,8 +96,6 @@ elseif(CMAKE_GENERATOR_PLATFORM MATCHES "^[Aa][Rr][Mm]64$")
     set(DIRECTX_ARCH arm64)
 endif()
 
-include(GNUInstallDirs)
-
 #--- Library
 set(LIBRARY_HEADERS
     DirectXTex/DirectXTex/DirectXTex.h
@@ -125,7 +124,7 @@ set(LIBRARY_SOURCES
 
 if(APPLE)
   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
-    unix_headers/mac_system/malloc.h)
+    unix_external/mac_system/malloc.h)
 endif()
 
 if(TEXCONV_USE_ALPHA_CONFIG)
@@ -201,14 +200,15 @@ if(BUILD_DX11 AND WIN32)
 endif()
 
 if(APPLE)
-   target_include_directories(${PROJECT_NAME} PRIVATE unix_headers/mac_system)
+   target_include_directories(${PROJECT_NAME} PRIVATE unix_external/mac_system)
 endif()
 
 source_group(${PROJECT_NAME} REGULAR_EXPRESSION DirectXTex/DirectXTex/*.*)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DirectXTex/DirectXTex>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/DirectXTex/DirectXTex
+  )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 
@@ -233,58 +233,25 @@ if(MSVC)
     string(REPLACE "/GR " "/GR- " CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 endif()
 
+# get DirexctX-Headers and DirectXMath
 if (MINGW OR (NOT WIN32) OR VCPKG_TOOLCHAIN)
     if (WIN32)
       message("INFO: Using VCPKG for DirectX-Headers and DirectXMath.")
       find_package(directx-headers CONFIG REQUIRED)
       find_package(directxmath CONFIG REQUIRED)
     else()
-      message("INFO: Using a subdirectory 'unix_headers' for DirectX-Headers and DirectXMath.")
-      add_subdirectory(unix_headers)
+      message("INFO: Using a subdirectory 'unix_external' for DirectX-Headers, DirectXMath, and safestringlib.")
+      add_subdirectory(unix_external)
     endif()
     target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectX-Headers Microsoft::DirectXMath)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USING_DIRECTX_HEADERS)
 endif()
-
-#--- Package
-include(CMakePackageConfigHelpers)
-
-string(TOLOWER ${PROJECT_NAME} PACKAGE_NAME)
-
-write_basic_package_version_file(
-  ${PACKAGE_NAME}-config-version.cmake
-  VERSION ${DIRECTXTEX_VERSION}
-  COMPATIBILITY AnyNewerVersion)
-
-install(TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}-targets
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/DirectXTex/.nuget/${PROJECT_NAME}-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
-
-install(EXPORT ${PROJECT_NAME}-targets
-  FILE ${PROJECT_NAME}-targets.cmake
-  NAMESPACE Microsoft::
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
-
-install(FILES ${LIBRARY_HEADERS}
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config-version.cmake
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
 
 #--- Command-line tools
 if(BUILD_TOOLS)
   set(TOOL_EXES texconv)
 
   configure_file(TexconvDLL/config.h.in TexconvDLL/config.h @ONLY)
-  include_directories(${CMAKE_CURRENT_BINARY_DIR})
   set(TEXCONV_FILES
     TexconvDLL/config.h
     TexconvDLL/TexconvDLL.cpp)
@@ -310,17 +277,7 @@ if(BUILD_TOOLS)
   if(WIN32)
     target_link_libraries(texconv ole32.lib shell32.lib version.lib)
   else()
-    # Use safestringlib for unix
-    include(FetchContent)
-    FetchContent_Declare(
-      safestringlib
-      GIT_REPOSITORY https://github.com/intel/safestringlib.git
-      GIT_TAG master)
-
-    set(BUILD_UNITTESTS OFF
-        CACHE BOOL "" FORCE)
-
-    FetchContent_MakeAvailable(safestringlib)
+    # unix need a library for safe functions
     target_link_libraries(texconv safestring_static)
   endif()
 

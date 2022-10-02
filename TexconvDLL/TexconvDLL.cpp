@@ -2449,13 +2449,14 @@ extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, 
 
     // Work out out filename prefix and suffix
     if (szOutputDir[0] && (SLASH != szOutputDir[wcslen(szOutputDir) - 1]))
-        wcscat_s(szOutputDir, MAX_PATH, &WSLASH);
+        //wcscat_s won't work on mac
+        wcsncat_s(szOutputDir, MAX_PATH, &WSLASH, 1);
 
     auto fileTypeName = LookupByValue(FileType, g_pSaveFileTypes);
 
     if (fileTypeName)
     {
-        wcscat_s(szSuffix, MAX_PATH, L".");
+        wcsncat_s(szSuffix, MAX_PATH, L".", 1);
         wcscat_s(szSuffix, MAX_PATH, fileTypeName);
     }
     else

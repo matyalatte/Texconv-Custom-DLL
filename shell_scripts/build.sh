@@ -1,6 +1,6 @@
 #!/bin/bash
 #Builds texconv with cmake.
-#libtexconv.so will be generated in Texconv-Custom-DLL/
+#libtexconv.so or libtexconv.dylib will be generated in ./Texconv-Custom-DLL/
 
 pushd $(dirname "$0")/../
 mkdir build
@@ -12,5 +12,5 @@ cmake \
   -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
   ../
 cmake --build .
-cp bin/CMake/libtexconv.dylib ../
+cp bin/CMake/libtexconv.* ../
 popd

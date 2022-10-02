@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cd $(dirname "$0")/../unix_external
 mkdir sal
 cd sal

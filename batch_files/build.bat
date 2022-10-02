@@ -7,8 +7,8 @@ REM You need Visual Studio to use this batch file.
 
 set VS_VERSION=Visual Studio 17 2022
 
-mkdir ..\build
-@pushd ..\build
+mkdir %~dp0\..\build
+@pushd %~dp0\..\build
 
 cmake -G "%VS_VERSION%"^
  -A x64^
@@ -17,7 +17,6 @@ cmake -G "%VS_VERSION%"^
  ../
 
 cmake --build . --config Release
-
+copy bin\CMake\Release\texconv.dll ..\
 @popd
 
-copy ..\build\bin\CMake\Release\texconv.dll ..\

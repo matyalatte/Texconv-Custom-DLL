@@ -2,7 +2,7 @@
 
 Customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
 You can remove many features from Texconv to reduce the file size.  
-And you can use it as a DLL.
+And you can use it as a DLL (or a shared library).  
 
 ## What's Texconv?
 
@@ -43,21 +43,20 @@ import ctypes as c
 import os
 
 # Get DLL
-# dll_path = os.path.abspath('libtexconv.so') # for linux
-dll_path = os.path.abspath('texconv.dll') # for windows
+dll_path = os.path.abspath('texconv.dll')  # for windows
+# dll_path = os.path.abspath('libtexconv.so')  # for linux
+# dll_path = os.path.abspath('libtexconv.dylib')  # for mac
 dll = c.cdll.LoadLibrary(dll_path)
 
 # Make arguments
 dds_file = 'test.dds'
 argv = ['-ft', 'tga', '-o', 'outdir', '-y', dds_file]
-argc = len(argv)
 argv = [c.c_wchar_p(arg) for arg in argv]
 argv = (c.c_wchar_p*len(argv))(*argv)
-verbose = c.c_bool(True)
-initCOM = c.c_bool(True)
+argc = len(argv)
 
 # Convert DDS to TGA
-result = dll.texconv(argc, argv, verbose, initCOM)
+result = dll.texconv(argc, argv, verbose=True, initCOM=True)
 ```
 
 ## Removed features

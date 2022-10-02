@@ -1,14 +1,14 @@
 @echo off
 
-REM Builds texconv.dll with msbuild
-REM texconv.dll will be generated in ..\
+REM Builds texconv.exe with msbuild
+REM texconv.exe will be generated in ..\
 
 REM You need Visual Studio to use this batch file.
 
 set VS_VERSION=Visual Studio 17 2022
 
-mkdir ..\build
-@pushd ..\build
+mkdir %~dp0\..\build
+@pushd %~dp0\..\build
 
 cmake -G "%VS_VERSION%"^
  -A x64^
@@ -18,7 +18,5 @@ cmake -G "%VS_VERSION%"^
  ../
 
 cmake --build . --config Release
-
+copy bin\CMake\Release\texconv.exe ..\
 @popd
-
-copy ..\build\bin\CMake\Release\texconv.exe ..\

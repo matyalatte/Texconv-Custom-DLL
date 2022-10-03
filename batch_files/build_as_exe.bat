@@ -1,6 +1,6 @@
 @echo off
 
-REM Builds texconv.exe with msbuild
+REM Builds texconv.exe.
 REM texconv.exe will be generated in ..\
 
 REM You need Visual Studio to use this batch file.
@@ -15,6 +15,7 @@ cmake -G "%VS_VERSION%"^
  -D CMAKE_CONFIGURATION_TYPES=Release^
  -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded^
  -D TEXCONV_BUILD_AS_EXE=ON^
+ -D TEXCONV_USE_USAGE=ON^
  ../
 
 cmake --build . --config Release

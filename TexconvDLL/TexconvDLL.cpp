@@ -64,16 +64,18 @@
 extern "C"{
 #include <safe_str_lib.h>
 }
+#include <filesystem>
 
 // Todo: Use secure function
 #define swscanf_s swscanf
 
-// Todo: Use wcsicmp
-#define _wcsicmp wcscmp
+// wcsicmp for Windows = wcscasecmp for Unix
+#define _wcsicmp wcscasecmp
 
-#define _MAX_PATH 1024
-#define _MAX_EXT 8
-#define _MAX_FNAME 128
+// undefined parameters for unix
+#define _MAX_PATH 260
+#define _MAX_EXT 256
+#define _MAX_FNAME 256
 #endif
 
 #pragma warning(disable : 4619 4616 26812)
@@ -84,7 +86,6 @@ extern "C"{
 
 //Uncomment to add support for OpenEXR (.exr)
 //#define USE_OPENEXR
-
 #ifdef USE_OPENEXR
 // See <https://github.com/Microsoft/DirectXTex/wiki/Adding-OpenEXR> for details
 #include "DirectXTexEXR.h"
@@ -1138,9 +1139,9 @@ namespace
         PrintLogo();
     #endif
 
-        wprintf(L"Usage: texconv <options> <files>\n\n");
+        wprintf(L"Usage: texconv <options> <files>\n");
     #if USE_MULTIPLE_FILES
-        wprintf(L"   -r                  wildcard filename search is recursive\n");
+        wprintf(L"\n   -r                  wildcard filename search is recursive\n");
         wprintf(L"     -r:flatten        flatten the directory structure (default)\n");
         wprintf(L"     -r:keep           keep the directory structure\n");
         wprintf(L"   -flist <filename>   use text file with a list of input files (one per line)\n");
@@ -1310,7 +1311,6 @@ namespace
     {
     #ifdef _WIN32
         static wchar_t desc[1024] = {};
-
         LPWSTR errorText = nullptr;
 
         const DWORD result = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
@@ -1332,10 +1332,17 @@ namespace
             if (errorText)
                 LocalFree(errorText);
         }
-
         return desc;
     #else
-    	return L"Error!";
+        return L"";
+    #endif
+    }
+
+    bool ErrorIsMissingPath(HRESULT hr){
+    #ifdef _WIN32
+        return hr == -2147024893;
+    #else
+        return hr == -2147467259;
     #endif
     }
 
@@ -1683,13 +1690,7 @@ namespace
 #pragma prefast(disable : 28198, "Command-line tool, frees all memory on exit")
 #endif
 
-#if BUILD_AS_EXE
-int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
-{
-    bool verbose = true;
-    bool initCOM = true;
-#else
-
+// Main function for texconv
 #ifdef _WIN32
 extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
@@ -1697,9 +1698,8 @@ extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], 
 extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
     initCOM = false;
-#endif //_WIN32
+#endif
 
-#endif //BUILD_AS_EXE
     // Parameters and defaults
     size_t width = 0;
     size_t height = 0;
@@ -2683,9 +2683,11 @@ extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, 
         size_t tMips = (!mipLevels && info.mipLevels > 1) ? info.mipLevels : mipLevels;
 
         // Convert texture
+    #if USE_PRINT_INFO
         if (verbose){
             wprintf(L" as");
         }
+    #endif
         fflush(stdout);
 
         // --- Planar ------------------------------------------------------------------
@@ -4133,12 +4135,12 @@ extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, 
             auto img = image->GetImage(0, 0, 0);
             assert(img);
             const size_t nimg = image->GetImageCount();
-        #if USE_PRINT_INFO
             if (verbose){
+            #if USE_PRINT_INFO
                 PrintInfo(info);
+            #endif
                 wprintf(L"\n");
             }
-        #endif
 
             // Figure out dest filename
             wchar_t *pchSlash, *pchDot;
@@ -4209,17 +4211,19 @@ extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, 
             }
             fflush(stdout);
 
-            #ifdef _WIN32
             if (~dwOptions & (uint64_t(1) << OPT_OVERWRITE))
             {
+            #ifdef _WIN32
                 if (GetFileAttributesW(szDest) != INVALID_FILE_ATTRIBUTES)
+            #else
+                if (std::filesystem::exists(szDest))
+            #endif
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite:\n");
                     retVal = 1;
                     continue;
                 }
             }
-            #endif
 
             switch (FileType)
             {
@@ -4348,6 +4352,10 @@ extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, 
             if (FAILED(hr))
             {
                 wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                if (ErrorIsMissingPath(hr)){
+                    wprintf(L"This error is mainly caused by missing the output directory.\n");
+                }
+
                 retVal = 1;
                 #if USE_WIC
                 if ((hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */) && (FileType == WIC_CODEC_HEIF))
@@ -4392,3 +4400,33 @@ extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, 
 
     return retVal;
 }
+
+// Main function for exe
+#if BUILD_AS_EXE
+#ifdef _WIN32
+int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+{
+    bool verbose = true;
+    bool initCOM = true;
+#else
+int __cdecl main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
+{
+    bool verbose = true;
+    bool initCOM = false;
+
+    wchar_t* argv[argc];
+    size_t length;
+    for(int i=0;i<argc;i++){
+    length = strlen(argv_char[i]);
+    argv[i] = new wchar_t[length + 1];
+    mbstowcs(argv[i], argv_char[i], length);
+    }
+
+#endif  // _WIN32
+    if (argc == 0){
+    return texconv(0, argv, verbose, initCOM);
+    } else {
+    return texconv(argc - 1, &argv[1], verbose, initCOM);
+    }
+}
+#endif  // BUILD_AS_EXE

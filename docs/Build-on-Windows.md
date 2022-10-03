@@ -29,3 +29,9 @@ The steps are as follows.
 2.  Select Manage Configurations from configuration.
 3.  Add `-D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded` to `CMake command arguments`.
 4.  Build texconv.dll.
+
+## 3. Build executable
+
+If you want an executable, use `build_as_exe.bat` instead of `build.bat`.  
+`texconv.exe` will be generated in `./Texconv-Custom-DLL/`.  
+You can use it on the terminal like `texconv.exe -ft tga -y -o outdir test.dds`.  

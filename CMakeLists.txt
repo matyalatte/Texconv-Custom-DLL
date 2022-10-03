@@ -49,6 +49,25 @@ option(TEXCONV_USE_X2BIAS "Use -x2bias" OFF)
 option(TEXCONV_USE_SINGLEPROC "Use -singleproc" OFF)
 option(TEXCONV_USE_TGA20 "Use -tga20 " OFF)
 
+# show variables
+function(texconv_show_variables)
+
+  set(ENABLED_OPTIONS "")
+  get_cmake_property(_variableNames VARIABLES)
+  foreach (_variableName ${_variableNames})
+    if ((_variableName MATCHES "TEXCONV*") AND (${_variableName} STREQUAL "ON"))
+      set(ENABLED_OPTIONS "${ENABLED_OPTIONS} ${_variableName}\n")
+    endif()
+  endforeach()
+  if (ENABLED_OPTIONS STREQUAL "")
+  message(STATUS "No enabled options for texconv.")
+  else()
+  message(STATUS "Enabled texconv options")
+  message(${ENABLED_OPTIONS})
+  endif()
+endfunction()
+texconv_show_variables()
+
 project (DirectXTex
   VERSION ${DIRECTXTEX_VERSION}
   DESCRIPTION "DirectX Texture Library"

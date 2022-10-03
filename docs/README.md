@@ -1,6 +1,6 @@
 # Texconv-Custom-DLL v0.1.2
 
-Customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
+Cross-platform and customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
 You can remove many features from Texconv to reduce the file size.  
 And you can use it as a DLL (or a shared library).  
 
@@ -17,6 +17,15 @@ It's 29% smaller than the original exe.
 -   The original exe: 686KB
 -   The custom dll: 487KB
 
+## Platform
+
+The official texconv only supports Windows.  
+But my implementation supports the following platforms and compilers.
+
+-   Windows 10 + MSVC
+-   MacOS 10.15 (or later) + AppleClang
+-   Ubuntu 20.04 (or later) + GCC
+
 ## Available functions
 
 ### texconv
@@ -29,7 +38,7 @@ It's almost the same as the original texconv.
 -   `argc`: The number of arguments for texconv.
 -   `argv`: An array of arguments for texconv.
 -   `verbose`: Show info
--   `initCOM`: Initialize COM
+-   `initCOM`: Initialize COM for WIC.
 
 See [the document of texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) for the arguments.
 
@@ -56,7 +65,7 @@ argv = (c.c_wchar_p*len(argv))(*argv)
 argc = len(argv)
 
 # Convert DDS to TGA
-result = dll.texconv(argc, argv, verbose=True, initCOM=True)
+result = dll.texconv(argc, argv, verbose=True, initCOM=False)
 ```
 
 ## Removed features
@@ -70,17 +79,7 @@ Many features are removed from the original build to reduce the file size.
 -   Mutilple files processing
 -   Many optional arguments
 
-If you want to restore them, you need to use cmake options.
-
-## Cmake options
-
-There are many cmake options to restore removed features.  
-You can enable them with `-D` option (e.g. `-D TEXCONV_USE_WIC=ON`).  
-But it'll make the dll larger.  
-If you enable all options, the dll will be almost the same size as the original Texconv.  
-  
-See here for the details.  
-[CMake Options](./CMake-Options.md)  
+If you want to restore them, you need to use [cmake options](./CMake-Options.md).
 
 ## How to Build
 
@@ -97,3 +96,11 @@ There is a document for Mac and Ubuntu users.
 [Building Workflow for Ubuntu and MacOS](./Build-on-Unix.md)  
 
 And you can see [the shell scripts](../shell_scripts/) to understand the workflow.  
+
+### Docker
+
+Ubuntu users can also use a docker file to build the binary.  
+See [the docker file](../Dockerfile) for the details.  
+
+## License
+Files in this repository (including all submodules) are licensed under [MIT license](../LICENSE).

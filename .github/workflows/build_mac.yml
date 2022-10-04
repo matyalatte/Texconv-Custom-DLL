@@ -1,3 +1,4 @@
+# Build a shared library and an executable for macOS
 name: build_mac
 
 on:
@@ -16,12 +17,15 @@ jobs:
           bash shell_scripts/get_sal.sh
 
       - name: build shared library
-        run: bash shell_scripts/build.sh
+        run: |
+          bash shell_scripts/build.sh
+          bash shell_scripts/build_as_exe.sh
 
       - name: Copy files
         run: |
           mkdir -p ../release/${{ env.ZIP_NAME }}
           cp libtexconv.dylib ../release/${{ env.ZIP_NAME }}
+          cp texconv ../release/${{ env.ZIP_NAME }}
           cp changelog.txt ../release/${{ env.ZIP_NAME }}
           cp LICENSE ../release/${{ env.ZIP_NAME }}
           cd ../release

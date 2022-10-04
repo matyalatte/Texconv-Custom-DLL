@@ -1,0 +1,125 @@
+# Run building workflows for all supported platforms
+name: build_all
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+  
+env:
+  ZIP_NAME: Texconv-Custom-DLL
+  CACHE_NAME: main
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check-tag.outputs.version }}
+      url: ${{ steps.create-release.outputs.upload_url }}
+    steps:
+    
+      - name: Check tag
+        id: check-tag
+        run: |
+          if [[ ${{ github.ref }} == refs/tags/v* ]]; then
+            VERSION=-$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          else
+            VERSION=""
+          fi
+          echo "::set-output name=version::$VERSION"
+        shell: bash
+      
+      - name: Create Release Draft
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            Changelog
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: false
+       
+  build_windows:
+    runs-on: windows-2022
+    needs: setup
+    steps:
+      - uses: actions/checkout@v3
+      - run: git submodule update --init --recursive DirectXTex
+
+      - name: build exe
+        run: |
+          batch_files/build.bat
+          batch_files/build_as_exe.bat
+
+      - name: Copy files
+        run: |
+          mkdir -p ../release
+          cp texconv.dll ../release/
+          cp texconv.exe ../release/
+          cp changelog.txt ../release/
+          cp LICENSE ../release/
+        shell: bash
+
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
+        with:
+          directory: '../release'
+          type: 'zip'
+          filename: '${{ env.ZIP_NAME }}.zip'
+          exclusions: '*.git* .gitignore'
+          
+      - name: Upload Release Asset for windows
+        id: upload-release-asset-windows
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.setup.outputs.url }}
+          asset_path: ../release/${{ env.ZIP_NAME }}.zip
+          asset_name: ${{ env.ZIP_NAME }}${{ needs.setup.outputs.version }}-${{ runner.os }}.zip
+          asset_content_type: application/zip
+          
+  build_unix:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-11]
+    runs-on: ${{ matrix.os }}
+    needs: setup
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          git submodule update --init --recursive
+          bash shell_scripts/get_sal.sh
+
+      - name: build shared library
+        run: |
+          bash shell_scripts/build.sh
+          bash shell_scripts/build_as_exe.sh
+
+      - name: Copy files
+        run: |
+          mkdir -p ../release/${{ env.ZIP_NAME }}
+          cp libtexconv.* ../release/${{ env.ZIP_NAME }}
+          cp texconv ../release/${{ env.ZIP_NAME }}
+          cp changelog.txt ../release/${{ env.ZIP_NAME }}
+          cp LICENSE ../release/${{ env.ZIP_NAME }}
+          cd ../release
+          tar -jcvf ${{ env.ZIP_NAME }}.tar.bz2 ${{ env.ZIP_NAME }}
+
+      - name: Upload Release Asset for ubuntu
+        id: upload-release-asset-ubuntu
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.setup.outputs.url }}
+          asset_path: ../release/${{ env.ZIP_NAME }}.tar.bz2
+          asset_name: ${{ env.ZIP_NAME }}${{ needs.setup.outputs.version }}-${{ runner.os }}.tar.bz2
+          asset_content_type: application/zip
+  

@@ -22,7 +22,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone repo
-RUN git clone -b dev --recursive --depth=1 https://github.com/matyalatte/Texconv-Custom-DLL.git;\
+RUN git clone --recursive --depth=1 https://github.com/matyalatte/Texconv-Custom-DLL.git;\
     bash Texconv-Custom-DLL/shell_scripts/get_sal.sh
 
 # Build shared lib

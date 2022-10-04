@@ -1695,7 +1695,7 @@ namespace
 extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
 #else
-extern "C" __attribute__((visibility("default"))) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
+extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t* argv[], bool verbose = true, bool initCOM = false)
 {
     initCOM = false;
 #endif
@@ -4409,7 +4409,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     bool verbose = true;
     bool initCOM = true;
 #else
-int __cdecl main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
+int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
 {
     bool verbose = true;
     bool initCOM = false;
@@ -4417,16 +4417,16 @@ int __cdecl main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
     wchar_t* argv[argc];
     size_t length;
     for(int i=0;i<argc;i++){
-    length = strlen(argv_char[i]);
-    argv[i] = new wchar_t[length + 1];
-    mbstowcs(argv[i], argv_char[i], length);
+        length = strlen(argv_char[i]);
+        argv[i] = new wchar_t[length + 1];
+        mbstowcs(argv[i], argv_char[i], length);
     }
 
 #endif  // _WIN32
     if (argc == 0){
-    return texconv(0, argv, verbose, initCOM);
+        return texconv(0, argv, verbose, initCOM);
     } else {
-    return texconv(argc - 1, &argv[1], verbose, initCOM);
+        return texconv(argc - 1, &argv[1], verbose, initCOM);
     }
 }
 #endif  // BUILD_AS_EXE

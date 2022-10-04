@@ -17,10 +17,23 @@ It's 29% smaller than the original exe.
 -   The original exe: 686KB
 -   The custom dll: 487KB
 
+## Removed features
+
+Many features are removed from the original build to reduce the file size.  
+-   WIC support (.bmp, .jpg, .png, etc.)
+-   3D textures support
+-   Little-used dds formats support (B5G6R5, B5G5R5A1, etc.)
+-   ppm support (.ppm and .pfm)
+-   Print functions
+-   Mutilple files processing
+-   Many optional arguments
+
+If you want to restore them, you need to use [cmake options](./CMake-Options.md).
+
 ## Platform
 
 The official texconv only supports Windows.  
-But my implementation supports the following platforms and compilers.
+But the custom build supports the following platforms and compilers.
 
 -   Windows 10 + MSVC
 -   MacOS 10.15 (or later) + AppleClang
@@ -67,19 +80,6 @@ argc = len(argv)
 # Convert DDS to TGA
 result = dll.texconv(argc, argv, verbose=True, initCOM=False)
 ```
-
-## Removed features
-
-Many features are removed from the original build to reduce the file size.  
--   WIC support (.bmp, .jpg, .png, etc.)
--   3D textures support
--   Little-used dds formats support (B5G6R5, B5G5R5A1, etc.)
--   ppm support (.ppm and .pfm)
--   Print functions
--   Mutilple files processing
--   Many optional arguments
-
-If you want to restore them, you need to use [cmake options](./CMake-Options.md).
 
 ## How to Build
 

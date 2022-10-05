@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   
 env:
-  ZIP_NAME: Texconv-Custom-DLL
+  ZIP_NAME: TexconvCustomDLL
 
 jobs:
   build:

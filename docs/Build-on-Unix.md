@@ -23,8 +23,8 @@ It'll install DirectX related files on the repository.
 ## 2. Get sal.h
 
 On non-Windows platform, DirectXMath requires [sal.h](https://github.com/dotnet/corert/blob/master/src/Native/inc/unix/sal.h).  
-Move to `./Texconv-Custom-DLL/shell_scripts` and type `bash get_sal.h`.  
-It will put the file into `./unix_external/sal/`.  
+Move to `./Texconv-Custom-DLL/shell_scripts` and type `bash get_sal.sh`.  
+It will put the file into `./Texconv-Custom-DLL/unix_external/sal/`.  
 
 ## 3. Build the binary with a shell script
 
@@ -36,4 +36,4 @@ Move to `Texconv-Custom-DLL/shell_scripts` and type `bash build.sh` on the termi
 
 If you want an executable, use `build_as_exe.sh` instead of `build.sh`.  
 `texconv` will be generated in `./Texconv-Custom-DLL/`.  
-You can use it on the terminal like `./texconv -ft tga -y -o outdir test.dds`.  
+You can use it on the terminal. (e.g. `./texconv -ft tga -y -o outdir test.dds`)  

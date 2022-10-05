@@ -9,7 +9,8 @@ And you can use it as a DLL (or a shared library).
 [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv)
 is a texture converter developed by Microsoft.  
 It supports all dds formats.  
-There are some dds formats common tools can't handle properly, but Texconv can.
+There are some dds formats common tools can't handle properly, but Texconv can.  
+Texconv is the best DDS converter as far as I know.  
 
 ## How small is the dll?
 
@@ -39,47 +40,21 @@ But the custom build supports the following platforms and compilers.
 -   MacOS 10.15 (or later) + AppleClang
 -   Ubuntu 20.04 (or later) + GCC
 
-## Available functions
+## Download
+You can download the built binary from [the release page](https://github.com/matyalatte/Texconv-Custom-DLL/releases).  
 
-### texconv
+-   `TexconvCustomDLL*-Windows.zip` is for Windows.
+-   `TexconvCustomDLL*-macOS.tar.bz2` is for Mac (10.15 or later).
+-   `TexconvCustomDLL*-Linux.tar.bz2` is for Ubuntu (20.04 or later).
 
-```
-int texconv(int argc, wchar_t* argv[], bool verbose = true,  bool initCOM = false);
-```
+Each zip file has a DLL and an executable.  
+You can copy whichever you want to use to your project.  
+(The execuatble won't refer the DLL.)  
 
-It's almost the same as the original texconv.
--   `argc`: The number of arguments for texconv.
--   `argv`: An array of arguments for texconv.
--   `verbose`: Show info
--   `initCOM`: Initialize COM for WIC.
+## Usage
 
-See [the document of texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) for the arguments.
-
-## Sample code for Python
-
-Here is a sample code for Python.  
-It'll convert `test.dds` to `outdir/test.tga`
-
-```
-import ctypes as c
-import os
-
-# Get DLL
-dll_path = os.path.abspath('texconv.dll')  # for windows
-# dll_path = os.path.abspath('libtexconv.so')  # for linux
-# dll_path = os.path.abspath('libtexconv.dylib')  # for mac
-dll = c.cdll.LoadLibrary(dll_path)
-
-# Make arguments
-dds_file = 'test.dds'
-argv = ['-ft', 'tga', '-o', 'outdir', '-y', dds_file]
-argv = [c.c_wchar_p(arg) for arg in argv]
-argv = (c.c_wchar_p*len(argv))(*argv)
-argc = len(argv)
-
-# Convert DDS to TGA
-result = dll.texconv(argc, argv, verbose=True, initCOM=False)
-```
+See here if you want to know how to use texconv.  
+[Usage](./Usage.md)  
 
 ## How to Build
 
@@ -94,7 +69,6 @@ It only supports Visual Studio 2022, but you can see [the batch files](../batch_
 
 There is a document for Mac and Ubuntu users.  
 [Building Workflow for Ubuntu and MacOS](./Build-on-Unix.md)  
-
 And you can see [the shell scripts](../shell_scripts/) to understand the workflow.  
 
 ### Docker

@@ -1,0 +1,58 @@
+# Build a shared library and an executable for Ubuntu
+name: build_ubuntu
+
+on:
+  workflow_dispatch:
+  
+env:
+  ZIP_NAME: TexconvCustomDLL
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          git submodule update --init --recursive
+          bash shell_scripts/get_sal.sh
+
+      - name: build shared library
+        run: |
+          bash shell_scripts/build.sh
+          bash shell_scripts/build_as_exe.sh
+
+      - name: Copy files
+        run: |
+          mkdir -p ../release/${{ env.ZIP_NAME }}
+          cp libtexconv.so ../release/${{ env.ZIP_NAME }}
+          cp texconv ../release/${{ env.ZIP_NAME }}
+          cp changelog.txt ../release/${{ env.ZIP_NAME }}
+          cp LICENSE ../release/${{ env.ZIP_NAME }}
+          cd ../release
+          tar -jcvf ${{ env.ZIP_NAME }}.tar.bz2 ${{ env.ZIP_NAME }}
+
+      - name: Create Release Draft
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            Changelog
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: false
+          
+      - name: Upload Release Asset for ubuntu
+        id: upload-release-asset-ubuntu
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ../release/${{ env.ZIP_NAME }}.tar.bz2
+          asset_name: ${{ env.ZIP_NAME }}-${{ runner.os }}.tar.bz2
+          asset_content_type: application/zip

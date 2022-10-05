@@ -20,7 +20,11 @@ namespace
     inline void * _aligned_malloc(size_t size, size_t alignment)
     {
         size = (size + alignment - 1) & ~(alignment - 1);
+    #if __APPLE__
+        return aligned_alloc(alignment, size);
+    #else
         return std::aligned_alloc(alignment, size);
+    #endif
     }
 
 #define _aligned_free free

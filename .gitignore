@@ -14,9 +14,11 @@ python
 *.py
 out
 *.dds
+*.tga
 
 # script
 *.bat
 !batch_files/*.bat
 *.sh
+!shell_scripts/*.sh
 memo*

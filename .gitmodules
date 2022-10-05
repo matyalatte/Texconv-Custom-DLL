@@ -1,3 +1,12 @@
 [submodule "DirectXTex"]
 	path = DirectXTex
 	url = https://github.com/microsoft/DirectXTex.git
+[submodule "unix_headers/DirectXMath"]
+	path = unix_external/DirectXMath
+	url = https://github.com/microsoft/DirectXMath.git
+[submodule "unix_headers/DirectX-Headers"]
+	path = unix_external/DirectX-Headers
+	url = https://github.com/microsoft/DirectX-Headers.git
+[submodule "unix_headers/safestringlib"]
+	path = unix_external/safestringlib
+	url = https://github.com/intel/safestringlib.git

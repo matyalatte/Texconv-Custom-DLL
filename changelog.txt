@@ -1,3 +1,8 @@
+v0.1.2
+- Supported Ubuntu 20.04 or later
+- Supported macOS 10.15 or later
+- Improved an error message about missing output directories
+
 v0.1.1
 - Enabled to build as exe (added "TEXCONV_BUILD_AS_EXE" option)
 - Removed more lines for WIC

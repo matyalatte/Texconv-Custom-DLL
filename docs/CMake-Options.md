@@ -43,7 +43,8 @@ If you enable all options, the dll will be almost the same size as the original 
 -   `TEXCONV_USE_SRGB`: Enable to use -srgb, -srgbi, and -srgbo
 -   `TEXCONV_USE_NAME_CONFIG`: Enable to use -px, -sx, and -l
 -   `TEXCONV_USE_DITHER`: Enable to use dither filters
--   `TEXCONV_USE_GPU_CONFG`: Enable to use -gpu and -nogpu
+-   `TEXCONV_NO_GPU_CODEC`: Disable GPU codec for BC6 and BC7
+-   `TEXCONV_USE_GPU_CONFIG`: Enable to use -gpu and -nogpu
 -   `TEXCONV_USE_X2BIAS`: Enable to use -x2bias
 -   `TEXCONV_USE_SINGLEPROC`: Enable to use -singleproc
 -   `TEXCONV_USE_TGA20`: Enable to use -tga20

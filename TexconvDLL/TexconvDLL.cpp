@@ -22,7 +22,9 @@
 #pragma warning(pop)
 
 #ifdef _WIN32
+#if USE_WIC
 #include <ShlObj.h>
+#endif
 #endif
 
 #include <algorithm>
@@ -1347,6 +1349,7 @@ namespace
     }
 
 #ifdef _WIN32
+#if NOT NO_GPU_CODEC
     _Success_(return)
         bool CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
     {
@@ -1443,6 +1446,7 @@ namespace
         else
             return false;
     }
+#endif
 #endif
 
     void FitPowerOf2(size_t origx, size_t origy, _Inout_ size_t& targetx, _Inout_ size_t& targety, size_t maxsize)
@@ -1776,7 +1780,8 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     {
         PWSTR pArg = argv[iArg];
 
-        if (('-' == pArg[0]) || ('/' == pArg[0]))
+        //if (('-' == pArg[0]) || ('/' == pArg[0]))
+        if ('-' == pArg[0])  // '/' is used for paths in Unix systems.
         {
             pArg++;
             PWSTR pValue;
@@ -2438,6 +2443,8 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     {
     #if USE_USAGE
         PrintUsage();
+    #else
+        wprintf(L"No files are specified.");
     #endif
         return 0;
     }
@@ -2485,7 +2492,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     bool preserveAlphaCoverage = false;
 #endif
 #ifdef _WIN32
-    ComPtr<ID3D11Device> pDevice;
+    static ComPtr<ID3D11Device> pDevice;
 #endif
 
     int retVal = 0;
@@ -4023,6 +4030,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         static bool s_tryonce = false;
 
                         #ifdef _WIN32
+                        #if NOT NO_GPU_CODEC
                         if (!s_tryonce)
                         {
                             s_tryonce = true;
@@ -4041,8 +4049,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             }
                             #endif
                         }
-                        #else
-	        	    	wprintf(L"\nWARNING: using BC6H / BC7 CPU codec\n");
+        	    		#endif
         	    		#endif
                     }
                     break;
@@ -4067,11 +4074,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }
 
                 #ifdef _WIN32
+                #if NOT NO_GPU_CODEC
                 if (bc6hbc7 && pDevice)
                 {
                     hr = Compress(pDevice.Get(), img, nimg, info, tformat, dwCompress | dwSRGB, alphaWeight, *timage);
                 }
                 else
+                #endif
                 #endif
                 {
                     hr = Compress(img, nimg, info, tformat, cflags | dwSRGB, alphaThreshold, *timage);

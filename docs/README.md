@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.1.2
+# Texconv-Custom-DLL v0.1.3
 
 Cross-platform and customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
 You can remove many features from Texconv to reduce the file size.  
@@ -16,7 +16,10 @@ Texconv is the best DDS converter as far as I know.
 
 It's 29% smaller than the original exe.
 -   The original exe: 686KB
--   The custom dll: 487KB
+-   The custom dll: 489KB
+
+If you won't use BC6 and BC7 formats, you can also remove GPU codec with `TEXCONV_NO_GPU_CODEC` option.  
+It can be 231KB (66% smaller than the original exe).  
 
 ## Removed features
 

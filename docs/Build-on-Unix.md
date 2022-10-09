@@ -14,6 +14,13 @@ But it might not work on your environment.
 -   Ubuntu 20.04 + GCC 9.4
 -   MacOS 10.15 + AppleClang 12.0
 
+## 0. Requirements
+
+- xcode (for macOS)
+- build-essential (for Linux)
+- cmake
+- wget
+
 ## 1. Get submodules
 
 Move to `./Texconv-Custom-DLL`.  

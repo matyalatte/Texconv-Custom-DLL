@@ -92,6 +92,9 @@
 // Use dither filters
 #define USE_DITHER __@TEXCONV_USE_DITHER@__
 
+// Disable GPU codec for BC6 and BC7
+#define NO_GPU_CODEC __@TEXCONV_NO_GPU_CODEC@__
+
 // Use -gpu and -nogpu
 #define USE_GPU_CONFIG __@TEXCONV_USE_GPU_CONFIG@__
 

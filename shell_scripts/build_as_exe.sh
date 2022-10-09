@@ -3,8 +3,8 @@
 #texconv will be generated in ./Texconv-Custom-DLL/
 
 pushd $(dirname "$0")/../
-mkdir build
-cd build
+mkdir build_exe
+cd build_exe
 cmake \
   -D CMAKE_BUILD_TYPE=Release\
   -D BUILD_DX11=OFF\

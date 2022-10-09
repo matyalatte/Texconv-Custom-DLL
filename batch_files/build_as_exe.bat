@@ -7,8 +7,8 @@ REM You need Visual Studio to use this batch file.
 
 set VS_VERSION=Visual Studio 17 2022
 
-mkdir %~dp0\..\build
-@pushd %~dp0\..\build
+mkdir %~dp0\..\build_exe
+@pushd %~dp0\..\build_exe
 
 cmake -G "%VS_VERSION%"^
  -A x64^

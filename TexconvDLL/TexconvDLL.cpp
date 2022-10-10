@@ -1348,62 +1348,56 @@ namespace
     #endif
     }
 
-    void StoreErrorMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg) {
+    void RaiseErrorMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg) {
         fwprintf(stderr, L"%ls", msg);
         if (err_buf != nullptr) {
             wcscat_s(err_buf, err_buf_size, msg);
         }
     }
 
-    void StoreErrorMessage(wchar_t* err_buf, size_t err_buf_size, int num) {
-        wchar_t buf[128];
-        swscanf_s(buf, L"%d", &num);
-        StoreErrorMessage(err_buf, err_buf_size, buf);
+    void RaiseErrorMessage(wchar_t* err_buf, size_t err_buf_size, int num) {
+        wchar_t buf[128] = {};
+        swprintf(buf, 128, L"%d", num);
+        RaiseErrorMessage(err_buf, err_buf_size, buf);
     }
 
-    void StoreErrorMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, const wchar_t* msg2, const wchar_t* msg3) {
-        StoreErrorMessage(err_buf, err_buf_size, msg);
-        StoreErrorMessage(err_buf, err_buf_size, msg2);
-        StoreErrorMessage(err_buf, err_buf_size, msg3);
+    void RaiseErrorMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, const wchar_t* msg2, const wchar_t* msg3) {
+        wchar_t buf[512] = {};
+        swprintf(buf, 512, L"%ls%ls%ls", msg, msg2, msg3);
+        RaiseErrorMessage(err_buf, err_buf_size, buf);
     }
 
-    void StoreMemoryAllocError(wchar_t* err_buf, size_t err_buf_size) {
+    void RaiseMemoryAllocError(wchar_t* err_buf, size_t err_buf_size) {
         wprintf(L"\n");
-        StoreErrorMessage(err_buf, err_buf_size, L"ERROR: Memory allocation failed\n");
+        RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Memory allocation failed\n");
     }
 
-    void StoreErrorCodeMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, HRESULT hr) {
-        StoreErrorMessage(err_buf, err_buf_size, msg);
-        wchar_t buf[9];
-        unsigned int num = static_cast<unsigned int>(hr);
-        swscanf_s(buf, L"%08X", &num);
-        StoreErrorMessage(err_buf, err_buf_size, buf);
-        StoreErrorMessage(err_buf, err_buf_size, GetErrorDesc(hr));
-        StoreErrorMessage(err_buf, err_buf_size, L")\n");
+    void RaiseErrorCodeMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, HRESULT hr) {
+        wchar_t buf[512] = {};
+        swprintf(buf, 512, L"%ls%08X%ls)\n", msg, static_cast<int>(hr), GetErrorDesc(hr));
+        RaiseErrorMessage(err_buf, err_buf_size, buf);
     }
 
-    void StoreInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* option, const wchar_t* pValue) {
-        StoreErrorMessage(err_buf, err_buf_size, L"Invalid value specified with ");
-        StoreErrorMessage(err_buf, err_buf_size, option);
-        StoreErrorMessage(err_buf, err_buf_size, L" (");
-        StoreErrorMessage(err_buf, err_buf_size, pValue);
-        StoreErrorMessage(err_buf, err_buf_size, L")\n");
+    void RaiseInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* option, const wchar_t* pValue) {
+        wchar_t buf[512] = {};
+        swprintf(buf, 512, L"Invalid value specified with %ls (%ls)\n", option, pValue);
+        RaiseErrorMessage(err_buf, err_buf_size, buf);
     #if USE_USAGE
         wprintf(L"\n");
         PrintUsage();
     #endif
     }
 
-    void StoreInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg) {
-        StoreErrorMessage(err_buf, err_buf_size, msg);
+    void RaiseInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg) {
+        RaiseErrorMessage(err_buf, err_buf_size, msg);
     #if USE_USAGE
         wprintf(L"\n");
         PrintUsage();
     #endif
     }
     
-    void StoreInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, const wchar_t* msg2, const wchar_t* msg3) {
-        StoreErrorMessage(err_buf, err_buf_size, msg, msg2, msg3);
+    void RaiseInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, const wchar_t* msg2, const wchar_t* msg3) {
+        RaiseErrorMessage(err_buf, err_buf_size, msg, msg2, msg3);
     #if USE_USAGE
         wprintf(L"\n");
         PrintUsage();
@@ -1828,7 +1822,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
         if (FAILED(hr))
         {
-            StoreErrorCodeMessage(err_buf, err_buf_size, L"Failed to initialize COM (", hr);
+            RaiseErrorCodeMessage(err_buf, err_buf_size, L"Failed to initialize COM (", hr);
             return 1;
         }
     }
@@ -1922,7 +1916,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 {
                     if ((iArg + 1 >= argc))
                     {
-                        StoreInvalidOptionError(err_buf, err_buf_size, L"Failed to parse arguments.\n");
+                        RaiseInvalidOptionError(err_buf, err_buf_size, L"Failed to parse arguments.\n");
                         return 1;
                     }
 
@@ -1937,7 +1931,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_WIDTH:
                 if (swscanf_s(pValue, L"%zu", &width) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-w", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-w", pValue);
                     return 1;
                 }
                 break;
@@ -1945,7 +1939,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_HEIGHT:
                 if (swscanf_s(pValue, L"%zu", &height) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-h", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-h", pValue);
                     return 1;
                 }
                 break;
@@ -1953,7 +1947,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_MIPLEVELS:
                 if (swscanf_s(pValue, L"%zu", &mipLevels) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-m", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-m", pValue);
                     return 1;
                 }
                 break;
@@ -1965,7 +1959,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     format = static_cast<DXGI_FORMAT>(LookupByName(pValue, g_pFormatAliases));
                     if (!format)
                     {
-                        StoreInvalidOptionError(err_buf, err_buf_size, L"-f", pValue);
+                        RaiseInvalidOptionError(err_buf, err_buf_size, L"-f", pValue);
                         return 1;
                     }
                 }
@@ -1975,7 +1969,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 dwFilter = static_cast<TEX_FILTER_FLAGS>(LookupByName(pValue, g_pFilters));
                 if (!dwFilter)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-if", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-if", pValue);
                     return 1;
                 }
                 break;
@@ -1984,7 +1978,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 dwRotateColor = LookupByName(pValue, g_pRotateColor);
                 if (!dwRotateColor)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-rotatecolor", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-rotatecolor", pValue);
                     return 1;
                 }
                 break;
@@ -2032,7 +2026,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 FileType = LookupByName(pValue, g_pSaveFileTypes);
                 if (!FileType)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-ft", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-ft", pValue);
                     return 1;
                 }
                 break;
@@ -2041,7 +2035,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_PREMUL_ALPHA:
                 if (dwOptions & (uint64_t(1) << OPT_DEMUL_ALPHA))
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"Can't use -pmalpha and -alpha at same time\n");
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"Can't use -pmalpha and -alpha at same time\n");
                     return 1;
                 }
                 break;
@@ -2049,7 +2043,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_DEMUL_ALPHA:
                 if (dwOptions & (uint64_t(1) << OPT_PREMUL_ALPHA))
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"Can't use -pmalpha and -alpha at same time\n");
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"Can't use -pmalpha and -alpha at same time\n");
                     return 1;
                 }
                 break;
@@ -2058,7 +2052,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_TA_WRAP:
                 if (dwFilterOpts & TEX_FILTER_MIRROR)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"Can't use -wrap and -mirror at same time\n");
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"Can't use -wrap and -mirror at same time\n");
                     return 1;
                 }
                 dwFilterOpts |= TEX_FILTER_WRAP;
@@ -2067,7 +2061,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_TA_MIRROR:
                 if (dwFilterOpts & TEX_FILTER_WRAP)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"Can't use -wrap and -mirror at same time\n");
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"Can't use -wrap and -mirror at same time\n");
                     return 1;
                 }
                 dwFilterOpts |= TEX_FILTER_MIRROR;
@@ -2100,7 +2094,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     }
                     else
                     {
-                        StoreInvalidOptionError(err_buf, err_buf_size, L"Invalid value specified for -nmap (", pValue, L"), missing l, r, g, b, or a\n")
+                        RaiseInvalidOptionError(err_buf, err_buf_size, L"Invalid value specified for -nmap (", pValue, L"), missing l, r, g, b, or a\n")
                         return 1;
                     }
 
@@ -2135,17 +2129,17 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_NORMAL_MAP_AMPLITUDE:
                 if (!dwNormalMap)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-nmapamp requires -nmap\n");
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-nmapamp requires -nmap\n");
                     return 1;
                 }
                 else if (swscanf_s(pValue, L"%f", &nmapAmplitude) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-nmapamp", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-nmapamp", pValue);
                     return 1;
                 }
                 else if (nmapAmplitude < 0.f)
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L"Normal map amplitude must be positive (", pValue, L")\n")
+                    RaiseErrorMessage(err_buf, err_buf_size, L"Normal map amplitude must be positive (", pValue, L")\n")
                     return 1;
                 }
                 break;
@@ -2155,12 +2149,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_GPU:
                 if (swscanf_s(pValue, L"%d", &adapter) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-gpu", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-gpu", pValue);
                     return 1;
                 }
                 else if (adapter < 0)
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L"Invalid adapter index (", pValue, L")\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"Invalid adapter index (", pValue, L")\n");
                     return 1;
                 }
                 break;
@@ -2171,7 +2165,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 maxSize = LookupByName(pValue, g_pFeatureLevels);
                 if (!maxSize)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-fl", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-fl", pValue);
                     return 1;
                 }
                 break;
@@ -2181,12 +2175,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_ALPHA_THRESHOLD:
                 if (swscanf_s(pValue, L"%f", &alphaThreshold) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-at", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-at", pValue);
                     return 1;
                 }
                 else if (alphaThreshold < 0.f)
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L"-at (", pValue, L") parameter must be positive\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"-at (", pValue, L") parameter must be positive\n");
                     return 1;
                 }
                 break;
@@ -2194,12 +2188,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_ALPHA_WEIGHT:
                 if (swscanf_s(pValue, L"%f", &alphaWeight) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-aw", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-aw", pValue);
                     return 1;
                 }
                 else if (alphaWeight < 0.f)
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L"-aw (", pValue, L") parameter must be positive\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"-aw (", pValue, L") parameter must be positive\n");
                     return 1;
                 }
                 break;
@@ -2239,13 +2233,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
                     if ((dwCompress & (TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_BC7_USE_3SUBSETS)) == (TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_BC7_USE_3SUBSETS))
                     {
-                        StoreInvalidOptionError(err_buf, err_buf_size, L"Can't use -bc x (max) and -bc q (quick) at same time\n");
+                        RaiseInvalidOptionError(err_buf, err_buf_size, L"Can't use -bc x (max) and -bc q (quick) at same time\n");
                         return 1;
                     }
 
                     if (!found)
                     {
-                        StoreInvalidOptionError(err_buf, err_buf_size, L"Invalid value specified for -bc (", pValue, L"), missing d, u, q, or x\n");
+                        RaiseInvalidOptionError(err_buf, err_buf_size, L"Invalid value specified for -bc (", pValue, L"), missing d, u, q, or x\n");
                         return 1;
                     }
                 }
@@ -2258,7 +2252,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     || (wicQuality < 0.f)
                     || (wicQuality > 1.f))
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-wicq", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-wicq", pValue);
                     return 1;
                 }
                 break;
@@ -2268,7 +2262,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_COLORKEY:
                 if (swscanf_s(pValue, L"%x", &colorKey) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-c", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-c", pValue);
                     return 1;
                 }
                 colorKey &= 0xFFFFFF;
@@ -2284,7 +2278,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_USE_DX10:
                 if (dwOptions & (uint64_t(1) << OPT_USE_DX9))
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"Can't use -dx9 and -dx10 at same time\n");
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"Can't use -dx9 and -dx10 at same time\n");
                     return 1;
                 }
                 break;
@@ -2292,7 +2286,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_USE_DX9:
                 if (dwOptions & (uint64_t(1) << OPT_USE_DX10))
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"Can't use -dx9 and -dx10 at same time\n");
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"Can't use -dx9 and -dx10 at same time\n");
                     return 1;
                 }
                 break;
@@ -2309,7 +2303,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     }
                     else if (_wcsicmp(pValue, L"flatten") != 0)
                     {
-                        StoreInvalidOptionError(err_buf, err_buf_size, L"For recursive use -r, -r:flatten, or -r:keep\n");
+                        RaiseInvalidOptionError(err_buf, err_buf_size, L"For recursive use -r, -r:flatten, or -r:keep\n");
                         return 1;
                     }
                 }
@@ -2320,7 +2314,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     std::wifstream inFile(pValue);
                     if (!inFile)
                     {
-                        StoreErrorMessage(err_buf, err_buf_size, L"Error opening -flist file ", pValue, L" \n");
+                        RaiseErrorMessage(err_buf, err_buf_size, L"Error opening -flist file ", pValue, L" \n");
                         return 1;
                     }
 
@@ -2335,12 +2329,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_PAPER_WHITE_NITS:
                 if (swscanf_s(pValue, L"%f", &paperWhiteNits) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-nits", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-nits", pValue);
                     return 1;
                 }
                 else if (paperWhiteNits > 10000.f || paperWhiteNits <= 0.f)
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L"-nits (", pValue, L") parameter must be between 0 and 10000\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"-nits (", pValue, L") parameter must be between 0 and 10000\n");
                     return 1;
                 }
                 break;
@@ -2350,12 +2344,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_PRESERVE_ALPHA_COVERAGE:
                 if (swscanf_s(pValue, L"%f", &preserveAlphaCoverageRef) != 1)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-keepcoverage", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-keepcoverage", pValue);
                     return 1;
                 }
                 else if (preserveAlphaCoverageRef < 0.0f || preserveAlphaCoverageRef > 1.0f)
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L"-keepcoverage (", pValue, L") parameter must be between 0.0 and 1.0\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"-keepcoverage (", pValue, L") parameter must be between 0.0 and 1.0\n");
                     return 1;
                 }
                 break;
@@ -2365,12 +2359,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_SWIZZLE:
                 if (!*pValue || wcslen(pValue) > 4)
                 {
-                    StoreInvalidOptionError(err_buf, err_buf_size, L"-swizzle", pValue);
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-swizzle", pValue);
                     return 1;
                 }
                 else if (!ParseSwizzleMask(pValue, swizzleElements, zeroElements, oneElements))
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1\n");
                     return 1;
                 }
                 break;
@@ -2384,7 +2378,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             SearchForFiles(pArg, conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
-                StoreErrorMessage(err_buf, err_buf_size, L"No matching files found for ", pArg, " \n");
+                RaiseErrorMessage(err_buf, err_buf_size, L"No matching files found for ", pArg, " \n");
                 return 1;
             }
         }
@@ -2485,7 +2479,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
         if (!image)
         {
-            StoreMemoryAllocError(err_buf, err_buf_size);
+            RaiseMemoryAllocError(err_buf, err_buf_size);
             return 1;
         }
 
@@ -2504,7 +2498,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromDDSFile(pConv->szSrc, ddsFlags, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2524,7 +2518,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
                 if (IsTypeless(info.format))
                 {
-                    StoreErrorMessage(err_buf, err_buf_size, L" FAILED due to Typeless format\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L" FAILED due to Typeless format\n");
                     retVal = 1;
                     continue;
                 }
@@ -2538,12 +2532,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromBMPEx(pConv->szSrc, WIC_FLAGS_NONE | dwFilter, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 continue;
             }
         #else
-            StoreErrorMessage(err_buf, err_buf_size, L"WIC is unsupported.\n");
+            RaiseErrorMessage(err_buf, err_buf_size, L"WIC is unsupported.\n");
             retVal = 1;
             continue;
         #endif
@@ -2555,7 +2549,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromTGAFile(pConv->szSrc, tgaFlags, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2565,7 +2559,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromHDRFile(pConv->szSrc, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2576,7 +2570,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromPortablePixMap(pConv->szSrc, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2586,7 +2580,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromPortablePixMapHDR(pConv->szSrc, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2598,7 +2592,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromEXRFile(pConv->szSrc, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2624,7 +2618,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromWICFile(pConv->szSrc, wicFlags, &info, *image);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 retVal = 1;
                 if (hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */)
                 {
@@ -2640,7 +2634,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 continue;
             }
         #else
-            StoreErrorMessage(err_buf, err_buf_size, L"WIC is unsupported.\n");
+            RaiseErrorMessage(err_buf, err_buf_size, L"WIC is unsupported.\n");
             retVal = 1;
             continue;
         #endif
@@ -2673,14 +2667,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
             hr = ConvertToSinglePlane(img, nimg, info, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [converttosingleplane] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [converttosingleplane] (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2699,7 +2693,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
             image.swap(timage);
         #else
-            StoreErrorMessage(err_buf, err_buf_size, L"Planar DDS is unsupported.\n");
+            RaiseErrorMessage(err_buf, err_buf_size, L"Planar DDS is unsupported.\n");
             retVal = 1;
             continue;
         #endif
@@ -2720,7 +2714,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                     if (!timage)
                     {
-                        StoreMemoryAllocError(err_buf, err_buf_size);
+                        RaiseMemoryAllocError(err_buf, err_buf_size);
                         return 1;
                     }
 
@@ -2738,7 +2732,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     hr = timage->Initialize(mdata);
                     if (FAILED(hr))
                     {
-                        StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [BC non-multiple-of-4 fixup] (", hr);
+                        RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [BC non-multiple-of-4 fixup] (", hr);
                         return 1;
                     }
 
@@ -2784,14 +2778,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
             hr = Decompress(img, nimg, info, DXGI_FORMAT_UNKNOWN /* picks good default */, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [decompress] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [decompress] (", hr);
                 retVal = 1;
                 continue;
             }
@@ -2843,14 +2837,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    StoreMemoryAllocError(err_buf, err_buf_size);
+                    RaiseMemoryAllocError(err_buf, err_buf_size);
                     return 1;
                 }
 
                 hr = PremultiplyAlpha(img, nimg, info, TEX_PMALPHA_REVERSE | dwSRGB, *timage);
                 if (FAILED(hr))
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [demultiply alpha] (", hr);
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [demultiply alpha] (", hr);
                     retVal = 1;
                     continue;
                 }
@@ -2879,7 +2873,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -2896,7 +2890,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = FlipRotate(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwFlags, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [fliprotate] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [fliprotate] (", hr);
                 return 1;
             }
 
@@ -2946,14 +2940,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
             hr = Resize(image->GetImages(), image->GetImageCount(), image->GetMetadata(), twidth, theight, dwFilter | dwFilterOpts, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [resize] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [resize] (", hr);
                 return 1;
             }
 
@@ -2981,7 +2975,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     : CountMips(info.width, info.height);
                 #else
                 if (info.depth > 1){
-                    StoreErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.\n");
                     return 1;
                 }
                 const size_t maxMips = CountMips(info.width, info.height);
@@ -3003,7 +2997,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3025,7 +3019,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [swizzle] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [swizzle] (", hr);
                 return 1;
             }
 
@@ -3056,7 +3050,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    StoreMemoryAllocError(err_buf, err_buf_size);
+                    RaiseMemoryAllocError(err_buf, err_buf_size);
                     return 1;
                 }
 
@@ -3064,7 +3058,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     dwFilter | dwFilterOpts | dwSRGB | dwConvert, alphaThreshold, *timage);
                 if (FAILED(hr))
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [convert] (", hr);
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [convert] (", hr);
                     return 1;
                 }
 
@@ -3090,7 +3084,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3114,7 +3108,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             nvalue = XMVectorDivide(XMVectorMultiply(nvalue, paperWhite), c_MaxNitsFor2084);
 
                             XMFLOAT4A tmp;
-                            XMStoreFloat4A(&tmp, nvalue);
+                            XMRaiseFloat4A(&tmp, nvalue);
 
                             tmp.x = LinearToST2084(tmp.x);
                             tmp.y = LinearToST2084(tmp.y);
@@ -3162,7 +3156,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
                             // Convert from ST.2084
                             XMFLOAT4A tmp;
-                            XMStoreFloat4A(&tmp, value);
+                            XMRaiseFloat4A(&tmp, value);
 
                             tmp.x = ST2084ToLinear(tmp.x);
                             tmp.y = ST2084ToLinear(tmp.y);
@@ -3218,7 +3212,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             nvalue = XMVectorDivide(XMVectorMultiply(nvalue, paperWhite), c_MaxNitsFor2084);
 
                             XMFLOAT4A tmp;
-                            XMStoreFloat4A(&tmp, nvalue);
+                            XMRaiseFloat4A(&tmp, nvalue);
 
                             tmp.x = LinearToST2084(tmp.x);
                             tmp.y = LinearToST2084(tmp.y);
@@ -3296,7 +3290,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             }
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [rotate color apply] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [rotate color apply] (", hr);
                 return 1;
             }
 
@@ -3324,7 +3318,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3348,7 +3342,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 });
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [tonemap maxlum] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [tonemap maxlum] (", hr);
                 return 1;
             }
 
@@ -3377,7 +3371,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [tonemap apply] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [tonemap apply] (", hr);
                 return 1;
             }
 
@@ -3405,7 +3399,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3433,7 +3427,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = ComputeNormalMap(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwNormalMap, nmapAmplitude, nmfmt, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [normalmap] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [normalmap] (", hr);
                 return 1;
             }
 
@@ -3461,7 +3455,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3469,7 +3463,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 dwFilter | dwFilterOpts | dwSRGB | dwConvert, alphaThreshold, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [convert] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [convert] (", hr);
                 return 1;
             }
 
@@ -3498,7 +3492,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3529,7 +3523,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [colorkey] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [colorkey] (", hr);
                 return 1;
             }
 
@@ -3557,7 +3551,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3579,7 +3573,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [inverty] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [inverty] (", hr);
                 return 1;
             }
 
@@ -3606,7 +3600,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3640,7 +3634,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [reconstructz] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [reconstructz] (", hr);
                 return 1;
             }
 
@@ -3701,7 +3695,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3710,7 +3704,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = timage->Initialize(mdata);
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy to single level] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy to single level] (", hr);
                 return 1;
             }
 
@@ -3723,12 +3717,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         *timage->GetImage(0, 0, d), TEX_FILTER_DEFAULT, 0, 0);
                     if (FAILED(hr))
                     {
-                        StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy to single level] (", hr);
+                        RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy to single level] (", hr);
                         return 1;
                     }
                 }
                 #else
-                StoreErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.");
+                RaiseErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.");
                 return 1;
                 #endif
             }
@@ -3740,7 +3734,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         *timage->GetImage(0, i, 0), TEX_FILTER_DEFAULT, 0, 0);
                     if (FAILED(hr))
                     {
-                        StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy to single level] (", hr);
+                        RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy to single level] (", hr);
                         return 1;
                     }
                 }
@@ -3757,7 +3751,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 hr = timage->Initialize(mdata);
                 if (FAILED(hr))
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy compressed to single level] (", hr);
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [copy compressed to single level] (", hr);
                     return 1;
                 }
 
@@ -3772,7 +3766,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         memcpy_s(dimg->pixels, dimg->slicePitch, simg->pixels, simg->slicePitch);
                     }
                     #else
-                    StoreErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.");
                     return 1;
                     #endif
                 }
@@ -3800,7 +3794,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
@@ -3809,7 +3803,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 #if USE_3D
                 hr = GenerateMipMaps3D(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwFilter3D | dwFilterOpts, tMips, *timage);
                 #else
-                StoreErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.");
+                RaiseErrorMessage(err_buf, err_buf_size, L"3D textures are unsupported.");
                 return 1;
                 #endif
             }
@@ -3819,7 +3813,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             }
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [mipmaps] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [mipmaps] (", hr);
                 return 1;
             }
 
@@ -3845,14 +3839,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                StoreMemoryAllocError(err_buf, err_buf_size);
+                RaiseMemoryAllocError(err_buf, err_buf_size);
                 return 1;
             }
 
             hr = timage->Initialize(image->GetMetadata());
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [keepcoverage] (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [keepcoverage] (", hr);
                 return 1;
             }
 
@@ -3865,7 +3859,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 hr = ScaleMipMapsAlphaForCoverage(img, info.mipLevels, info, item, preserveAlphaCoverageRef, *timage);
                 if (FAILED(hr))
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [keepcoverage] (", hr);
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [keepcoverage] (", hr);
                     return 1;
                 }
             }
@@ -3906,14 +3900,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    StoreMemoryAllocError(err_buf, err_buf_size);
+                    RaiseMemoryAllocError(err_buf, err_buf_size);
                     return 1;
                 }
 
                 hr = PremultiplyAlpha(img, nimg, info, TEX_PMALPHA_DEFAULT | dwSRGB, *timage);
                 if (FAILED(hr))
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [premultiply alpha] (", hr);
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [premultiply alpha] (", hr);
                     retVal = 1;
                     continue;
                 }
@@ -3970,7 +3964,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    StoreMemoryAllocError(err_buf, err_buf_size);
+                    RaiseMemoryAllocError(err_buf, err_buf_size);
                     return 1;
                 }
 
@@ -4040,7 +4034,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             wprintf(L"\nWARNING: Using CPU codec for BC6 or BC7. It'll take a long time for conversion.\n");
                         } else {
                             wprintf(L"\n");
-                            StoreErrorMessage(err_buf, err_buf_size, L"Error: Can NOT use CPU codec for BC6 and BC7. Or enable the allow_slow_codec option.\n");
+                            RaiseErrorMessage(err_buf, err_buf_size, L"Error: Can NOT use CPU codec for BC6 and BC7. Or enable the allow_slow_codec option.\n");
                             retVal = 1;
                             continue;
                         }
@@ -4050,7 +4044,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }
                 if (FAILED(hr))
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED [compress] (", hr);
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED [compress] (", hr);
                     retVal = 1;
                     continue;
                 }
@@ -4128,7 +4122,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 wchar_t szPath[MAX_PATH] = {};
                 if (!GetFullPathNameW(szDest, MAX_PATH, szPath, nullptr))
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" get full path FAILED (", HRESULT_FROM_WIN32(GetLastError()));
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" get full path FAILED (", HRESULT_FROM_WIN32(GetLastError()));
                     retVal = 1;
                     continue;
                 }
@@ -4136,7 +4130,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 auto const err = static_cast<DWORD>(SHCreateDirectoryExW(nullptr, szPath, nullptr));
                 if (err != ERROR_SUCCESS && err != ERROR_ALREADY_EXISTS)
                 {
-                    StoreErrorCodeMessage(err_buf, err_buf_size, L" directory creation FAILED (", HRESULT_FROM_WIN32(err));
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" directory creation FAILED (", HRESULT_FROM_WIN32(err));
                     retVal = 1;
                     continue;
                 }
@@ -4171,7 +4165,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             if (wcslen(szDest) > _MAX_PATH)
             {
                 wprintf(L"\n");
-                StoreErrorMessage(err_buf, err_buf_size, L"ERROR: Output filename exceeds max-path, skipping!\n");
+                RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Output filename exceeds max-path, skipping!\n");
                 retVal = 1;
                 continue;
             }
@@ -4191,7 +4185,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             #endif
                 {
                     wprintf(L"\n");
-                    StoreErrorMessage(err_buf, err_buf_size, L"ERROR: Output file already exists, use -y to overwrite:\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Output file already exists, use -y to overwrite:\n");
                     retVal = 1;
                     continue;
                 }
@@ -4313,7 +4307,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             }
                         });
                 #else
-                    StoreErrorMessage(err_buf, err_buf_size, L"WIC is unsupported.\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"WIC is unsupported.\n");
                     retVal = 1;
                     continue;
                 #endif
@@ -4323,9 +4317,9 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
             if (FAILED(hr))
             {
-                StoreErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
                 if (ErrorIsMissingPath(hr)){
-                    StoreErrorMessage(err_buf, err_buf_size, L"This error is mainly caused by missing the output directory.\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"This error is mainly caused by missing the output directory.\n");
                 }
 
                 retVal = 1;

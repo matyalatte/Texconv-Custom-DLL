@@ -14,12 +14,12 @@ Texconv is the best DDS converter as far as I know.
 
 ## How small is the dll?
 
-It's 29% smaller than the original exe.
+It's 28% smaller than the original exe.
 -   The original exe: 686KB
--   The custom dll: 489KB
+-   The custom dll: 491KB
 
 If you won't use BC6 and BC7 formats, you can also remove GPU codec with `TEXCONV_NO_GPU_CODEC` option.  
-It can be 231KB (66% smaller than the original exe).  
+It can be 233KB (66% smaller than the original exe).  
 
 ## Removed features
 

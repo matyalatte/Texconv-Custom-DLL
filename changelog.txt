@@ -1,4 +1,6 @@
 v0.1.3
+- Added parameters to get error messages
+- Enabled to print error messages to stderr
 - Enabled to remove GPU codec (added "TEXCONV_NO_GPU_CODEC" option)
 - Fixed a bug it can't read paths start with "/"
 - Fixed a bug it can't use GPU twice in a process

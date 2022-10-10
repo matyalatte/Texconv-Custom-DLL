@@ -5,6 +5,7 @@
 
 # build
 build
+build_exe
 *.so
 *.dll
 *.exe

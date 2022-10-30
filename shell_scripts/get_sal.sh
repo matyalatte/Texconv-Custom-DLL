@@ -1,4 +1,5 @@
 #!/bin/bash
+# Download sal.h for DirectXMath
 
 cd $(dirname "$0")/../unix_external
 mkdir sal

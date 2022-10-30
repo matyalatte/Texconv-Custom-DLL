@@ -1,6 +1,6 @@
 #!/bin/bash
-#Builds texconv with cmake.
-#libtexconv.so or libtexconv.dylib will be generated in ./Texconv-Custom-DLL/
+# Builds texconv with some CMake options to support more DDS formats.
+# libtexconv.so or libtexconv.dylib will be generated in ./Texconv-Custom-DLL/
 
 pushd $(dirname "$0")/../
 mkdir build

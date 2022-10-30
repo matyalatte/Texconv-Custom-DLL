@@ -41,7 +41,7 @@ int texconv(int argc, wchar_t* argv[], bool verbose = true,
 -   `argv`: An array of arguments for texconv.
 -   `verbose`: Show info
 -   `init_com`: Initialize COM for WIC.
--   `allow_clow_codec`: Allow to use CPU coded for BC6 and BC7.
+-   `allow_slow_codec`: Allow to use CPU coded for BC6 and BC7.
 -   `err_buf`: A buffer to store error messages.
 -   `err_buf_size`: The size of the buffer.
 
@@ -67,8 +67,8 @@ dll = ctypes.cdll.LoadLibrary(dll_path)
 # Make arguments
 dds_file = 'test.dds'
 argv = ['-ft', 'tga', '-o', 'outdir', '-y', dds_file]
-argv = [c.c_wchar_p(arg) for arg in argv]
-argv = (c.c_wchar_p*len(argv))(*argv)
+argv = [ctypes.c_wchar_p(arg) for arg in argv]
+argv = (ctypes.c_wchar_p*len(argv))(*argv)
 err_buf = ctypes.create_unicode_buffer(512)
 
 # Convert DDS to TGA

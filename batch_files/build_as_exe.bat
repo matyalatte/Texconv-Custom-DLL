@@ -1,6 +1,6 @@
 @echo off
 
-REM Builds texconv.exe.
+REM Builds texconv.exe with CMake and Visual Studio.
 REM texconv.exe will be generated in ..\
 
 REM You need Visual Studio to use this batch file.

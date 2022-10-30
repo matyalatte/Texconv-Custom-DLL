@@ -1,9 +1,7 @@
 @echo off
 
-REM Builds texconv.dll with msbuild
+REM Builds texconv.dll with some CMake options to support removed DDS formats.
 REM texconv.dll will be generated in ..\
-
-REM You need Visual Studio to use this batch file.
 
 set VS_VERSION=Visual Studio 17 2022
 

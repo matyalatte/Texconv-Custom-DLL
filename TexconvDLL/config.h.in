@@ -102,7 +102,10 @@
 #define USE_X2BIAS __@TEXCONV_USE_X2BIAS@__
 
 // Use -singleproc
-#define USE_SINGLEPROC __@TEXCONV_SINGLEPROC@__
+#define USE_SINGLEPROC __@TEXCONV_USE_SINGLEPROC@__
 
 // Use -tga20
-#define USE_TGA20 __@TEXCONV_TGA20@__
+#define USE_TGA20 __@TEXCONV_USE_TGA20@__
+
+// Use texassemble as a dll function
+#define USE_TEXASSEMBLE __@TEXCONV_USE_TEXASSEMBLE@__

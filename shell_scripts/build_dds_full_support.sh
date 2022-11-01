@@ -14,6 +14,8 @@ cmake \
   -D TEXCONV_USE_16BPP=ON\
   -D TEXCONV_USE_PLANAR=ON\
   -D TEXCONV_USE_MINOR_DDS_CONFIG=ON\
+  -D TEXCONV_USE_3D=ON\
+  -D TEXCONV_USE_TEXASSEMBLE=ON\
   ../
 cmake --build .
 cp bin/CMake/libtexconv.* ../

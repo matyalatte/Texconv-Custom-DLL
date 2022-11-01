@@ -49,6 +49,7 @@ option(TEXCONV_USE_GPU_CONFIG "Use -gpu and -nogpu" OFF)
 option(TEXCONV_USE_X2BIAS "Use -x2bias" OFF)
 option(TEXCONV_USE_SINGLEPROC "Use -singleproc" OFF)
 option(TEXCONV_USE_TGA20 "Use -tga20 " OFF)
+option(TEXCONV_USE_TEXASSEMBLE "Use texassemble as a dll function" OFF)
 
 # show variables
 function(texconv_show_variables)
@@ -131,16 +132,16 @@ set(LIBRARY_SOURCES
     DirectXTex/DirectXTex/BC4BC5.cpp
     DirectXTex/DirectXTex/BC6HBC7.cpp
     DirectXTex/DirectXTex/DirectXTexCompress.cpp
-    TexconvDLL/DirectXTexConvert_Custom.cpp
-    TexconvDLL/DirectXTexDDS_Custom.cpp
+    TexconvDLL/DirectXTexConvert.cpp
+    TexconvDLL/DirectXTexDDS.cpp
     DirectXTex/DirectXTex/DirectXTexHDR.cpp
-    TexconvDLL/DirectXTexImage_Custom.cpp
-    TexconvDLL/DirectXTexMipmaps_Custom.cpp
-    TexconvDLL/DirectXTexMisc_Custom.cpp
+    TexconvDLL/DirectXTexImage.cpp
+    TexconvDLL/DirectXTexMipmaps.cpp
+    TexconvDLL/DirectXTexMisc.cpp
     DirectXTex/DirectXTex/DirectXTexNormalMaps.cpp
-    TexconvDLL/DirectXTexResize_Custom.cpp
+    TexconvDLL/DirectXTexResize.cpp
     DirectXTex/DirectXTex/DirectXTexTGA.cpp
-    TexconvDLL/DirectXTexUtil_Custom.cpp)
+    TexconvDLL/DirectXTexUtil.cpp)
 
 if(APPLE)
   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
@@ -168,7 +169,7 @@ if(BUILD_DX11 AND WIN32)
    set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
        DirectXTex/DirectXTex/BCDirectCompute.h
        DirectXTex/DirectXTex/BCDirectCompute.cpp
-       TexconvDLL/DirectXTexCompressGPU_Custom.cpp
+       TexconvDLL/DirectXTexCompressGPU.cpp
        DirectXTex/DirectXTex/DirectXTexD3D11.cpp)
 endif()
 
@@ -274,7 +275,13 @@ if(BUILD_TOOLS)
   configure_file(TexconvDLL/config.h.in TexconvDLL/config.h @ONLY)
   set(TEXCONV_FILES
     TexconvDLL/config.h
-    TexconvDLL/TexconvDLL.cpp)
+    TexconvDLL/tool_util.h
+    TexconvDLL/tool_util.cpp
+    TexconvDLL/texconv.cpp)
+  if (TEXCONV_USE_TEXASSEMBLE)
+    set(TEXCONV_FILES ${TEXCONV_FILES}
+      TexconvDLL/texassemble.cpp)
+  endif()
   if (TEXCONV_USE_WIC)
     set(TEXCONV_FILES ${TEXCONV_FILES}
       DirectXTex/Texconv/ExtendedBMP.cpp)
@@ -286,7 +293,7 @@ if(BUILD_TOOLS)
   if (TEXCONV_BUILD_AS_EXE)
     if (TEXCONV_USE_ICON_FOR_EXE)
       set(TEXCONV_FILES ${TEXCONV_FILES}
-        TexconvDLL/TexconvDLL.rc)
+        TexconvDLL/texconv.rc)
     endif()
     add_executable(texconv ${TEXCONV_FILES})
   else()

@@ -1,7 +1,6 @@
 #include "tool_util.h"
 
 #ifndef _WIN32
-// Secure function for linux
 void _wsplitpath_s(const WCHAR* path, WCHAR* drv, int drvnum, WCHAR* dir, int dirnum, WCHAR* name, int namenum, WCHAR* ext, int extnum)
 {
     const WCHAR* end; /* end of processed string */

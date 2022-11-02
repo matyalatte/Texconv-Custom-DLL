@@ -48,3 +48,4 @@ If you enable all options, the dll will be almost the same size as the original 
 -   `TEXCONV_USE_X2BIAS`: Enable to use -x2bias
 -   `TEXCONV_USE_SINGLEPROC`: Enable to use -singleproc
 -   `TEXCONV_USE_TGA20`: Enable to use -tga20
+-   `TEXCONV_USE_TEXASSEMBLE`: Enable to use texassemble as a DLL function

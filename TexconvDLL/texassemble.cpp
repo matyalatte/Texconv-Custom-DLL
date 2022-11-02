@@ -9,6 +9,8 @@
 // http://go.microsoft.com/fwlink/?LinkId=248926
 //--------------------------------------------------------------------------------------
 
+#include "TexconvDLL/config.h"
+
 #pragma warning(push)
 #pragma warning(disable : 4005)
 #define WIN32_LEAN_AND_MEAN
@@ -40,11 +42,7 @@
 #include <utility>
 #include <vector>
 
-#ifdef _WIN32
-#include <wrl\client.h>
-#else
 #include <wrl/client.h>
-#endif
 
 #ifdef _WIN32
 #include <dxgiformat.h>
@@ -55,11 +53,12 @@
 #include <directx/dxgiformat.h>
 #endif //_WIN32
 
-#include <DirectXPackedVector.h>
+#include "tool_util.h"
 
 #pragma warning(disable : 4619 4616 26812)
 
 #include "DirectXTex.h"
+#include "DirectXPackedVector.h"
 
 //Uncomment to add support for OpenEXR (.exr)
 //#define USE_OPENEXR
@@ -69,12 +68,8 @@
 #include "DirectXTexEXR.h"
 #endif
 
-#include "tool_util.h"
-
 using namespace DirectX;
-#ifdef _WIN32
 using Microsoft::WRL::ComPtr;
-#endif
 
 namespace
 {
@@ -2175,7 +2170,11 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
+                #ifdef _WIN32
                 if (GetFileAttributesW(szOutputFile) != INVALID_FILE_ATTRIBUTES)
+                #else
+                if (std::filesystem::exists(szOutputFile))
+                #endif
                 {
                     wprintf(L"\n");
                     RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Output file already exists, use -y to overwrite\n");
@@ -2250,7 +2249,11 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
+                #ifdef _WIN32
                 if (GetFileAttributesW(szOutputFile) != INVALID_FILE_ATTRIBUTES)
+                #else
+                if (std::filesystem::exists(szOutputFile))
+                #endif
                 {
                     wprintf(L"\n");
                     RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Output file already exists, use -y to overwrite\n");
@@ -2328,7 +2331,11 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
+                #ifdef _WIN32
                 if (GetFileAttributesW(szOutputFile) != INVALID_FILE_ATTRIBUTES)
+                #else
+                if (std::filesystem::exists(szOutputFile))
+                #endif
                 {
                     wprintf(L"\n");
                     RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Output file already exists, use -y to overwrite\n");
@@ -2451,7 +2458,11 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
+                #ifdef _WIN32
                 if (GetFileAttributesW(szOutputFile) != INVALID_FILE_ATTRIBUTES)
+                #else
+                if (std::filesystem::exists(szOutputFile))
+                #endif
                 {
                     wprintf(L"\n");
                     RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Output file already exists, use -y to overwrite\n");

@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.1.3
+# Texconv-Custom-DLL v0.2.0
 
 Cross-platform and customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
 You can remove many features from Texconv to reduce the file size.  
@@ -33,6 +33,12 @@ Many features are removed from the original build to reduce the file size.
 -   Many optional arguments
 
 If you want to restore them, you need to use [cmake options](./CMake-Options.md).
+
+## Extra features
+
+You can add some features by [cmake options](./CMake-Options.md)].
+-   Disable GPU codec (`TEXCONV_NO_GPU_CODEC`)
+-   Enable to use texassemble as a DLL function (`TEXCONV_USE_TEXASSEMBLE`)
 
 ## Platform
 

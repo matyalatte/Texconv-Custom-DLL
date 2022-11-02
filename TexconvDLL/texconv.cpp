@@ -46,23 +46,19 @@
 #include <string>
 #include <tuple>
 
-#ifdef _WIN32
-#include <wrl\client.h>
-#else
 #include <wrl/client.h>
-#endif
 
 #ifdef _WIN32
 #include <d3d11.h>
 #include <dxgi.h>
 #include <dxgiformat.h>
-#if USE_WIC
 #include <wincodec.h>
-#endif //USE_WIC
 #else //_WIN32
 #include <directx/d3d12.h>
 #include <directx/dxgiformat.h>
 #endif //_WIN32
+
+#include "tool_util.h"
 
 #pragma warning(disable : 4619 4616 26812)
 
@@ -77,26 +73,12 @@
 #include "DirectXTexEXR.h"
 #endif
 
-#include "tool_util.h"
-
 using namespace DirectX;
 using namespace DirectX::PackedVector;
-#ifdef _WIN32
 using Microsoft::WRL::ComPtr;
-#endif
 
 namespace
 {
-
-    // Define slash for paths
-#ifdef _WIN32
-    const wchar_t WSLASH = L'\\';
-    const char SLASH = '\\';
-#else
-    const wchar_t WSLASH = L'/';
-    const char SLASH = '/';
-#endif
-
     enum OPTIONS : uint64_t
     {
     #if USE_MULTIPLE_FILES

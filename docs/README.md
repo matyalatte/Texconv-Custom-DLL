@@ -36,7 +36,7 @@ If you want to restore them, you need to use [cmake options](./CMake-Options.md)
 
 ## Extra features
 
-You can add some features by [cmake options](./CMake-Options.md)].
+You can add some features by [cmake options](./CMake-Options.md).
 -   Disable GPU codec (`TEXCONV_NO_GPU_CODEC`)
 -   Enable to use texassemble as a DLL function (`TEXCONV_USE_TEXASSEMBLE`)
 

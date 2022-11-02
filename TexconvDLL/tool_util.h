@@ -43,25 +43,25 @@ void _wmakepath_s(
     wchar_t* end = &path[0] + size;    /* end of path buffer */
     wchar_t* s = &path[0];      /* copy pointer */
     if (drv) {
-        for(dir;*drv && *drv != '\0' && s < end;)
+        for(;*drv && *drv != '\0' && s < end;)
             *s++ = *drv++;
     }
     if (dir) {
-        for(dir;*dir && *dir!= '\0' && s < end;)
+        for(;*dir && *dir!= '\0' && s < end;)
             *s++ = *dir++;
     }
     if (s > &path[0] && s < end && (*(s - 1) != SLASH)) {
         *s++ = SLASH;
     }
     if (fname) {
-        for(fname; *fname && *fname!= '\0' && s < end;)
+        for(; *fname && *fname!= '\0' && s < end;)
             *s++ = *fname++;
     }
     if (s < end) {
         *s++ = '.';
     }
     if (ext) {
-        for(ext; *ext && *ext!= '\0' && s < end;)
+        for(; *ext && *ext!= '\0' && s < end;)
             *s++ = *ext++;
     }
     if (s < end) {

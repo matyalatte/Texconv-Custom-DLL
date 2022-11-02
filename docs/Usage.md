@@ -29,8 +29,9 @@ mkdir outdir
 ## DLL (or shared library)
 You can use texconv as a function of a DLL (or a shared library).
 
-### Available function
+### Available functions
 
+#### texconv
 ```c++
 int texconv(int argc, wchar_t* argv[], bool verbose = true,
             bool init_com = false, bool allow_slow_codec = true,
@@ -42,6 +43,27 @@ int texconv(int argc, wchar_t* argv[], bool verbose = true,
 -   `verbose`: Show info
 -   `init_com`: Initialize COM for WIC.
 -   `allow_slow_codec`: Allow to use CPU coded for BC6 and BC7.
+-   `err_buf`: A buffer to store error messages.
+-   `err_buf_size`: The size of the buffer.
+
+The return value is the execution status.  
+0 means no errors.  
+And 1 means failed to convert.  
+
+#### texassemble
+
+You can use [texassemble](https://github.com/microsoft/DirectXTex/wiki/Texassemble) if you built the dll with `TEXCONV_USE_TEXASSEMBLE` option.
+
+```c++
+int texassemble(int argc, wchar_t* argv[], bool verbose = true,
+            bool init_com = false,
+            wchar_t* err_buf = nullptr, int err_buf_size = 0)
+```
+
+-   `argc`: The number of arguments for texassemble.
+-   `argv`: An array of arguments for texassemble.
+-   `verbose`: Show info
+-   `init_com`: Initialize COM for WIC.
 -   `err_buf`: A buffer to store error messages.
 -   `err_buf_size`: The size of the buffer.
 

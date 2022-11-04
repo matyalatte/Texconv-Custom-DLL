@@ -1,3 +1,7 @@
+v0.2.1
+- Updated DirectXTex
+- Removed unnecessary files
+
 v0.2.0
 - Added texassemble as a DLL function
 

@@ -94,7 +94,6 @@ option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 option(USE_PREBUILT_SHADERS "Use externally built HLSL shaders" OFF)
 
 # Includes the functions for loading/saving OpenEXR files at runtime
-# NOTE requires adding DirectXTexEXR.h/.cpp source files (vcpkg does this automatically)
 option(ENABLE_OPENEXR_SUPPORT "Build with OpenEXR support" OFF)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -143,11 +142,6 @@ set(LIBRARY_SOURCES
     DirectXTex/DirectXTex/DirectXTexTGA.cpp
     TexconvDLL/DirectXTexUtil.cpp)
 
-if(APPLE)
-  set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
-    unix_external/mac_system/malloc.h)
-endif()
-
 if(TEXCONV_USE_ALPHA_CONFIG)
   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
     DirectXTex/DirectXTex/DirectXTexPMAlpha.cpp)
@@ -169,7 +163,7 @@ if(BUILD_DX11 AND WIN32)
    set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
        DirectXTex/DirectXTex/BCDirectCompute.h
        DirectXTex/DirectXTex/BCDirectCompute.cpp
-       TexconvDLL/DirectXTexCompressGPU.cpp
+       DirectXTex/DirectXTex/DirectXTexCompressGPU.cpp
        DirectXTex/DirectXTex/DirectXTexD3D11.cpp)
 endif()
 
@@ -181,11 +175,11 @@ endif()
 
 if(ENABLE_OPENEXR_SUPPORT)
    set(LIBRARY_HEADERS ${LIBRARY_HEADERS}
-       DirectXTex/DirectXTex/DirectXTexEXR.h)
+       DirectXTex/Auxiliary/DirectXTexEXR.h)
 
    set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
-       DirectXTex/DirectXTex/DirectXTexEXR.h
-       DirectXTex/DirectXTex/DirectXTexEXR.cpp)
+       DirectXTex/Auxiliary/DirectXTexEXR.h
+       DirectXTex/Auxiliary/DirectXTexEXR.cpp)
 endif()
 
 if(BUILD_DX11 AND WIN32)
@@ -310,6 +304,7 @@ if(BUILD_TOOLS)
 
   if(ENABLE_OPENEXR_SUPPORT)
     foreach(t IN LISTS TOOL_EXES)
+      target_include_directories(${t} PRIVATE Auxiliary)
       target_link_libraries(${t} ${OPENEXR_ILMIMF_LIBRARY})
       target_compile_options(${t} PRIVATE -DUSE_OPENEXR)
     endforeach()

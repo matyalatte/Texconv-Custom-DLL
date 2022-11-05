@@ -273,8 +273,10 @@ if(BUILD_TOOLS)
     TexconvDLL/tool_util.cpp
     TexconvDLL/texconv.cpp)
   if (TEXCONV_USE_TEXASSEMBLE)
-    set(TEXCONV_FILES ${TEXCONV_FILES}
-      TexconvDLL/texassemble.cpp)
+    if (NOT TEXCONV_BUILD_AS_EXE)
+      set(TEXCONV_FILES ${TEXCONV_FILES}
+        TexconvDLL/texassemble.cpp)
+    endif()
   endif()
   if (TEXCONV_USE_WIC)
     set(TEXCONV_FILES ${TEXCONV_FILES}
@@ -294,13 +296,34 @@ if(BUILD_TOOLS)
     add_library(texconv SHARED ${TEXCONV_FILES})
   endif()
   source_group(texconv FILES ${TEXCONV_FILES})
-  target_link_libraries(texconv ${PROJECT_NAME})
-  if(WIN32)
-    target_link_libraries(texconv ole32.lib shell32.lib version.lib)
-  else()
-    # unix need a library for safe functions
-    target_link_libraries(texconv safestring_static)
+
+  if (TEXCONV_USE_TEXASSEMBLE AND TEXCONV_BUILD_AS_EXE)
+    set(TOOL_EXES ${TOOL_EXES} texassemble)
+    set(TEXASSEMBLE_FILES
+      TexconvDLL/config.h
+      TexconvDLL/tool_util.h
+      TexconvDLL/tool_util.cpp
+      TexconvDLL/texassemble.cpp)
+    if (TEXCONV_USE_ICON_FOR_EXE)
+      set(TEXASSEMBLE_FILES ${TEXASSEMBLE_FILES}
+        TexconvDLL/texconv.rc)
+    endif()
+    add_executable(texassemble ${TEXASSEMBLE_FILES})
+    source_group(texassemble FILES ${TEXASSEMBLE_FILES})
   endif()
+
+
+  foreach(t IN LISTS TOOL_EXES)
+    target_link_libraries(${t} ${PROJECT_NAME})
+    if(WIN32)
+      target_link_libraries(${t} ole32.lib shell32.lib version.lib)
+    else()
+      # unix need a library for safe functions
+      target_link_libraries(${t} safestring_static)
+    endif()
+  endforeach()
+
+
 
   if(ENABLE_OPENEXR_SUPPORT)
     foreach(t IN LISTS TOOL_EXES)

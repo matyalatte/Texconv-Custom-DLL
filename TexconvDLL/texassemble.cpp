@@ -375,6 +375,7 @@ namespace
         { nullptr,  CODEC_DDS }
     };
 
+    #if USE_FEATURE_LEVEL
     const SValue g_pFeatureLevels[] =   // valid feature levels for -fl for maximimum size
     {
         { L"9.1",  2048 },
@@ -434,6 +435,7 @@ namespace
         { L"12.2", 2048 },
         { nullptr, 0 },
     };
+    #endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -803,7 +805,9 @@ namespace
         wprintf(L"   -o <filename>       output filename\n");
         wprintf(L"   -l                  force output filename to lower case\n");
         wprintf(L"   -y                  overwrite existing output file (if any)\n");
+    #if USE_ALPHA_CONFIG
         wprintf(L"   -sepalpha           resize alpha channel separately from color channels\n");
+    #endif
     #if USE_WIC
         wprintf(L"   -nowic              Force non-WIC filtering\n");
     #endif
@@ -815,7 +819,9 @@ namespace
     #if USE_LOGO
         wprintf(L"   -nologo             suppress copyright message\n");
     #endif
+    #if USE_FEATURE_LEVEL
         wprintf(L"   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n");
+    #endif
     #if USE_TONEMAP
         wprintf(L"   -tonemap            Apply a tonemap operator based on maximum luminance\n");
     #endif
@@ -837,9 +843,10 @@ namespace
 
         wprintf(L"\n   <filter>: ");
         PrintList(13, g_pFilters);
-
+    #if USE_FEATURE_LEVEL
         wprintf(L"\n   <feature-level>: ");
         PrintList(13, g_pFeatureLevels);
+    #endif
     }
 #endif //USE_USAGE
 
@@ -2487,3 +2494,33 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
     return 0;
 }
+
+// Main function for exe
+#if BUILD_AS_EXE
+#ifdef _WIN32
+int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+{
+    bool verbose = true;
+    bool init_com = true;
+#else
+int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
+{
+    bool verbose = true;
+    bool init_com = false;
+
+    wchar_t* argv[argc];
+    size_t length;
+    for(int i=0;i<argc;i++){
+        length = strlen(argv_char[i]);
+        argv[i] = new wchar_t[length + 1];
+        mbstowcs(argv[i], argv_char[i], length);
+    }
+
+#endif  // _WIN32
+    if (argc == 0){
+        return texassemble(0, argv, verbose, init_com);
+    } else {
+        return texassemble(argc - 1, &argv[1], verbose, init_com);
+    }
+}
+#endif  // BUILD_AS_EXE

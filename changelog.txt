@@ -1,4 +1,5 @@
 v0.2.1
+- Enabled to build texassemble as exe
 - Updated DirectXTex
 - Removed unnecessary files
 

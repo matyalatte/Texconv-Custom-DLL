@@ -1,3 +1,8 @@
+v0.2.1
+- Enabled to build texassemble as exe
+- Updated DirectXTex
+- Removed unnecessary files
+
 v0.2.0
 - Added texassemble as a DLL function
 

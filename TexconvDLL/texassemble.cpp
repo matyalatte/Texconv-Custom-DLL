@@ -88,6 +88,10 @@ namespace
         CMD_GIF,
     #endif
         CMD_ARRAY_STRIP,
+        CMD_CUBE_FROM_HC,
+        CMD_CUBE_FROM_VC,
+        CMD_CUBE_FROM_HS,
+        CMD_CUBE_FROM_VS,
         CMD_MAX
     };
 
@@ -176,6 +180,10 @@ namespace
         { L"gif",           CMD_GIF },
     #endif
         { L"array-strip",   CMD_ARRAY_STRIP },
+        { L"cube-from-hc",  CMD_CUBE_FROM_HC },
+        { L"cube-from-vc",  CMD_CUBE_FROM_VC },
+        { L"cube-from-hs",  CMD_CUBE_FROM_HS },
+        { L"cube-from-vs",  CMD_CUBE_FROM_VS },
         { nullptr,          0 }
     };
 
@@ -375,6 +383,7 @@ namespace
         { nullptr,  CODEC_DDS }
     };
 
+    #if USE_FEATURE_LEVEL
     const SValue g_pFeatureLevels[] =   // valid feature levels for -fl for maximimum size
     {
         { L"9.1",  2048 },
@@ -434,6 +443,7 @@ namespace
         { L"12.2", 2048 },
         { nullptr, 0 },
     };
+    #endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -777,58 +787,74 @@ namespace
         PrintLogo();
     #endif
 
-        wprintf(L"Usage: texassemble <command> <options> <files>\n\n");
-        wprintf(L"   cube                create cubemap\n");
-        wprintf(L"   volume              create volume map\n");
-        wprintf(L"   array               create texture array\n");
-        wprintf(L"   cubearray           create cubemap array\n");
-        wprintf(L"   h-cross or v-cross  create a cross image from a cubemap\n");
-        wprintf(L"   h-strip or v-strip  create a strip image from a cubemap\n");
-        wprintf(L"   array-strip         creates a strip image from a 1D/2D array\n");
-        wprintf(L"   merge               create texture from rgb image and alpha image\n");
-    #if USE_GIF
-        wprintf(L"   gif                 create array from animated gif\n\n");
-    #endif
-    #if USE_MULTIPLE_FILES
-        wprintf(L"   -r                  wildcard filename search is recursive\n");
-        wprintf(L"   -flist <filename>   use text file with a list of input files (one per line)\n");
-    #endif
-        wprintf(L"   -w <n>              width\n");
-        wprintf(L"   -h <n>              height\n");
-        wprintf(L"   -f <format>         format\n");
-        wprintf(L"   -if <filter>        image filtering\n");
-    #if USE_SRGB
-        wprintf(L"   -srgb{i|o}          sRGB {input, output}\n");
-    #endif
-        wprintf(L"   -o <filename>       output filename\n");
-        wprintf(L"   -l                  force output filename to lower case\n");
-        wprintf(L"   -y                  overwrite existing output file (if any)\n");
-        wprintf(L"   -sepalpha           resize alpha channel separately from color channels\n");
-    #if USE_WIC
-        wprintf(L"   -nowic              Force non-WIC filtering\n");
-    #endif
-        wprintf(L"   -wrap, -mirror      texture addressing mode (wrap, mirror, or clamp)\n");
-    #if USE_ALPHA_CONFIG
-        wprintf(L"   -alpha              convert premultiplied alpha to straight alpha\n");
-    #endif
-        wprintf(L"   -dx10               Force use of 'DX10' extended header\n");
-    #if USE_LOGO
-        wprintf(L"   -nologo             suppress copyright message\n");
-    #endif
-        wprintf(L"   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n");
-    #if USE_TONEMAP
-        wprintf(L"   -tonemap            Apply a tonemap operator based on maximum luminance\n");
-    #endif
-    #if USE_GIF
-        wprintf(L"\n                       (gif only)\n");
-        wprintf(L"   -bgcolor            Use background color instead of transparency\n");
-    #endif
-    #if USE_SWIZZLE
-        wprintf(L"\n                       (merge only)\n");
-        wprintf(L"   -swizzle <rgba>     Select channels for merge (defaults to rgbB)\n");
-    #endif
-        wprintf(L"\n                       (cube, volume, array, cubearray, merge only)\n");
-        wprintf(L"   -stripmips          Use only base image from input dds files\n");
+        static const wchar_t* const s_usage =
+            L"Usage: texassemble <command> <options> <files>\n"
+            L"\n"
+            L"   cube                create cubemap\n"
+            L"   volume              create volume map\n"
+            L"   array               create texture array\n"
+            L"   cubearray           create cubemap array\n"
+            L"   h-cross or v-cross  create a cross image from a cubemap\n"
+            L"   h-strip or v-strip  create a strip image from a cubemap\n"
+            L"   array-strip         create a strip image from a 1D/2D array\n"
+            L"   merge               create texture from rgb image and alpha image\n"
+        #if USE_GIF
+            L"   gif                 create array from animated gif\n"
+        #endif
+            L"   cube-from-hc        create cubemap from a cross image\n"
+            L"   cube-from-vc        create cubemap from a v-cross image\n"
+            L"   cube-from-hs        create cubemap from a h-strip image\n"
+            L"   cube-from-vs        create cubemap from a v-strip image\n"
+            L"\n"
+        #if USE_MULTIPLE_FILES
+            L"   -r                  wildcard filename search is recursive\n"
+            L"   -flist <filename>   use text file with a list of input files (one per line)\n"
+        #endif
+            L"   -w <n>              width\n"
+            L"   -h <n>              height\n"
+            L"   -f <format>         format\n"
+            L"   -if <filter>        image filtering\n"
+        #if USE_SRGB
+            L"   -srgb{i|o}          sRGB {input, output}\n"
+        #endif
+            L"   -o <filename>       output filename\n"
+            L"   -l                  force output filename to lower case\n"
+            L"   -y                  overwrite existing output file (if any)\n"
+        #if USE_ALPHA_CONFIG
+            L"   -sepalpha           resize alpha channel separately from color channels\n"
+        #endif
+        #if USE_WIC
+            L"   -nowic              Force non-WIC filtering\n"
+        #endif
+            L"   -wrap, -mirror      texture addressing mode (wrap, mirror, or clamp)\n"
+        #if USE_ALPHA_CONFIG
+            L"   -alpha              convert premultiplied alpha to straight alpha\n"
+        #endif
+            L"   -dx10               Force use of 'DX10' extended header\n"
+        #if USE_LOGO
+            L"   -nologo             suppress copyright message\n"
+        #endif
+        #if USE_FEATURE_LEVEL
+            L"   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n"
+        #endif
+        #if USE_TONEMAP
+            L"   -tonemap            Apply a tonemap operator based on maximum luminance\n"
+        #endif
+        #if USE_GIF
+            L"\n"
+            L"                       (gif only)\n"
+            L"   -bgcolor            Use background color instead of transparency\n"
+        #endif
+        #if USE_SWIZZLE
+            L"\n"
+            L"                       (merge only)\n"
+            L"   -swizzle <rgba>     Select channels for merge (defaults to rgbB)\n"
+        #endif
+            L"\n"
+            L"                       (cube, volume, array, cubearray, merge only)\n"
+            L"   -stripmips          Use only base image from input dds files\n"
+
+        wprintf(L"%ls", s_usage);
 
         wprintf(L"\n   <format>: ");
         PrintList(13, g_pFormats);
@@ -837,9 +863,10 @@ namespace
 
         wprintf(L"\n   <filter>: ");
         PrintList(13, g_pFilters);
-
+    #if USE_FEATURE_LEVEL
         wprintf(L"\n   <feature-level>: ");
         PrintList(13, g_pFeatureLevels);
+    #endif
     }
 #endif //USE_USAGE
 
@@ -1089,10 +1116,20 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     case CMD_GIF:
 #endif
     case CMD_ARRAY_STRIP:
+    case CMD_CUBE_FROM_HC:
+    case CMD_CUBE_FROM_VC:
+    case CMD_CUBE_FROM_HS:
+    case CMD_CUBE_FROM_VS:
         break;
 
     default:
-        RaiseErrorMessage(err_buf, err_buf_size, L"Must use one of: cube, volume, array, cubearray,\n   h-cross, v-cross, h-strip, v-strip, array-strip\n   merge, gif\n\n");
+        static const wchar_t* const err_msg =
+            L"Must use one of: cube, volume, array, cubearray,\n"
+            L"    h-cross, v-cross, h-strip, v-strip,\n"
+            L"    array-strip, merge, gif,\n"
+            L"    cube-from-hc, cube-from-vc, cube-from-hs, cube-from-vs,\n"
+            L"\n";
+        RaiseErrorMessage(err_buf, err_buf_size, err_msg);
         return 1;
     }
 
@@ -1342,10 +1379,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 case CMD_ARRAY:
                 case CMD_CUBEARRAY:
                 case CMD_MERGE:
+                case CMD_CUBE_FROM_HC:
+                case CMD_CUBE_FROM_VC:
+                case CMD_CUBE_FROM_HS:
+                case CMD_CUBE_FROM_VS:
                     break;
 
                 default:
-                    RaiseErrorMessage(err_buf, err_buf_size, L"-stripmips only applies to cube, volume, array, cubearray, or merge commands\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"-stripmips only applies to cube, volume, array, cubearray, merge, or cube-from-* commands\n");
                     return 1;
                 }
                 break;
@@ -1398,9 +1439,13 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     case CMD_GIF:
 #endif
     case CMD_ARRAY_STRIP:
+    case CMD_CUBE_FROM_HC:
+    case CMD_CUBE_FROM_VC:
+    case CMD_CUBE_FROM_HS:
+    case CMD_CUBE_FROM_VS:
         if (conversion.size() > 1)
         {
-            RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: cross/strip/gif output only accepts 1 input file\n");
+            RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: cross/strip/gif/cube-from-* output only accepts 1 input file\n");
             return 1;
         }
         break;
@@ -2015,6 +2060,10 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 #if USE_GIF
     case CMD_GIF:
 #endif
+    case CMD_CUBE_FROM_HC:
+    case CMD_CUBE_FROM_VC:
+    case CMD_CUBE_FROM_HS:
+    case CMD_CUBE_FROM_VS:
         break;
 
     default:
@@ -2078,8 +2127,6 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 RaiseErrorCodeMessage(err_buf, err_buf_size, L"FAILED setting up result image (", hr);
                 return 1;
             }
-
-            memset(result.GetPixels(), 0, result.GetPixelsSize());
 
             auto src = loadedImages.cbegin();
             auto dest = result.GetImage(0, 0, 0);
@@ -2283,8 +2330,6 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 return 1;
             }
 
-            memset(result.GetPixels(), 0, result.GetPixelsSize());
-
             auto src = loadedImages.cbegin();
             auto dest = result.GetImage(0, 0, 0);
 
@@ -2354,11 +2399,178 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             }
             break;
         }
+
+    case CMD_CUBE_FROM_HC:
+    case CMD_CUBE_FROM_VC:
+    case CMD_CUBE_FROM_HS:
+    case CMD_CUBE_FROM_VS:
+        {
+            auto src = loadedImages.cbegin();
+            auto img = (*src)->GetImage(0, 0, 0);
+            size_t ratio_w = 1;
+            size_t ratio_h = 1;
+
+            switch (dwCommand)
+            {
+            case CMD_CUBE_FROM_HC:
+                // 4:3 aspect ratio
+                ratio_w = 4;
+                ratio_h = 3;
+                break;
+
+            case CMD_CUBE_FROM_VC:
+                // 3:4 aspect ratio
+                ratio_w = 3;
+                ratio_h = 4;
+                break;
+
+            case CMD_CUBE_FROM_HS:
+                // 6:1 aspect ratio
+                ratio_w = 6;
+                break;
+
+            case CMD_CUBE_FROM_VS:
+                // 1:6 aspect ratio
+                ratio_h = 6;
+                break;
+
+            default:
+                break;
+            }
+
+            size_t twidth = width / ratio_w;
+            size_t theight = height / ratio_h;
+
+            if (((width % ratio_w) != 0) || ((height % ratio_h) != 0) || (twidth != theight))
+            {
+                wprintf(L"\nWARNING: %ls expects %d:%d aspect ratio\n", g_pCommands[dwCommand - 1].name, ratio_w, ratio_h);
+            }
+
+            ScratchImage result;
+            hr = result.InitializeCube(format, twidth, theight, 1, 1);
+            if (FAILED(hr))
+            {
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L"FAILED setting up result image (", hr);
+                return 1;
+            }
+
+            for (size_t index = 0; index < 6; ++index)
+            {
+                size_t offsetx = 0;
+                size_t offsety = 0;
+
+                switch (dwCommand)
+                {
+                case CMD_CUBE_FROM_HC:
+                    {
+                        //    +Y
+                        // -X +Z +X -Z
+                        //    -Y
+                        static const size_t s_offsetx[6] = { 2, 0, 1, 1, 1, 3 };
+                        static const size_t s_offsety[6] = { 1, 1, 0, 2, 1, 1 };
+
+                        offsetx = s_offsetx[index] * twidth;
+                        offsety = s_offsety[index] * theight;
+
+                        break;
+                    }
+
+                case CMD_CUBE_FROM_VC:
+                    {
+                        //    +Y
+                        // -X +Z +X
+                        //    -Y
+                        //    -Z
+
+                        static const size_t s_offsetx[6] = { 2, 0, 1, 1, 1, 1 };
+                        static const size_t s_offsety[6] = { 1, 1, 0, 2, 1, 3 };
+
+                        offsetx = s_offsetx[index] * twidth;
+                        offsety = s_offsety[index] * theight;
+
+                        break;
+                    }
+
+                case CMD_CUBE_FROM_HS:
+                    // +X -X +Y -Y +Z -Z
+                    offsetx = index * twidth;
+                    break;
+
+                case CMD_CUBE_FROM_VS:
+                    // +X
+                    // -X
+                    // +Y
+                    // -Y
+                    // +Z
+                    // -Z
+                    offsety = index * theight;
+                    break;
+
+                default:
+                    break;
+                }
+
+                const Rect rect(offsetx, offsety, twidth, theight);
+                const Image* dest = result.GetImage(0, index, 0);
+                hr = CopyRectangle(*img, rect, *dest, dwFilter | dwFilterOpts, 0, 0);
+
+                if (FAILED(hr))
+                {
+                    RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED building result image (", hr);
+                    return 1;
+                }
+            }
+
+            // Write texture
+            if (verbose){
+                wprintf(L"\nWriting %ls ", szOutputFile);
+                #if USE_PRINT_INFO
+                PrintInfo(result.GetMetadata());
+                #endif
+                wprintf(L"\n");
+            }
+            fflush(stdout);
+
+            #if USE_NAME_CONFIG
+            if (dwOptions & (1 << OPT_TOLOWER))
+            {
+                std::ignore = _wcslwr_s(szOutputFile);
+            }
+            #endif
+
+            if (~dwOptions & (1 << OPT_OVERWRITE))
+            {
+                #ifdef _WIN32
+                if (GetFileAttributesW(szOutputFile) != INVALID_FILE_ATTRIBUTES)
+                #else
+                if (std::filesystem::exists(szOutputFile))
+                #endif
+                {
+                    wprintf(L"\n");
+                    RaiseErrorMessage(err_buf, err_buf_size, L"ERROR: Output file already exists, use -y to overwrite\n");
+                    return 1;
+                }
+            }
+
+            hr = SaveToDDSFile(result.GetImages(), result.GetImageCount(), result.GetMetadata(),
+                (dwOptions & (1 << OPT_USE_DX10)) ? (DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2) : DDS_FLAGS_NONE,
+                szOutputFile);
+
+            if (FAILED(hr))
+            {
+                RaiseErrorCodeMessage(err_buf, err_buf_size, L" FAILED (", hr);
+                if (ErrorIsMissingPath(hr)){
+                    RaiseErrorMessage(err_buf, err_buf_size, L"This error is mainly caused by missing the output directory.\n");
+                }
+                return 1;
+            }
+            break;
+        }
+
     default:
         {
             std::vector<Image> imageArray;
             imageArray.reserve(images);
-
             for (auto it = loadedImages.cbegin(); it != loadedImages.cend(); ++it)
             {
                 const ScratchImage* simage = it->get();
@@ -2487,3 +2699,33 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
     return 0;
 }
+
+// Main function for exe
+#if BUILD_AS_EXE
+#ifdef _WIN32
+int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+{
+    bool verbose = true;
+    bool init_com = true;
+#else
+int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
+{
+    bool verbose = true;
+    bool init_com = false;
+
+    wchar_t* argv[argc];
+    size_t length;
+    for(int i=0;i<argc;i++){
+        length = strlen(argv_char[i]);
+        argv[i] = new wchar_t[length + 1];
+        mbstowcs(argv[i], argv_char[i], length);
+    }
+
+#endif  // _WIN32
+    if (argc == 0){
+        return texassemble(0, argv, verbose, init_com);
+    } else {
+        return texassemble(argc - 1, &argv[1], verbose, init_com);
+    }
+}
+#endif  // BUILD_AS_EXE

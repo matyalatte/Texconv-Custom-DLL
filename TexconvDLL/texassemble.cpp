@@ -852,7 +852,7 @@ namespace
         #endif
             L"\n"
             L"                       (cube, volume, array, cubearray, merge only)\n"
-            L"   -stripmips          Use only base image from input dds files\n"
+            L"   -stripmips          Use only base image from input dds files\n";
 
         wprintf(L"%ls", s_usage);
 

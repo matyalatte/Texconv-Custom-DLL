@@ -51,6 +51,15 @@ option(TEXCONV_USE_SINGLEPROC "Use -singleproc" OFF)
 option(TEXCONV_USE_TGA20 "Use -tga20 " OFF)
 option(TEXCONV_USE_TEXASSEMBLE "Use texassemble as a dll function" OFF)
 
+if(NOT WIN32)
+  set(TEXCONV_USE_WIC OFF)
+  set(TEXCONV_USE_PPM OFF)
+  set(TEXCONV_USE_FLIP OFF)
+  set(TEXCONV_USE_MULTIPLE_FILES OFF)
+  set(TEXCONV_NO_GPU_CODEC OFF)
+  set(TEXCONV_USE_TIMING OFF)
+endif()
+
 # show variables
 function(texconv_show_variables)
 

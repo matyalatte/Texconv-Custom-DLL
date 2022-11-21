@@ -39,6 +39,7 @@ If you want to restore them, you need to use [cmake options](./CMake-Options.md)
 You can add some features by [cmake options](./CMake-Options.md).
 -   Disable GPU codec (`TEXCONV_NO_GPU_CODEC`)
 -   Enable to use [texassemble](https://github.com/microsoft/DirectXTex/wiki/Texassemble) as a DLL function (`TEXCONV_USE_TEXASSEMBLE`)
+-   Enable to build [texassemble](https://github.com/microsoft/DirectXTex/wiki/Texassemble) as an executable (`TEXCONV_USE_TEXASSEMBLE` and `TEXCONV_BUILD_AS_EXE`)
 
 ## Platform
 
@@ -50,13 +51,14 @@ But the custom build supports the following platforms and compilers.
 -   Ubuntu 20.04 (or later) + GCC
 
 ## Download
+
 You can download the built binary from [the release page](https://github.com/matyalatte/Texconv-Custom-DLL/releases).  
 
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
 -   `TexconvCustomDLL*-macOS.tar.bz2` is for Mac (10.15 or later).
 -   `TexconvCustomDLL*-Linux.tar.bz2` is for Ubuntu (20.04 or later).
 
-Each zip file has a DLL and a executable.  
+Each zip file has a DLL and an executable.  
 You can copy whichever you want to use to your project.  
 (The execuatble won't refer the DLL.)  
 

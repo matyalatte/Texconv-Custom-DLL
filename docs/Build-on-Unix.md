@@ -13,6 +13,7 @@ But it might not work on your environment.
 
 -   Ubuntu 20.04 + GCC 9.4
 -   MacOS 10.15 + AppleClang 12.0
+-   MacOS 11 + AppleClang 13.0
 
 ## 0. Requirements
 
@@ -39,8 +40,13 @@ You can build `libtexconv.so` (or `libtexconv.dylib`) with a shell script.
 Move to `Texconv-Custom-DLL/shell_scripts` and type `bash build.sh` on the terminal.  
 `libtexconv.so` (or `libtexconv.dylib`) will be generated in `./Texconv-Custom-DLL/`.  
 
-## 4. Build executable
+## 4. Build executable (optional)
 
 If you want an executable, use `build_as_exe.sh` instead of `build.sh`.  
 `texconv` will be generated in `./Texconv-Custom-DLL/`.  
 You can use it on the terminal. (e.g. `./texconv -ft tga -y -o outdir test.dds`)  
+
+## 5. Build texassemble (optional)
+
+If you want to build texassemble as an executable, use `build_texassemble.sh` instead of `build.sh`.  
+If you want to use texassemble as a dll function, use `build_dds_full_support.sh` instead of `build.sh`.  

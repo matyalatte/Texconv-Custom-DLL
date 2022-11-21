@@ -10,7 +10,7 @@ Move to `./Texconv-Custom-DLL` and type `git submodule update --init --recursive
 It'll download DirectXTex to the repository.  
 (`git submodule update --init --recursive` will work as well, but it'll download unnecessary repositories for Windows.)  
 
-## 2-a. Build .dll with Batch Files
+## 2-a. Build .dll with batch files
 
 You can build texconv.dll with batch files.  
 Move to `./Texconv-Custom-DLL/batch_files` and type `build.bat` on the command prompt.  
@@ -22,8 +22,13 @@ Of course, you can build the dll with Visual Studio.
 Open `./Texconv-Custom-DLL` with Visual Studio and load CMakeLists.txt.  
 Then, you can build texconv.dll.  
 
-## 3. Build executable
+## 3. Build executable (optional)
 
 If you want an executable, use `build_as_exe.bat` instead of `build.bat`.  
 `texconv.exe` will be generated in `./Texconv-Custom-DLL/`.  
 You can use it on the command prompt. (e.g. `texconv.exe -ft tga -y -o outdir test.dds`)  
+
+## 4. Build texassemble (optional)
+
+If you want to build texassemble as an executable, use `build_texassemble.bat` instead of `build.bat`.  
+If you want to use texassemble as a dll function, use `build_dds_full_support.bat` instead of `build.bat`.  

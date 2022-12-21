@@ -96,7 +96,9 @@ bool ErrorIsMissingPath(HRESULT hr){
 }
 
 void RaiseErrorMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg) {
+#if BUILD_AS_EXE
     fwprintf(stderr, L"%ls", msg);
+#endif
     if (err_buf != nullptr) {
         wcscat_s(err_buf, err_buf_size, msg);
     }

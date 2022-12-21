@@ -1076,19 +1076,18 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     // Set locale for output since GetErrorDesc can get localized strings.
     std::locale::global(std::locale(""));
 
+    HRESULT hr;
     #if USE_WIC
     // Initialize COM (needed for WIC)
     if (init_com)
     {
-        HRESULT hr = hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
         if (FAILED(hr))
         {
             RaiseErrorCodeMessage(err_buf, err_buf_size, L"Failed to initialize COM (", hr);
             return 1;
         }
     }
-    #else
-    HRESULT hr;
     #endif
 
     // Process command line

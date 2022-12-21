@@ -1,3 +1,6 @@
+v0.2.2
+- Fixed an error when building texassemble with TEXCONV_USE_WIC
+
 v0.2.1
 - Enabled to build texassemble as exe
 - Updated DirectXTex

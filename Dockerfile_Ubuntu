@@ -1,7 +1,7 @@
 # Building workflow for ubuntu 20.04 or later.
 #
 # 1. Use this docker file to build the executable.
-#    docker build -t texconv ./
+#    docker build -t texconv -f Dockerfile_Ubuntu ./
 # 2. Run the built image. 
 #    docker run texconv
 # 3. Use "docker cp" to get the built executable.
@@ -26,24 +26,8 @@ RUN git clone --recursive --depth=1 https://github.com/matyalatte/Texconv-Custom
     bash Texconv-Custom-DLL/shell_scripts/get_sal.sh
 
 # Build shared lib
-WORKDIR /Texconv-Custom-DLL/build
-RUN cmake \
-      -D CMAKE_BUILD_TYPE=Release\
-      -D BUILD_DX11=OFF\
-      -D BUILD_DX12=OFF\
-      -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
-      ../;\
-    cmake --build .;\
-    cp bin/CMake/libtexconv.* ../
+WORKDIR /Texconv-Custom-DLL/shell_scripts
+RUN bash build.sh
 
 # Build executable
-RUN cmake \
-      -D CMAKE_BUILD_TYPE=Release\
-      -D BUILD_DX11=OFF\
-      -D BUILD_DX12=OFF\
-      -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
-      -D TEXCONV_BUILD_AS_EXE=ON\
-      -D TEXCONV_USE_USAGE=ON\
-      ../;\
-    cmake --build .;\
-    cp bin/CMake/texconv ../
+RUN bash build_as_exe.sh

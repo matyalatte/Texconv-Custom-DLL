@@ -22,7 +22,7 @@ If you enable all options, the dll will be almost the same size as the original 
 ## Printing options
 
 -   `TEXCONV_USE_LOGO`: Enable to use `PrintLogo()`
--   `TEXCONV_USE_USAGE`: Enable to use `-help` (Only available for Windows)
+-   `TEXCONV_USE_USAGE`: Enable to use `-help`
 -   `TEXCONV_USE_PRINT_INFO`: Enable to use `PrintInfo()` and `PrintFormat()`
 -   `TEXCONV_USE_TIMING`: Enable to use `-timing` (Only available for Windows)
 

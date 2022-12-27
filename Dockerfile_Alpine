@@ -1,0 +1,45 @@
+# Building workflow for Alpine Linux.
+#
+# 1. Use this docker file to build the executable.
+#    docker build -t texconv -f Dockerfile_Alpine ./
+# 2. Run the built image. 
+#    docker run texconv
+# 3. Use "docker cp" to get the built executable.
+#    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/texconv /<SOMEPATH>/texconv
+# 4. Also, you can get the built shared library.
+#    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/libtexconv.so /<SOMEPATH>/libtexconv.so
+
+# Base image
+ARG alpine_version="3.16.3"
+FROM alpine:${alpine_version}
+
+# Install packages
+RUN apk update \
+    && apk add musl-dev gcc make g++ file alpine-sdk cmake wget
+
+# Clone repo
+RUN git clone --recursive --depth=1 https://github.com/matyalatte/Texconv-Custom-DLL.git;\
+    ash Texconv-Custom-DLL/shell_scripts/get_sal.sh
+
+# Build shared lib
+WORKDIR /Texconv-Custom-DLL/build
+RUN cmake \
+      -D CMAKE_BUILD_TYPE=Release\
+      -D BUILD_DX11=OFF\
+      -D BUILD_DX12=OFF\
+      -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
+      ../;\
+    cmake --build .;\
+    cp bin/CMake/libtexconv.* ../
+
+# Build executable
+RUN cmake \
+      -D CMAKE_BUILD_TYPE=Release\
+      -D BUILD_DX11=OFF\
+      -D BUILD_DX12=OFF\
+      -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
+      -D TEXCONV_BUILD_AS_EXE=ON\
+      -D TEXCONV_USE_USAGE=ON\
+      ../;\
+    cmake --build .;\
+    cp bin/CMake/texconv ../

@@ -49,6 +49,9 @@ But the custom build supports the following platforms and compilers.
 -   Windows 10 + MSVC
 -   MacOS 10.15 (or later) + AppleClang
 -   Ubuntu 20.04 (or later) + GCC
+-   Alpine Linux + GCC
+
+And it might work on other linux distributions.  
 
 ## Download
 
@@ -58,9 +61,12 @@ You can download the built binary from [the release page](https://github.com/mat
 -   `TexconvCustomDLL*-macOS.tar.bz2` is for Mac (10.15 or later).
 -   `TexconvCustomDLL*-Linux.tar.bz2` is for Ubuntu (20.04 or later).
 
-Each zip file has a DLL and an executable.  
-You can copy whichever you want to use to your project.  
-(The execuatble won't refer the DLL.)  
+> Each zip file has a DLL and an executable.  
+> You can copy whichever you want to use to your project.  
+> (The execuatble won't refer the DLL.)  
+
+> The linux build only supports Ubuntu due to the glibc dependences.  
+> If you want to use it on other linux distributions, you should get the lib or build texconv by yourself.  
 
 ## Usage
 
@@ -84,8 +90,11 @@ And you can see [the shell scripts](../shell_scripts/) to understand the workflo
 
 ### Docker
 
-Ubuntu users can also use a docker file to build the binary.  
-See [the docker file](../Dockerfile) for the details.  
+Linux users can use docker files to build the binary.  
+See the files for the details.  
+
+- [Dockerfile_Ubuntu](../Dockerfile_Ubuntu): Build texconv with GCC and glibc on Ubuntu
+- [Dockerfile_Alpine](../Dockerfile_Alpine): Build texconv with GCC and musl on Alpine Linux
 
 ## License
 Files in this repository (including all submodules) are licensed under [MIT license](../LICENSE).

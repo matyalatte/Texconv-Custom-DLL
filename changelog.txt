@@ -1,4 +1,5 @@
 v0.2.2
+- Update submodules
 - Fixed an error when building texassemble with TEXCONV_USE_WIC
 
 v0.2.1

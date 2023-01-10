@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.2.1
+# Texconv-Custom-DLL v0.2.2
 
 Cross-platform and customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
 You can remove many features from Texconv to reduce the file size.  

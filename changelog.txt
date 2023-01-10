@@ -1,6 +1,8 @@
 v0.2.2
-- Update submodules
+- Updated submodules
 - Fixed an error when building texassemble with TEXCONV_USE_WIC
+- Fixed a bug that initialized images won't be zeroed.
+- Removed a cmake warning for config.h.in
 
 v0.2.1
 - Enabled to build texassemble as exe

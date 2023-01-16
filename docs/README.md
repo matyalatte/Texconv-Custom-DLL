@@ -1,7 +1,6 @@
-# Texconv-Custom-DLL v0.2.1
+# Texconv-Custom-DLL v0.2.2
 
 Cross-platform and customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
-You can remove many features from Texconv to reduce the file size.  
 And you can use it as a DLL (or a shared library).  
 
 ## What's Texconv?
@@ -10,20 +9,11 @@ And you can use it as a DLL (or a shared library).
 is a texture converter developed by Microsoft.  
 It supports all dds formats.  
 There are some dds formats common tools can't handle properly, but Texconv can.  
-Texconv is the best DDS converter as far as I know.  
+It's the best DDS converter as far as I know.  
 
-## How small is the dll?
+## Removable features
 
-It's 28% smaller than the original exe.
--   The original exe: 686KB
--   The custom dll: 491KB
-
-If you won't use BC6 and BC7 formats, you can also remove GPU codec with `TEXCONV_NO_GPU_CODEC` option.  
-It can be 233KB (66% smaller than the original exe).  
-
-## Removed features
-
-Many features are removed from the original build to reduce the file size.  
+Many features are removed from the original build to support unix systems and to reduce the file size.  
 -   WIC support (.bmp, .jpg, .png, etc.)
 -   3D textures support
 -   Little-used dds formats support (B5G6R5, B5G5R5A1, etc.)
@@ -60,8 +50,8 @@ You can download the built binary from [the release page](https://github.com/mat
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
 -   `TexconvCustomDLL*-macOS.tar.bz2` is for Mac (10.15 or later).
 -   `TexconvCustomDLL*-Linux.tar.bz2` is for Ubuntu (20.04 or later).
-
-> Each zip file has a DLL and an executable.  
+ 
+> Each zip file has a DLL and executables.  
 > You can copy whichever you want to use to your project.  
 > (The execuatble won't refer the DLL.)  
 

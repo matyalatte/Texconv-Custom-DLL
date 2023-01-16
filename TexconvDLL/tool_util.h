@@ -30,6 +30,7 @@ extern "C"{
 #define _MAX_FNAME 256
 
 // Todo: define _wcslwr_s for unix
+// (for USE_NAME_CONFIG)
 
 // wmakepath_s for unix
 template <size_t size>

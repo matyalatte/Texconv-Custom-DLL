@@ -938,16 +938,16 @@ namespace
         switch (info.GetAlphaMode())
         {
         case TEX_ALPHA_MODE_OPAQUE:
-            wprintf(L" \x0e0:Opaque");
+            wprintf(L" \x03B1:Opaque");
             break;
         case TEX_ALPHA_MODE_PREMULTIPLIED:
-            wprintf(L" \x0e0:PM");
+            wprintf(L" \x03B1:PM");
             break;
         case TEX_ALPHA_MODE_STRAIGHT:
-            wprintf(L" \x0e0:NonPM");
+            wprintf(L" \x03B1:NonPM");
             break;
         case TEX_ALPHA_MODE_CUSTOM:
-            wprintf(L" \x0e0:Custom");
+            wprintf(L" \x03B1:Custom");
             break;
         case TEX_ALPHA_MODE_UNKNOWN:
             break;
@@ -957,7 +957,7 @@ namespace
     }
 #endif
 
-#if USE_USAGE
+#if BUILD_AS_EXE
     void PrintList(size_t cch, const SValue<uint32_t> *pValue)
     {
         while (pValue->name)
@@ -1045,7 +1045,7 @@ namespace
     }
 #endif
 
-#if USE_USAGE
+#if BUILD_AS_EXE
     void PrintUsage()
     {
     #if USE_LOGO
@@ -1665,7 +1665,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
             const uint64_t dwOption = LookupByName(pArg, g_pOptions);
         
-        #if USE_USAGE
+        #if BUILD_AS_EXE
             if (!dwOption || (dwOptions & (uint64_t(1) << dwOption)))
             {
                 PrintUsage();
@@ -1910,7 +1910,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     }
                     else
                     {
-                        RaiseInvalidOptionError(err_buf, err_buf_size, L"Invalid value specified for -nmap (", pValue, L"), missing l, r, g, b, or a\n")
+                        RaiseInvalidOptionError(err_buf, err_buf_size, L"Invalid value specified for -nmap (", pValue, L"), missing l, r, g, b, or a\n");
                         return 1;
                     }
 
@@ -1955,7 +1955,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }
                 else if (nmapAmplitude < 0.f)
                 {
-                    RaiseErrorMessage(err_buf, err_buf_size, L"Normal map amplitude must be positive (", pValue, L")\n")
+                    RaiseErrorMessage(err_buf, err_buf_size, L"Normal map amplitude must be positive (", pValue, L")\n");
                     return 1;
                 }
                 break;
@@ -2194,7 +2194,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             SearchForFiles(pArg, conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
-                RaiseErrorMessage(err_buf, err_buf_size, L"No matching files found for ", pArg, " \n");
+                RaiseErrorMessage(err_buf, err_buf_size, L"No matching files found for ", pArg, L" \n");
                 return 1;
             }
         }
@@ -2216,7 +2216,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
     if (conversion.empty())
     {
-    #if USE_USAGE
+    #if BUILD_AS_EXE
         PrintUsage();
     #else
         wprintf(L"No files are specified.\n");
@@ -2924,7 +2924,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             nvalue = XMVectorDivide(XMVectorMultiply(nvalue, paperWhite), c_MaxNitsFor2084);
 
                             XMFLOAT4A tmp;
-                            XMRaiseFloat4A(&tmp, nvalue);
+                            XMStoreFloat4A(&tmp, nvalue);
 
                             tmp.x = LinearToST2084(tmp.x);
                             tmp.y = LinearToST2084(tmp.y);
@@ -2972,7 +2972,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
                             // Convert from ST.2084
                             XMFLOAT4A tmp;
-                            XMRaiseFloat4A(&tmp, value);
+                            XMStoreFloat4A(&tmp, value);
 
                             tmp.x = ST2084ToLinear(tmp.x);
                             tmp.y = ST2084ToLinear(tmp.y);
@@ -3028,7 +3028,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             nvalue = XMVectorDivide(XMVectorMultiply(nvalue, paperWhite), c_MaxNitsFor2084);
 
                             XMFLOAT4A tmp;
-                            XMRaiseFloat4A(&tmp, nvalue);
+                            XMStoreFloat4A(&tmp, nvalue);
 
                             tmp.x = LinearToST2084(tmp.x);
                             tmp.y = LinearToST2084(tmp.y);

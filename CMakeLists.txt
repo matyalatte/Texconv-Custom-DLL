@@ -10,9 +10,12 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 set(DIRECTXTEX_VERSION 1.9.7)
 
+# for all options except for exe options and no-gpu option
+option(TEXCONV_USE_ALL "Enable 'TEXCONV_USE_*' options" OFF)
+
 # for exe build
 option(TEXCONV_BUILD_AS_EXE "Build texconv as .exe" OFF)
-option(TEXCONV_USE_ICON_FOR_EXE "Use directx.ico for .exe" OFF)
+option(TEXCONV_ICON_FOR_EXE "Use directx.ico for .exe" OFF)
 
 # for texture formats
 option(TEXCONV_USE_WIC "Use WIC-supported format (bmp, jpg, png, jxr, etc.)" OFF)
@@ -24,7 +27,6 @@ option(TEXCONV_USE_16BPP "Use 16bpp format (B5G6R5, B5G5R5A1, B4G4R4A4)" OFF)
 
 # for printing
 option(TEXCONV_USE_LOGO "Use PrintLogo()" OFF)
-option(TEXCONV_USE_USAGE "Use PrintUsage()" OFF)
 option(TEXCONV_USE_PRINT_INFO "Use PrintInfo() and PrintFormat()" OFF)
 option(TEXCONV_USE_TIMING "Use -timing" OFF)
 
@@ -51,10 +53,24 @@ option(TEXCONV_USE_SINGLEPROC "Use -singleproc" OFF)
 option(TEXCONV_USE_TGA20 "Use -tga20 " OFF)
 option(TEXCONV_USE_TEXASSEMBLE "Use texassemble as a dll function" OFF)
 
+# enable all options
+if(TEXCONV_USE_ALL)
+  get_cmake_property(_variableNames VARIABLES)
+  foreach (_variableName ${_variableNames})
+    if (_variableName MATCHES "TEXCONV_USE_*")
+      set(${_variableName} ON)
+    endif()
+  endforeach()
+  unset(_variableNames)
+endif()
+
+# disable windows options
 if(NOT WIN32)
   set(TEXCONV_USE_WIC OFF)
   set(TEXCONV_USE_PPM OFF)
   set(TEXCONV_USE_FLIP OFF)
+  set(TEXCONV_USE_LOGO OFF)
+  set(TEXCONV_USE_NAME_CONFIG OFF)
   set(TEXCONV_USE_MULTIPLE_FILES OFF)
   set(TEXCONV_NO_GPU_CODEC OFF)
   set(TEXCONV_USE_TIMING OFF)
@@ -62,19 +78,22 @@ endif()
 
 # show variables
 function(texconv_show_variables)
-
   set(ENABLED_OPTIONS "")
+  set(PREV_NAME "")
   get_cmake_property(_variableNames VARIABLES)
   foreach (_variableName ${_variableNames})
-    if ((_variableName MATCHES "TEXCONV*") AND (${_variableName} STREQUAL "ON"))
+    if ((_variableName MATCHES "TEXCONV*")
+        AND (${_variableName} STREQUAL "ON")
+        AND (NOT "${_variableName}" STREQUAL "${PREV_NAME}"))
       set(ENABLED_OPTIONS "${ENABLED_OPTIONS} ${_variableName}\n")
     endif()
+    set(PREV_NAME ${_variableName})
   endforeach()
   if (ENABLED_OPTIONS STREQUAL "")
-  message(STATUS "No enabled options for texconv.")
+    message(STATUS "No enabled options for texconv.")
   else()
-  message(STATUS "Enabled texconv options")
-  message(${ENABLED_OPTIONS})
+    message(STATUS "Enabled texconv options")
+    message(${ENABLED_OPTIONS})
   endif()
 endfunction()
 texconv_show_variables()
@@ -98,6 +117,11 @@ option(BUILD_DX12 "Build with DirectX12 Runtime support" ON)
 # Enable the use of OpenMP for software BC6H/BC7 compression
 option(BC_USE_OPENMP "Build with OpenMP support" ON)
 
+# https://devblogs.microsoft.com/cppblog/spectre-mitigations-in-msvc/
+option(ENABLE_SPECTRE_MITIGATION "Build using /Qspectre for MSVC" OFF)
+
+option(DISABLE_MSVC_ITERATOR_DEBUGGING "Disable iterator debugging in Debug configurations with the MSVC CRT" OFF)
+
 option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 
 option(USE_PREBUILT_SHADERS "Use externally built HLSL shaders" OFF)
@@ -113,7 +137,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/CMake")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/CMake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/CMake")
 
-if (DEFINED VCPKG_TARGET_ARCHITECTURE)
+if(DEFINED VCPKG_TARGET_ARCHITECTURE)
     set(DIRECTX_ARCH ${VCPKG_TARGET_ARCHITECTURE})
 elseif(CMAKE_GENERATOR_PLATFORM MATCHES "^[Ww][Ii][Nn]32$")
     set(DIRECTX_ARCH x86)
@@ -192,8 +216,8 @@ if(ENABLE_OPENEXR_SUPPORT)
 endif()
 
 if(BUILD_DX11 AND WIN32)
-    if (NOT COMPILED_SHADERS)
-        if (USE_PREBUILT_SHADERS)
+    if(NOT COMPILED_SHADERS)
+        if(USE_PREBUILT_SHADERS)
             message(FATAL_ERROR "ERROR: Using prebuilt shaders requires the COMPILED_SHADERS variable is set")
         endif()
         set(COMPILED_SHADERS ${CMAKE_CURRENT_BINARY_DIR}/DirectXTex/Shaders/Compiled)
@@ -205,7 +229,7 @@ if(BUILD_DX11 AND WIN32)
     set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
         ${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc)
 
-    if (NOT USE_PREBUILT_SHADERS)
+    if(NOT USE_PREBUILT_SHADERS)
         add_custom_command(
             OUTPUT "${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc"
             MAIN_DEPENDENCY "${PROJECT_SOURCE_DIR}/DirectXTex/DirectXTex/Shaders/CompileShaders.cmd"
@@ -260,7 +284,7 @@ endif()
 # get DirexctX-Headers and DirectXMath
 if (MINGW OR (NOT WIN32) OR VCPKG_TOOLCHAIN)
     if (WIN32)
-      message("INFO: Using VCPKG for DirectX-Headers and DirectXMath.")
+      message(STATUS "Using VCPKG for DirectX-Headers and DirectXMath")
       find_package(directx-headers CONFIG REQUIRED)
       find_package(directxmath CONFIG REQUIRED)
     else()
@@ -275,9 +299,10 @@ endif()
 if(BUILD_TOOLS)
   set(TOOL_EXES texconv)
 
-  configure_file(TexconvDLL/config.h.in TexconvDLL/config.h @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in ${CMAKE_BINARY_DIR}/TexconvDLL/config.h @ONLY)
   set(TEXCONV_FILES
-    TexconvDLL/config.h
+    ${CMAKE_BINARY_DIR}/TexconvDLL/config.h
+    ${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in
     TexconvDLL/tool_util.h
     TexconvDLL/tool_util.cpp
     TexconvDLL/texconv.cpp)
@@ -296,7 +321,7 @@ if(BUILD_TOOLS)
       DirectXTex/Texconv/PortablePixMap.cpp)
   endif()
   if (TEXCONV_BUILD_AS_EXE)
-    if (TEXCONV_USE_ICON_FOR_EXE)
+    if (TEXCONV_ICON_FOR_EXE)
       set(TEXCONV_FILES ${TEXCONV_FILES}
         TexconvDLL/texconv.rc)
     endif()
@@ -309,11 +334,12 @@ if(BUILD_TOOLS)
   if (TEXCONV_USE_TEXASSEMBLE AND TEXCONV_BUILD_AS_EXE)
     set(TOOL_EXES ${TOOL_EXES} texassemble)
     set(TEXASSEMBLE_FILES
-      TexconvDLL/config.h
+      ${CMAKE_BINARY_DIR}/TexconvDLL/config.h
+      ${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in
       TexconvDLL/tool_util.h
       TexconvDLL/tool_util.cpp
       TexconvDLL/texassemble.cpp)
-    if (TEXCONV_USE_ICON_FOR_EXE)
+    if (TEXCONV_ICON_FOR_EXE)
       set(TEXASSEMBLE_FILES ${TEXASSEMBLE_FILES}
         TexconvDLL/texconv.rc)
     endif()
@@ -343,7 +369,7 @@ if(BUILD_TOOLS)
   endif()
 endif()
 
-if (MINGW OR (NOT WIN32) OR VCPKG_TOOLCHAIN)
+if(MINGW OR (NOT WIN32) OR VCPKG_TOOLCHAIN)
   foreach(t IN LISTS TOOL_EXES)
     target_link_libraries(${t} Microsoft::DirectXMath)
     if (NOT WIN32)
@@ -360,22 +386,38 @@ if(MSVC)
     endforeach()
 
     if((${CMAKE_SIZEOF_VOID_P} EQUAL 4) AND (NOT ${DIRECTX_ARCH} MATCHES "^arm"))
-        foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
-          target_link_options(${t} PRIVATE /SAFESEH)
-        endforeach()
+      foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+        target_link_options(${t} PRIVATE /SAFESEH)
+      endforeach()
     endif()
 
-    if((MSVC_VERSION GREATER_EQUAL 1928) AND (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if(ENABLE_SPECTRE_MITIGATION
+       AND (MSVC_VERSION GREATER_EQUAL 1913)
+       AND (NOT WINDOWS_STORE)
+       AND (NOT ENABLE_OPENEXR_SUPPORT)
+       AND (NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang")))
+      message(STATUS "Building Spectre-mitigated libraries")
+      foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+        target_compile_options(${t} PRIVATE "/Qspectre")
+      endforeach()
+    endif()
+
+    if((MSVC_VERSION GREATER_EQUAL 1928)
+       AND (CMAKE_SIZEOF_VOID_P EQUAL 8)
        AND ((NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang")) OR (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)))
       foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
         target_compile_options(${t} PRIVATE "$<$<NOT:$<CONFIG:DEBUG>>:/guard:ehcont>")
         target_link_options(${t} PRIVATE "$<$<NOT:$<CONFIG:DEBUG>>:/guard:ehcont>")
       endforeach()
     endif()
+else()
+    foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+      target_compile_definitions(${t} PRIVATE $<IF:$<CONFIG:DEBUG>,_DEBUG,NDEBUG>)
+    endforeach()
 endif()
 
 if(NOT ${DIRECTX_ARCH} MATCHES "^arm")
-    if (${CMAKE_SIZEOF_VOID_P} EQUAL "4")
+    if(${CMAKE_SIZEOF_VOID_P} EQUAL "4")
         set(ARCH_SSE2 $<$<CXX_COMPILER_ID:MSVC>:/arch:SSE2> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-msse2>)
     else()
         set(ARCH_SSE2 $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-msse2>)
@@ -396,16 +438,14 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     foreach(t IN LISTS TOOL_EXES)
       target_compile_options(${t} PRIVATE ${WarningsEXE})
     endforeach()
-endif()
-if(MINGW)
+elseif(MINGW)
     foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
       target_compile_options(${t} PRIVATE -Wno-ignored-attributes)
       target_link_options(${t} PRIVATE -municode)
     endforeach()
-endif()
-if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
-      target_compile_options(${t} PRIVATE /sdl /permissive- /JMC- /Zc:__cplusplus)
+      target_compile_options(${t} PRIVATE /sdl /permissive- /JMC- /Zc:__cplusplus /Zc:inline)
     endforeach()
 
     if(ENABLE_CODE_ANALYSIS)
@@ -414,21 +454,27 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
       endforeach()
     endif()
 
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.24)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.24)
         foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
           target_compile_options(${t} PRIVATE /ZH:SHA_256)
         endforeach()
     endif()
 
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.26)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.26)
         foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
           target_compile_options(${t} PRIVATE /Zc:preprocessor /wd5105)
         endforeach()
     endif()
 
-    if ((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.27) AND (NOT (${DIRECTX_ARCH} MATCHES "^arm")))
+    if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.27) AND (NOT (${DIRECTX_ARCH} MATCHES "^arm")))
         foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
           target_link_options(${t} PRIVATE /CETCOMPAT)
+        endforeach()
+    endif()
+
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.28)
+        foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+          target_compile_options(${t} PRIVATE /Zc:lambda)
         endforeach()
     endif()
 
@@ -439,35 +485,39 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         endif()
     endif()
 
-    set(WarningsEXE "/wd4061" "/wd4062" "/wd4365" "/wd4514" "/wd4625" "/wd4626" "/wd4627" "/wd4668" "/wd4710" "/wd4751" "/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd5219")
+    set(WarningsEXE "/wd4061" "/wd4062" "/wd4365" "/wd4514" "/wd4625" "/wd4626" "/wd4627" "/wd4668" "/wd4710" "/wd4751" "/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd5219" "/wd4711")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.34)
+        list(APPEND WarningsEXE "/wd5262" "/wd5264")
+    endif()
     foreach(t IN LISTS TOOL_EXES)
       target_compile_options(${t} PRIVATE ${WarningsEXE})
     endforeach()
 endif()
 
 if(WIN32)
-    foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
-      target_compile_definitions(${t} PRIVATE _UNICODE UNICODE)
-    endforeach()
-
     if(WINDOWS_STORE)
       target_compile_definitions(${PROJECT_NAME} PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_APP)
     endif()
 
-    if(BUILD_DX12 OR WINDOWS_STORE)
-        if(BUILD_DX12)
-          message("INFO: Building with DirectX 12 Runtime support")
-        endif()
-        target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN32_WINNT=0x0A00)
+    if(BUILD_DX12 OR WINDOWS_STORE OR (${DIRECTX_ARCH} MATCHES "^arm64"))
+        message(STATUS "Building with DirectX 12 Runtime support")
+        set(WINVER 0x0A00)
+    elseif(${DIRECTX_ARCH} MATCHES "^arm")
+        set(WINVER 0x0602)
     else()
-        message("INFO: Building with Windows 7 compatibility")
-        target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN32_WINNT=0x0601 _WIN7_PLATFORM_UPDATE)
+        message(STATUS "Building with Windows 7 compatibility")
+        set(WINVER 0x0601)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN7_PLATFORM_UPDATE)
     endif()
-    foreach(t IN LISTS TOOL_EXES)
-      target_compile_definitions(${t} PRIVATE _WIN32_WINNT=0x0601)
+
+    foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+      target_compile_definitions(${t} PRIVATE _UNICODE UNICODE _WIN32_WINNT=${WINVER})
     endforeach()
+
+    if(DISABLE_MSVC_ITERATOR_DEBUGGING)
+      foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+        target_compile_definitions(${t} PRIVATE _ITERATOR_DEBUG_LEVEL=0)
+      endforeach()
+    endif()
 endif()
 
-if(BUILD_TOOLS AND WIN32 AND (NOT WINDOWS_STORE))
-  set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Texconv)
-endif()

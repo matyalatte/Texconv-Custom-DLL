@@ -2089,7 +2089,11 @@ bool DirectX::Internal::StoreScanline(
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<2, 1, 0, 3>(*sPtr++);
+#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+                v = XMVectorMultiplyAdd(v, s_Scale, g_XMOneHalf);
+#else
                 v = XMVectorMultiply(v, s_Scale);
+#endif
                 XMStoreU565(dPtr++, v);
             }
             return true;
@@ -2102,12 +2106,19 @@ bool DirectX::Internal::StoreScanline(
         if (size >= sizeof(XMU555))
         {
             static const XMVECTORF32 s_Scale = { { { 31.f, 31.f, 31.f, 1.f } } };
+#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+            static const XMVECTORF32 s_OneHalfXYZ = { { { 0.5f, 0.5f, 0.5f, 0.f } } };
+#endif
             XMU555 * __restrict dPtr = static_cast<XMU555*>(pDestination);
             for (size_t icount = 0; icount < (size - sizeof(XMU555) + 1); icount += sizeof(XMU555))
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<2, 1, 0, 3>(*sPtr++);
+#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+                v = XMVectorMultiplyAdd(v, s_Scale, s_OneHalfXYZ);
+#else
                 v = XMVectorMultiply(v, s_Scale);
+#endif
                 XMStoreU555(dPtr, v);
                 dPtr->w = (XMVectorGetW(v) > threshold) ? 1u : 0u;
                 ++dPtr;
@@ -2385,7 +2396,11 @@ bool DirectX::Internal::StoreScanline(
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<2, 1, 0, 3>(*sPtr++);
+#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+                v = XMVectorMultiplyAdd(v, s_Scale, g_XMOneHalf);
+#else
                 v = XMVectorMultiply(v, s_Scale);
+#endif
                 XMStoreUNibble4(dPtr++, v);
             }
             return true;

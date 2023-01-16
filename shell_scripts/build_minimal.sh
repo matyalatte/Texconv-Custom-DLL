@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds texconv with cmake.
+# Make a minimal build.
 # libtexconv.so or libtexconv.dylib will be generated in ./Texconv-Custom-DLL/
 
 pushd $(dirname "$0")/../
@@ -10,7 +10,6 @@ cmake \
   -D BUILD_DX11=OFF\
   -D BUILD_DX12=OFF\
   -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
-  -D TEXCONV_USE_ALL=ON\
   ../
 cmake --build .
 cp bin/CMake/libtexconv.* ../

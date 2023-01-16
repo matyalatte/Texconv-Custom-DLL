@@ -1,6 +1,6 @@
 @echo off
 
-REM Builds texconv.dll with some CMake options to support removed DDS formats and to use texassemble.
+REM Builds texconv.dll without some minor options.
 REM texconv.dll will be generated in ..\
 
 set VS_VERSION=Visual Studio 17 2022

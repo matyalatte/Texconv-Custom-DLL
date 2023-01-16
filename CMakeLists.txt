@@ -10,9 +10,12 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 set(DIRECTXTEX_VERSION 1.9.7)
 
+# for all options except for exe options and no-gpu option
+option(TEXCONV_USE_ALL "Enable 'TEXCONV_USE_*' options" OFF)
+
 # for exe build
 option(TEXCONV_BUILD_AS_EXE "Build texconv as .exe" OFF)
-option(TEXCONV_USE_ICON_FOR_EXE "Use directx.ico for .exe" OFF)
+option(TEXCONV_ICON_FOR_EXE "Use directx.ico for .exe" OFF)
 
 # for texture formats
 option(TEXCONV_USE_WIC "Use WIC-supported format (bmp, jpg, png, jxr, etc.)" OFF)
@@ -24,7 +27,6 @@ option(TEXCONV_USE_16BPP "Use 16bpp format (B5G6R5, B5G5R5A1, B4G4R4A4)" OFF)
 
 # for printing
 option(TEXCONV_USE_LOGO "Use PrintLogo()" OFF)
-option(TEXCONV_USE_USAGE "Use PrintUsage()" OFF)
 option(TEXCONV_USE_PRINT_INFO "Use PrintInfo() and PrintFormat()" OFF)
 option(TEXCONV_USE_TIMING "Use -timing" OFF)
 
@@ -51,10 +53,24 @@ option(TEXCONV_USE_SINGLEPROC "Use -singleproc" OFF)
 option(TEXCONV_USE_TGA20 "Use -tga20 " OFF)
 option(TEXCONV_USE_TEXASSEMBLE "Use texassemble as a dll function" OFF)
 
+# enable all options
+if(TEXCONV_USE_ALL)
+  get_cmake_property(_variableNames VARIABLES)
+  foreach (_variableName ${_variableNames})
+    if (_variableName MATCHES "TEXCONV_USE_*")
+      set(${_variableName} ON)
+    endif()
+  endforeach()
+  unset(_variableNames)
+endif()
+
+# disable windows options
 if(NOT WIN32)
   set(TEXCONV_USE_WIC OFF)
   set(TEXCONV_USE_PPM OFF)
   set(TEXCONV_USE_FLIP OFF)
+  set(TEXCONV_USE_LOGO OFF)
+  set(TEXCONV_USE_NAME_CONFIG OFF)
   set(TEXCONV_USE_MULTIPLE_FILES OFF)
   set(TEXCONV_NO_GPU_CODEC OFF)
   set(TEXCONV_USE_TIMING OFF)
@@ -62,19 +78,22 @@ endif()
 
 # show variables
 function(texconv_show_variables)
-
   set(ENABLED_OPTIONS "")
+  set(PREV_NAME "")
   get_cmake_property(_variableNames VARIABLES)
   foreach (_variableName ${_variableNames})
-    if ((_variableName MATCHES "TEXCONV*") AND (${_variableName} STREQUAL "ON"))
+    if ((_variableName MATCHES "TEXCONV*")
+        AND (${_variableName} STREQUAL "ON")
+        AND (NOT "${_variableName}" STREQUAL "${PREV_NAME}"))
       set(ENABLED_OPTIONS "${ENABLED_OPTIONS} ${_variableName}\n")
     endif()
+    set(PREV_NAME ${_variableName})
   endforeach()
   if (ENABLED_OPTIONS STREQUAL "")
-  message(STATUS "No enabled options for texconv.")
+    message(STATUS "No enabled options for texconv.")
   else()
-  message(STATUS "Enabled texconv options")
-  message(${ENABLED_OPTIONS})
+    message(STATUS "Enabled texconv options")
+    message(${ENABLED_OPTIONS})
   endif()
 endfunction()
 texconv_show_variables()
@@ -302,7 +321,7 @@ if(BUILD_TOOLS)
       DirectXTex/Texconv/PortablePixMap.cpp)
   endif()
   if (TEXCONV_BUILD_AS_EXE)
-    if (TEXCONV_USE_ICON_FOR_EXE)
+    if (TEXCONV_ICON_FOR_EXE)
       set(TEXCONV_FILES ${TEXCONV_FILES}
         TexconvDLL/texconv.rc)
     endif()
@@ -320,7 +339,7 @@ if(BUILD_TOOLS)
       TexconvDLL/tool_util.h
       TexconvDLL/tool_util.cpp
       TexconvDLL/texassemble.cpp)
-    if (TEXCONV_USE_ICON_FOR_EXE)
+    if (TEXCONV_ICON_FOR_EXE)
       set(TEXASSEMBLE_FILES ${TEXASSEMBLE_FILES}
         TexconvDLL/texconv.rc)
     endif()
@@ -466,7 +485,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         endif()
     endif()
 
-    set(WarningsEXE "/wd4061" "/wd4062" "/wd4365" "/wd4514" "/wd4625" "/wd4626" "/wd4627" "/wd4668" "/wd4710" "/wd4751" "/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd5219")
+    set(WarningsEXE "/wd4061" "/wd4062" "/wd4365" "/wd4514" "/wd4625" "/wd4626" "/wd4627" "/wd4668" "/wd4710" "/wd4751" "/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd5219" "/wd4711")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.34)
         list(APPEND WarningsEXE "/wd5262" "/wd5264")
     endif()

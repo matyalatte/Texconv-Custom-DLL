@@ -5,12 +5,16 @@ You can enable them with `-D` option (e.g. `-D TEXCONV_USE_WIC=ON`).
 But it'll make the dll larger.  
 If you enable all options, the dll will be almost the same size as the original Texconv.  
 
-## exe options
+## For all options
+
+-   `TEXCONV_USE_ALL`: Enable all options except for `TEXCONV_BUILD_AS_EXE`, `TEXCONV_ICON_FOR_EXE`, and `TEXCONV_NO_GPU_CODEC`  
+
+## Exe options
 
 -   `TEXCONV_BUILD_AS_EXE`: Build Texconv as .exe.
--   `TEXCONV_USE_ICON_FOR_EXE`: Use `directx.ico` when `TEXCONV_BUILD_AS_EXE` is ON.
+-   `TEXCONV_ICON_FOR_EXE`: Use `directx.ico` when `TEXCONV_BUILD_AS_EXE` is ON.
 
-## format options
+## Format options
 
 -   `TEXCONV_USE_WIC`: Enable to use WIC-supported formats (bmp, jpg, png, etc.) (Only available for Windows)
 -   `TEXCONV_USE_PPM`: Enable to use ppm and pfm formats (Only available for Windows)
@@ -21,7 +25,7 @@ If you enable all options, the dll will be almost the same size as the original 
 
 ## Printing options
 
--   `TEXCONV_USE_LOGO`: Enable to use `PrintLogo()`
+-   `TEXCONV_USE_LOGO`: Enable to use `PrintLogo()` (Only available for Windows)
 -   `TEXCONV_USE_USAGE`: Enable to use `-help`
 -   `TEXCONV_USE_PRINT_INFO`: Enable to use `PrintInfo()` and `PrintFormat()`
 -   `TEXCONV_USE_TIMING`: Enable to use `-timing` (Only available for Windows)
@@ -41,7 +45,7 @@ If you enable all options, the dll will be almost the same size as the original 
 -   `TEXCONV_USE_FEATURE_LEVEL`: Enable to use `-fl`
 -   `TEXCONV_USE_BC_CONFIG`: Enable to use `-bc`
 -   `TEXCONV_USE_SRGB`: Enable to use `-srgb`, `-srgbi`, and `-srgbo`
--   `TEXCONV_USE_NAME_CONFIG`: Enable to use `-px`, `-sx`, and `-l`
+-   `TEXCONV_USE_NAME_CONFIG`: Enable to use `-px`, `-sx`, and `-l` (Only available for Windows)
 -   `TEXCONV_USE_DITHER`: Enable to use dither filters for `-if` option
 -   `TEXCONV_NO_GPU_CODEC`: Disable GPU codec for BC6 and BC7 (Only available for Windows)
 -   `TEXCONV_USE_GPU_CONFIG`: Enable to use `-gpu` and `-nogpu`

@@ -35,9 +35,6 @@
 // Use PrintLogo() or not
 #define USE_LOGO __@TEXCONV_USE_LOGO@__
 
-// Use PrintUsage() or not
-#define USE_USAGE __@TEXCONV_USE_USAGE@__
-
 // Use -timing or not
 #define USE_TIMING __@TEXCONV_USE_TIMING@__
 

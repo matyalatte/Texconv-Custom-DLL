@@ -62,6 +62,7 @@ jobs:
           mkdir -p ../release
           cp texconv.dll ../release/
           cp texconv.exe ../release/
+          cp texassemble.exe ../release/
           cp changelog.txt ../release/
           cp LICENSE ../release/
         shell: bash
@@ -107,6 +108,7 @@ jobs:
           mkdir -p ../release/${{ env.ZIP_NAME }}
           cp libtexconv.* ../release/${{ env.ZIP_NAME }}
           cp texconv ../release/${{ env.ZIP_NAME }}
+          cp texassemble ../release/${{ env.ZIP_NAME }}
           cp changelog.txt ../release/${{ env.ZIP_NAME }}
           cp LICENSE ../release/${{ env.ZIP_NAME }}
           cd ../release

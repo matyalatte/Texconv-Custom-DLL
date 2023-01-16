@@ -54,10 +54,6 @@ And 1 means failed to convert.
 
 You can use [texassemble](https://github.com/microsoft/DirectXTex/wiki/Texassemble) if you built the dll with `TEXCONV_USE_TEXASSEMBLE` option.
 
-> **Warning**  
-> This function is not included in the released builds.  
-> You need to build it by yourself if you want to use.  
-
 ```c++
 int texassemble(int argc, wchar_t* argv[], bool verbose = true,
             bool init_com = false,

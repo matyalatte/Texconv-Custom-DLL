@@ -720,7 +720,7 @@ namespace
     }
 #endif
 
-#if USE_USAGE
+#if BUILD_AS_EXE
     void PrintList(size_t cch, const SValue *pValue)
     {
         while (pValue->name)
@@ -780,7 +780,7 @@ namespace
     }
 #endif
 
-#if USE_USAGE
+#if BUILD_AS_EXE
     void PrintUsage()
     {
     #if USE_LOGO
@@ -868,7 +868,7 @@ namespace
         PrintList(13, g_pFeatureLevels);
     #endif
     }
-#endif //USE_USAGE
+#endif //BUILD_AS_EXE
 
     HRESULT SaveImageFile(const Image& img, uint32_t fileType, const wchar_t* szOutputFile)
     {
@@ -1093,7 +1093,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     // Process command line
     if (argc < 1)
     {
-    #if USE_USAGE
+    #if BUILD_AS_EXE
         PrintUsage();
     #endif
         return 0;
@@ -1152,7 +1152,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             const uint32_t dwOption = LookupByName(pArg, g_pOptions);
 
-        #if USE_USAGE
+        #if BUILD_AS_EXE
             if (!dwOption || (dwOptions & (uint64_t(1) << dwOption)))
             {
                 PrintUsage();
@@ -1334,7 +1334,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 maxVolume = LookupByName(pValue, g_pFeatureLevelsVolume);
                 if (!maxSize || !maxCube || !maxArray || !maxVolume)
                 {
-                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-fl", pValue)
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-fl", pValue);
                     return 1;
                 }
                 break;
@@ -1359,7 +1359,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 }
                 if (!*pValue || wcslen(pValue) > 4)
                 {
-                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-swizzle", pValue)
+                    RaiseInvalidOptionError(err_buf, err_buf_size, L"-swizzle", pValue);
                     return 1;
                 }
                 else if (!ParseSwizzleMask(pValue, permuteElements, zeroElements, oneElements))
@@ -1417,7 +1417,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
     if (conversion.empty())
     {
-    #if USE_USAGE
+    #if BUILD_AS_EXE
         PrintUsage();
     #endif
         return 0;

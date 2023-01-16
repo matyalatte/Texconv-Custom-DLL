@@ -1,6 +1,6 @@
 #!/bin/bash
-# Builds texconv with cmake.
-# texconv will be generated in ./Texconv-Custom-DLL/
+# Builds executables with cmake.
+# texconv and texassemble will be generated in ./Texconv-Custom-DLL/
 
 pushd $(dirname "$0")/../
 mkdir build_exe
@@ -11,8 +11,9 @@ cmake \
   -D BUILD_DX12=OFF\
   -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
   -D TEXCONV_BUILD_AS_EXE=ON\
-  -D TEXCONV_USE_USAGE=ON\
+  -D TEXCONV_USE_ALL=ON\
   ../
 cmake --build .
 cp bin/CMake/texconv ../
+cp bin/CMake/texassemble ../
 popd

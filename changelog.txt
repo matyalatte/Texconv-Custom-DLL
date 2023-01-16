@@ -1,6 +1,8 @@
 v0.2.2
 - Updated submodules
-- Fixed an error when building texassemble with TEXCONV_USE_WIC
+- Added "TEXCONV_USE_ALL" option (it'll enable all "TEXCONV_USE_*" options)
+- Removed "TEXCONV_USE_USAGE" option (it'll be enabled with TEXCONV_BUILD_AS_EXE)
+- Fixed errors when using some cmake options
 - Fixed a bug that initialized images won't be zeroed.
 - Removed a cmake warning for config.h.in
 

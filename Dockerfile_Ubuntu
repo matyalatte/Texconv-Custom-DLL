@@ -2,12 +2,16 @@
 #
 # 1. Use this docker file to build the executable.
 #    docker build -t texconv -f Dockerfile_Ubuntu ./
+#
 # 2. Run the built image. 
 #    docker run texconv
-# 3. Use "docker cp" to get the built executable.
-#    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/texconv /<SOMEPATH>/texconv
+#
+# 3. Use "docker cp" to get the built executables.
+#    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/texconv ./
+#    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/texassemble ./
+#
 # 4. Also, you can get the built shared library.
-#    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/libtexconv.so /<SOMEPATH>/libtexconv.so
+#    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/libtexconv.so ./
 
 # Base image
 ARG ubuntu_version="20.04"

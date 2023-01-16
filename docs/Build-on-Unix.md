@@ -40,13 +40,8 @@ You can build `libtexconv.so` (or `libtexconv.dylib`) with a shell script.
 Move to `Texconv-Custom-DLL/shell_scripts` and type `bash build.sh` on the terminal.  
 `libtexconv.so` (or `libtexconv.dylib`) will be generated in `./Texconv-Custom-DLL/`.  
 
-## 4. Build executable (optional)
+## 4. Build executables (optional)
 
 If you want an executable, use `build_as_exe.sh` instead of `build.sh`.  
-`texconv` will be generated in `./Texconv-Custom-DLL/`.  
-You can use it on the terminal. (e.g. `./texconv -ft tga -y -o outdir test.dds`)  
-
-## 5. Build texassemble (optional)
-
-If you want to build texassemble as an executable, use `build_texassemble.sh` instead of `build.sh`.  
-If you want to use texassemble as a dll function, use `build_dds_full_support.sh` instead of `build.sh`.  
+`texconv` and `texassemble` will be generated in `./Texconv-Custom-DLL/`.  
+You can use them on the terminal. (e.g. `./texconv -ft tga -y -o outdir test.dds`)  

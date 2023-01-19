@@ -1,12 +1,12 @@
 # Texconv-Custom-DLL v0.2.2
 
-Cross-platform and customizable implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv).  
+Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).  
 And you can use it as a DLL (or a shared library).  
 
 ## What's Texconv?
 
 [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv)
-is a texture converter developed by Microsoft.  
+is a DDS converter developed by Microsoft.  
 It supports all dds formats.  
 There are some dds formats common tools can't handle properly, but Texconv can.  
 It's the best DDS converter as far as I know.  

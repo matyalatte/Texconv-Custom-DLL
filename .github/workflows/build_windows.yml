@@ -24,6 +24,7 @@ jobs:
           mkdir -p ../release
           cp texconv.dll ../release/
           cp texconv.exe ../release/
+          cp texassemble.exe ../release/
           cp changelog.txt ../release/
           cp LICENSE ../release/
         shell: bash

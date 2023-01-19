@@ -369,12 +369,12 @@ HRESULT ScratchImage::Initialize(const TexMetadata& mdata, CP_FLAGS flags) noexc
     memset(m_image, 0, sizeof(Image) * nimages);
 
     m_memory = static_cast<uint8_t*>(_aligned_malloc(pixelSize, 16));
-    memset(m_memory, 0, pixelSize);
     if (!m_memory)
     {
         Release();
         return E_OUTOFMEMORY;
     }
+    memset(m_memory, 0, pixelSize);
     m_size = pixelSize;
     if (!SetupImageArray(m_memory, pixelSize, m_metadata, flags, m_image, nimages))
     {
@@ -437,12 +437,12 @@ HRESULT ScratchImage::Initialize2D(DXGI_FORMAT fmt, size_t width, size_t height,
     memset(m_image, 0, sizeof(Image) * nimages);
 
     m_memory = static_cast<uint8_t*>(_aligned_malloc(pixelSize, 16));
-    memset(m_memory, 0, pixelSize);
     if (!m_memory)
     {
         Release();
         return E_OUTOFMEMORY;
     }
+    memset(m_memory, 0, pixelSize);
     m_size = pixelSize;
     if (!SetupImageArray(m_memory, pixelSize, m_metadata, flags, m_image, nimages))
     {
@@ -492,12 +492,12 @@ HRESULT ScratchImage::Initialize3D(DXGI_FORMAT fmt, size_t width, size_t height,
     memset(m_image, 0, sizeof(Image) * nimages);
 
     m_memory = static_cast<uint8_t*>(_aligned_malloc(pixelSize, 16));
-    memset(m_memory, 0, pixelSize);
     if (!m_memory)
     {
         Release();
         return E_OUTOFMEMORY;
     }
+    memset(m_memory, 0, pixelSize);
     m_size = pixelSize;
 
     if (!SetupImageArray(m_memory, pixelSize, m_metadata, flags, m_image, nimages))

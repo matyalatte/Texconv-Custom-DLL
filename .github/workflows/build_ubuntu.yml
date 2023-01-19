@@ -26,6 +26,7 @@ jobs:
           mkdir -p ../release/${{ env.ZIP_NAME }}
           cp libtexconv.so ../release/${{ env.ZIP_NAME }}
           cp texconv ../release/${{ env.ZIP_NAME }}
+          cp texassemble ../release/${{ env.ZIP_NAME }}
           cp changelog.txt ../release/${{ env.ZIP_NAME }}
           cp LICENSE ../release/${{ env.ZIP_NAME }}
           cd ../release

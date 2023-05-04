@@ -17,6 +17,7 @@ cmake \
   -D TEXCONV_USE_3D=ON\
   -D TEXCONV_USE_TEXASSEMBLE=ON\
   -D TEXCONV_USE_FILTER=ON\
+  -D BC_USE_OPENMP=OFF\
   ../
 cmake --build .
 cp bin/CMake/libtexconv.* ../

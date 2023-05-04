@@ -821,7 +821,7 @@ namespace
                     if (wcspbrk(fname, L"?*") != nullptr)
                     {
                         std::list<SConversion> removeFiles;
-                        SearchForFiles(npath.c_str(), removeFiles, false, nullptr);
+                        SearchForFiles(npath.wstring().c_str(), removeFiles, false, nullptr);
 
                         for (auto& it : removeFiles)
                         {
@@ -831,7 +831,7 @@ namespace
                     }
                     else
                     {
-                        std::wstring name = npath.c_str();
+                        std::wstring name = npath.wstring().c_str();
                         std::transform(name.begin(), name.end(), name.begin(), towlower);
                         excludes.insert(name);
                     }
@@ -840,13 +840,13 @@ namespace
             else if (wcspbrk(fname, L"?*") != nullptr)
             {
                 std::filesystem::path path(fname);
-                SearchForFiles(path.make_preferred().c_str(), flist, false, nullptr);
+                SearchForFiles(path.make_preferred().wstring().c_str(), flist, false, nullptr);
             }
             else
             {
                 SConversion conv = {};
                 std::filesystem::path path(fname);
-                wcscpy_s(conv.szSrc, path.make_preferred().c_str());
+                wcscpy_s(conv.szSrc, MAX_PATH, path.make_preferred().wstring().c_str());
                 flist.push_back(conv);
             }
 
@@ -1902,7 +1902,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_OUTPUTDIR:
                 {
                     std::filesystem::path path(pValue);
-                    wcscpy_s(szOutputDir, path.make_preferred().c_str());
+                    wcscpy_s(szOutputDir, MAX_PATH, path.make_preferred().wstring().c_str());
                 }
                 break;
 
@@ -2196,7 +2196,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_FILELIST:
                 {
                     std::filesystem::path path(pValue);
-                    std::wifstream inFile(path.make_preferred().c_str());
+                    std::wifstream inFile(path.make_preferred().wstring().c_str());
                     if (!inFile)
                     {
                         RaiseErrorMessage(err_buf, err_buf_size, L"Error opening -flist file ", pValue, L" \n");
@@ -2261,7 +2261,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         {
             const size_t count = conversion.size();
             std::filesystem::path path(pArg);
-            SearchForFiles(path.make_preferred().c_str(), conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
+            SearchForFiles(path.make_preferred().wstring().c_str(), conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
                 RaiseErrorMessage(err_buf, err_buf_size, L"No matching files found for ", pArg, L" \n");
@@ -2273,7 +2273,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         {
             SConversion conv = {};
             std::filesystem::path path(pArg);
-            wcscpy_s(conv.szSrc, path.make_preferred().c_str());
+            wcscpy_s(conv.szSrc, MAX_PATH, path.make_preferred().wstring().c_str());
 
             conversion.push_back(conv);
         #if USE_MULTIPLE_FILES

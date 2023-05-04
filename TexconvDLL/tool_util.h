@@ -7,6 +7,7 @@
 extern "C"{
 #include <safe_str_lib.h>
 }
+#include <filesystem>
 
 // Todo: Use secure function
 #define swscanf_s swscanf
@@ -41,8 +42,8 @@ void _wmakepath_s(
         for(;*dir && *dir!= '\0' && s < end;)
             *s++ = *dir++;
     }
-    if (s > &path[0] && s < end && (*(s - 1) != SLASH)) {
-        *s++ = SLASH;
+    if (s > &path[0] && s < end && (*(s - 1) != std::filesystem::path::preferred_separator)) {
+        *s++ = std::filesystem::path::preferred_separator;
     }
     if (fname) {
         for(; *fname && *fname!= '\0' && s < end;)

@@ -27,6 +27,10 @@
 #endif
 #endif
 
+#if __cplusplus < 201703L
+#error Requires C++17 (and /Zc:__cplusplus with MSVC)
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -36,6 +40,7 @@
 #include <cstring>
 #include <cwchar>
 #include <cwctype>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <list>
@@ -766,8 +771,8 @@ namespace
                     {
                         wchar_t subdir[MAX_PATH] = {};
                         auto subfolder = (folder)
-                            ? (std::wstring(folder) + std::wstring(findData.cFileName) + WSLASH)
-                            : (std::wstring(findData.cFileName) + WSLASH);
+                            ? (std::wstring(folder) + std::wstring(findData.cFileName) + std::filesystem::path::preferred_separator)
+                            : (std::wstring(findData.cFileName) + std::filesystem::path::preferred_separator);
                         {
                             wchar_t drive[_MAX_DRIVE] = {};
                             wchar_t dir[_MAX_DIR] = {};
@@ -811,12 +816,14 @@ namespace
                 }
                 else
                 {
+                    std::filesystem::path path(fname + 1);
+                    auto& npath = path.make_preferred();
                     if (wcspbrk(fname, L"?*") != nullptr)
                     {
                         std::list<SConversion> removeFiles;
-                        SearchForFiles(&fname[1], removeFiles, false, nullptr);
+                        SearchForFiles(npath.c_str(), removeFiles, false, nullptr);
 
-                        for (auto it : removeFiles)
+                        for (auto& it : removeFiles)
                         {
                             _wcslwr_s(it.szSrc);
                             excludes.insert(it.szSrc);
@@ -824,7 +831,7 @@ namespace
                     }
                     else
                     {
-                        std::wstring name = (fname + 1);
+                        std::wstring name = npath.c_str();
                         std::transform(name.begin(), name.end(), name.begin(), towlower);
                         excludes.insert(name);
                     }
@@ -832,12 +839,14 @@ namespace
             }
             else if (wcspbrk(fname, L"?*") != nullptr)
             {
-                SearchForFiles(fname, flist, false, nullptr);
+                std::filesystem::path path(fname);
+                SearchForFiles(path.make_preferred().c_str(), flist, false, nullptr);
             }
             else
             {
                 SConversion conv = {};
-                wcscpy_s(conv.szSrc, MAX_PATH, fname);
+                std::filesystem::path path(fname);
+                wcscpy_s(conv.szSrc, path.make_preferred().c_str());
                 flist.push_back(conv);
             }
 
@@ -980,7 +989,7 @@ namespace
 #endif
 
 #if USE_LOGO
-    void PrintLogo()
+    void PrintLogo(bool versionOnly)
     {
         wchar_t version[32] = {};
 
@@ -1008,12 +1017,19 @@ namespace
             swprintf_s(version, L"%03d (library)", DIRECTX_TEX_VERSION);
         }
 
-        wprintf(L"Microsoft (R) DirectX Texture Converter [DirectXTex] Version %ls\n", version);
-        wprintf(L"Copyright (C) Microsoft Corp.\n");
-    #ifdef _DEBUG
-        wprintf(L"*** Debug build ***\n");
-    #endif
-        wprintf(L"\n");
+        if (versionOnly)
+        {
+            wprintf(L"texconv version %ls\n", version);
+        }
+        else
+        {
+            wprintf(L"Microsoft (R) DirectX Texture Converter [DirectXTex] Version %ls\n", version);
+            wprintf(L"Copyright (C) Microsoft Corp.\n");
+        #ifdef _DEBUG
+            wprintf(L"*** Debug build ***\n");
+        #endif
+            wprintf(L"\n");
+        }
     }
 #endif
 
@@ -1049,133 +1065,153 @@ namespace
     void PrintUsage()
     {
     #if USE_LOGO
-        PrintLogo();
+        PrintLogo(false);
     #endif
 
-        wprintf(L"Usage: texconv <options> <files>\n");
+        static const wchar_t* const s_usage =
+            L"Usage: texconv <options> [--] <files>\n"
     #if USE_MULTIPLE_FILES
-        wprintf(L"\n   -r                  wildcard filename search is recursive\n");
-        wprintf(L"     -r:flatten        flatten the directory structure (default)\n");
-        wprintf(L"     -r:keep           keep the directory structure\n");
-        wprintf(L"   -flist <filename>   use text file with a list of input files (one per line)\n");
+            L"\n"
+            L"   -r                  wildcard filename search is recursive\n"
+            L"     -r:flatten        flatten the directory structure (default)\n"
+            L"     -r:keep           keep the directory structure\n"
+            L"   -flist <filename>   use text file with a list of input files (one per line)\n"
     #endif
-        wprintf(L"\n   -w <n>              width\n");
-        wprintf(L"   -h <n>              height\n");
-        wprintf(L"   -m <n>              miplevels\n");
-        wprintf(L"   -f <format>         format\n");
-        wprintf(L"\n   -if <filter>        image filtering\n");
+            L"\n"
+            L"   -w <n>              width\n"
+            L"   -h <n>              height\n"
+            L"   -m <n>              miplevels\n"
+            L"   -f <format>         format\n"
+            L"\n"
+            L"   -if <filter>        image filtering\n"
     #if USE_SRGB
-        wprintf(L"   -srgb{i|o}          sRGB {input, output}\n");
+            L"   -srgb{i|o}          sRGB {input, output}\n"
     #endif
     #if USE_NAME_CONFIG
-        wprintf(L"\n   -px <string>        name prefix\n");
-        wprintf(L"   -sx <string>        name suffix\n");
+            L"\n"
+            L"   -px <string>        name prefix\n"
+            L"   -sx <string>        name suffix\n"
     #endif
-        wprintf(L"   -o <directory>      output directory\n");
+            L"   -o <directory>      output directory\n"
     #if USE_NAME_CONFIG
-        wprintf(L"   -l                  force output filename to lower case\n");
+            L"   -l                  force output filename to lower case\n"
     #endif
-        wprintf(L"   -y                  overwrite existing output file (if any)\n");
-        wprintf(L"   -ft <filetype>      output file type\n");
+            L"   -y                  overwrite existing output file (if any)\n"
+            L"   -ft <filetype>      output file type\n"
     #if USE_FLIP
-        wprintf(L"\n   -hflip              horizonal flip of source image\n");
-        wprintf(L"   -vflip              vertical flip of source image\n");
+            L"\n"
+            L"   -hflip              horizonal flip of source image\n"
+            L"   -vflip              vertical flip of source image\n"
     #endif
     #if USE_ALPHA_CONFIG
-        wprintf(L"\n   -sepalpha           resize/generate mips alpha channel separately\n");
-        wprintf(L"                       from color channels\n");
-        wprintf(L"   -keepcoverage <ref> Preserve alpha coverage in mips for alpha test ref\n");
+            L"\n"
+            L"   -sepalpha           resize/generate mips alpha channel separately\n"
+            L"                       from color channels\n"
+            L"   -keepcoverage <ref> Preserve alpha coverage in mips for alpha test ref\n"
     #endif
     #if USE_WIC
-        wprintf(L"\n   -nowic              Force non-WIC filtering\n");
+            L"\n"
+            L"   -nowic              Force non-WIC filtering\n"
     #endif
     #if USE_ADDRESSING
-        wprintf(L"   -wrap, -mirror      texture addressing mode (wrap, mirror, or clamp)\n");
+            L"   -wrap, -mirror      texture addressing mode (wrap, mirror, or clamp)\n"
     #endif
     #if USE_ALPHA_CONFIG
-        wprintf(L"   -pmalpha            convert final texture to use premultiplied alpha\n");
-        wprintf(L"   -alpha              convert premultiplied alpha to straight alpha\n");
-        wprintf(
+            L"   -pmalpha            convert final texture to use premultiplied alpha\n"
+            L"   -alpha              convert premultiplied alpha to straight alpha\n"
+            
             L"   -at <threshold>     Alpha threshold used for BC1, RGBA5551, and WIC\n"
-            L"                       (defaults to 0.5)\n");
+            L"                       (defaults to 0.5)\n"
     #endif
     #if USE_FEATURE_LEVEL
-        wprintf(L"\n   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n");
+            L"\n"
+            L"   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n"
     #endif
-        wprintf(L"   -pow2               resize to fit a power-of-2, respecting aspect ratio\n");
+            L"   -pow2               resize to fit a power-of-2, respecting aspect ratio\n"
     #if USE_NMAP_CONFIG
-        wprintf(
-            L"\n   -nmap <options>     converts height-map to normal-map\n"
+            L"\n"
+            L"   -nmap <options>     converts height-map to normal-map\n"
             L"                       options must be one or more of\n"
-            L"                          r, g, b, a, l, m, u, v, i, o\n");
-        wprintf(L"   -nmapamp <weight>   normal map amplitude (defaults to 1.0)\n");
-        wprintf(L"\n                       (DDS input only)\n");
+            L"                          r, g, b, a, l, m, u, v, i, o\n"
+            L"   -nmapamp <weight>   normal map amplitude (defaults to 1.0)\n"
+            L"\n"
+            L"                       (DDS input only)\n"
     #endif
     #if USE_MINOR_DDS_CONFIG
-        wprintf(L"   -t{u|f}             TYPELESS format is treated as UNORM or FLOAT\n");
-        wprintf(L"   -dword              Use DWORD instead of BYTE alignment\n");
-        wprintf(L"   -badtails           Fix for older DXTn with bad mipchain tails\n");
-        wprintf(L"   -fixbc4x4           Fix for odd-sized BC files that Direct3D can't load\n");
-        wprintf(L"   -xlum               expand legacy L8, L16, and A8P8 formats\n");
-        wprintf(L"\n                       (DDS output only)\n");
-        wprintf(L"   -dx10               Force use of 'DX10' extended header\n");
-        wprintf(L"   -dx9                Force use of legacy DX9 header\n");
-        wprintf(L"\n                       (TGA output only)\n");
+            L"   -t{u|f}             TYPELESS format is treated as UNORM or FLOAT\n"
+            L"   -dword              Use DWORD instead of BYTE alignment\n"
+            L"   -badtails           Fix for older DXTn with bad mipchain tails\n"
+            L"   -fixbc4x4           Fix for odd-sized BC files that Direct3D can't load\n"
+            L"   -xlum               expand legacy L8, L16, and A8P8 formats\n"
+            L"\n"
+            L"                       (DDS output only)\n"
+            L"   -dx10               Force use of 'DX10' extended header\n"
+            L"   -dx9                Force use of legacy DX9 header\n"
+            L"\n"
+            L"                       (TGA output only)\n"
     #endif
     #if USE_TGA20
-        wprintf(L"   -tga20              Write file including TGA 2.0 extension area\n");
-        wprintf(L"\n                       (BMP, PNG, JPG, TIF, WDP output only)\n");
+            L"   -tga20              Write file including TGA 2.0 extension area\n"
+            L"\n"
+            L"                       (BMP, PNG, JPG, TIF, WDP output only)\n"
     #endif
     #if USE_WIC
-        wprintf(L"   -wicq <quality>     When writing images with WIC use quality (0.0 to 1.0)\n");
-        wprintf(L"   -wiclossless        When writing images with WIC use lossless mode\n");
-        wprintf(L"   -wicmulti           When writing images with WIC encode multiframe images\n");
+            L"   -wicq <quality>     When writing images with WIC use quality (0.0 to 1.0)\n"
+            L"   -wiclossless        When writing images with WIC use lossless mode\n"
+            L"   -wicmulti           When writing images with WIC encode multiframe images\n"
     #endif
     #if USE_LOGO
-        wprintf(L"\n   -nologo             suppress copyright message\n");
+            L"\n"
+            L"   -nologo             suppress copyright message\n"
     #endif
     #if USE_TIMING
-        wprintf(L"   -timing             Display elapsed processing time\n\n");
+            L"   -timing             Display elapsed processing time\n\n"
     #endif
     #ifdef _OPENMP
     #if USE_SINGLEPROC
-        wprintf(L"   -singleproc         Do not use multi-threaded compression\n");
+            L"   -singleproc         Do not use multi-threaded compression\n"
     #endif
     #endif
     #if USE_GPU_CONFIG
-        wprintf(L"   -gpu <adapter>      Select GPU for DirectCompute-based codecs (0 is default)\n");
-        wprintf(L"   -nogpu              Do not use DirectCompute-based codecs\n");
+            L"   -gpu <adapter>      Select GPU for DirectCompute-based codecs (0 is default)\n"
+            L"   -nogpu              Do not use DirectCompute-based codecs\n"
     #endif
     #if USE_BC_CONFIG
-        wprintf(
-            L"\n   -bc <options>       Sets options for BC compression\n"
+            L"\n"
+            L"   -bc <options>       Sets options for BC compression\n"
             L"                       options must be one or more of\n"
-            L"                          d, u, q, x\n");
+            L"                          d, u, q, x\n"
     #endif
     #if UES_ALPHA
-        wprintf(
+            
             L"   -aw <weight>        BC7 GPU compressor weighting for alpha error metric\n"
-            L"                       (defaults to 1.0)\n");
+            L"                       (defaults to 1.0)\n"
     #endif
     #if USE_COLORKEY
-        wprintf(L"\n   -c <hex-RGB>        colorkey (a.k.a. chromakey) transparency\n");
+            L"\n"
+            L"   -c <hex-RGB>        colorkey (a.k.a. chromakey) transparency\n"
     #endif
     #if USE_ROTATE_COLOR
-        wprintf(L"   -rotatecolor <rot>  rotates color primaries and/or applies a curve\n");
+            L"   -rotatecolor <rot>  rotates color primaries and/or applies a curve\n"
     #endif
     #if USE_ROTATE_COLOR
-        wprintf(L"   -nits <value>       paper-white value in nits to use for HDR10 (def: 200.0)\n");
+            L"   -nits <value>       paper-white value in nits to use for HDR10 (def: 200.0)\n"
     #endif
     #if USE_TONEMAP
-        wprintf(L"   -tonemap            Apply a tonemap operator based on maximum luminance\n");
+            L"   -tonemap            Apply a tonemap operator based on maximum luminance\n"
     #endif
     #if USE_X2BIAS
-        wprintf(L"   -x2bias             Enable *2 - 1 conversion cases for unorm/pos-only-float\n");
+            L"   -x2bias             Enable *2 - 1 conversion cases for unorm/pos-only-float\n"
     #endif
-        wprintf(L"   -inverty            Invert Y (i.e. green) channel values\n");
-        wprintf(L"   -reconstructz       Rebuild Z (blue) channel assuming X/Y are normals\n");
+            L"   -inverty            Invert Y (i.e. green) channel values\n"
+            L"   -reconstructz       Rebuild Z (blue) channel assuming X/Y are normals\n"
     #if USE_SWIZZLE
-        wprintf(L"   -swizzle <rgba>     Swizzle image channels using HLSL-style mask\n");
+            L"   -swizzle <rgba>     Swizzle image channels using HLSL-style mask\n"
+    #endif
+            L"\n"
+            L"   '-- ' is needed if any input filepath starts with the '-' or '/' character\n";
+        wprintf(L"%ls", s_usage);
+
         wprintf(L"\n   <format>: ");
         PrintList(13, g_pFormats);
         wprintf(L"      ");
@@ -1183,7 +1219,6 @@ namespace
 
         wprintf(L"\n   <filter>: ");
         PrintList(13, g_pFilters);
-    #endif
 
     #if USE_ROTATE_COLOR
         wprintf(L"\n   <rot>: ");
@@ -1308,7 +1343,8 @@ namespace
                     hr = pAdapter->GetDesc(&desc);
                     if (SUCCEEDED(hr))
                     {
-                        wprintf(L"\n[Using DirectCompute on \"%ls\"]\n", desc.Description);
+                        wprintf(L"\n[Using DirectCompute %ls on \"%ls\"]\n",
+                            (fl >= D3D_FEATURE_LEVEL_11_0) ? L"5.0" : L"4.0", desc.Description);
                     }
                 }
             }
@@ -1647,13 +1683,42 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     // Process command line
     uint64_t dwOptions = 0;
     std::list<SConversion> conversion;
+    bool allowOpts = true;
 
     for (int iArg = 0; iArg < argc; iArg++)
     {
         PWSTR pArg = argv[iArg];
 
-        //if (('-' == pArg[0]) || ('/' == pArg[0]))
-        if ('-' == pArg[0])  // '/' is used for paths in Unix systems.
+        if (allowOpts
+            && ('-' == pArg[0]) && ('-' == pArg[1]))
+        {
+            if (pArg[2] == 0)
+            {
+                // "-- " is the POSIX standard for "end of options" marking to escape the '-' and '/' characters at the start of filepaths.
+                allowOpts = false;
+            }
+            else if (!_wcsicmp(pArg,L"--version"))
+            {
+                #if USE_LOGO
+                PrintLogo(true);
+                #endif
+                return 0;
+            }
+            else if (!_wcsicmp(pArg, L"--help"))
+            {
+                #if BUILD_AS_EXE
+                PrintUsage();
+                #endif
+                return 0;
+            }
+            else
+            {
+                wprintf(L"Unknown option: %ls\n", pArg);
+                return 1;
+            }
+        }
+        else if (allowOpts
+            && (('-' == pArg[0]) || ('/' == pArg[0])))
         {
             pArg++;
             PWSTR pValue;
@@ -1835,7 +1900,10 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         #endif
 
             case OPT_OUTPUTDIR:
-                wcscpy_s(szOutputDir, MAX_PATH, pValue);
+                {
+                    std::filesystem::path path(pValue);
+                    wcscpy_s(szOutputDir, path.make_preferred().c_str());
+                }
                 break;
 
             case OPT_FILETYPE:
@@ -2127,7 +2195,8 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
             case OPT_FILELIST:
                 {
-                    std::wifstream inFile(pValue);
+                    std::filesystem::path path(pValue);
+                    std::wifstream inFile(path.make_preferred().c_str());
                     if (!inFile)
                     {
                         RaiseErrorMessage(err_buf, err_buf_size, L"Error opening -flist file ", pValue, L" \n");
@@ -2191,7 +2260,8 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         else if (wcspbrk(pArg, L"?*") != nullptr)
         {
             const size_t count = conversion.size();
-            SearchForFiles(pArg, conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
+            std::filesystem::path path(pArg);
+            SearchForFiles(path.make_preferred().c_str(), conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
                 RaiseErrorMessage(err_buf, err_buf_size, L"No matching files found for ", pArg, L" \n");
@@ -2202,7 +2272,8 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         else
         {
             SConversion conv = {};
-            wcscpy_s(conv.szSrc, MAX_PATH, pArg);
+            std::filesystem::path path(pArg);
+            wcscpy_s(conv.szSrc, path.make_preferred().c_str());
 
             conversion.push_back(conv);
         #if USE_MULTIPLE_FILES
@@ -2226,13 +2297,15 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
 #if USE_LOGO
     if (~dwOptions & (uint64_t(1) << OPT_NOLOGO))
-        PrintLogo();
+        PrintLogo(false);
 #endif
 
     // Work out out filename prefix and suffix
-    if (szOutputDir[0] && (SLASH != szOutputDir[wcslen(szOutputDir) - 1]))
-        //wcscat_s won't work on mac
-        wcsncat_s(szOutputDir, MAX_PATH, &WSLASH, 1);
+    if (szOutputDir[0] && (std::filesystem::path::preferred_separator != szOutputDir[wcslen(szOutputDir) - 1]))
+    {
+        wchar_t pSeparator[2] = { std::filesystem::path::preferred_separator, 0 };
+        wcscat_s(szOutputDir, MAX_PATH, pSeparator);
+    }
 
     auto fileTypeName = LookupByValue(FileType, g_pSaveFileTypes);
 
@@ -3956,13 +4029,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             if (*szPrefix)
                 wcscat_s(szDest, MAX_PATH, szPrefix);
 
-            pchSlash = wcsrchr(pConv->szSrc, SLASH);
+            pchSlash = wcsrchr(pConv->szSrc, std::filesystem::path::preferred_separator);
             if (pchSlash)
                 wcscat_s(szDest, MAX_PATH, pchSlash + 1);
             else
                 wcscat_s(szDest, MAX_PATH, pConv->szSrc);
 
-            pchSlash = wcsrchr(szDest, SLASH);
+            pchSlash = wcsrchr(szDest, std::filesystem::path::preferred_separator);
             pchDot = wcsrchr(szDest, '.');
 
             if (pchDot > pchSlash)

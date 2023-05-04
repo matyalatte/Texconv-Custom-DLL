@@ -3,20 +3,10 @@
 #include <cstdio>
 #include <wrl/client.h>
 
-// Define slash for paths
-#ifdef _WIN32
-const wchar_t WSLASH = L'\\';
-const char SLASH = '\\';
-#else
-const wchar_t WSLASH = L'/';
-const char SLASH = '/';
-#endif
-
 #ifndef _WIN32
 extern "C"{
 #include <safe_str_lib.h>
 }
-#include <filesystem>
 
 // Todo: Use secure function
 #define swscanf_s swscanf

@@ -18,6 +18,7 @@ python
 out
 *.dds
 *.tga
+*.png
 
 # script
 *.bat

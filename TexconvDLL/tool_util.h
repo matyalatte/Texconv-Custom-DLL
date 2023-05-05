@@ -1,5 +1,6 @@
 #pragma once
 
+#include "TexconvDLL/config.h"
 #include <cstdio>
 #include <wrl/client.h>
 

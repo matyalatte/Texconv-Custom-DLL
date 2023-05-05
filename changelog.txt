@@ -1,5 +1,6 @@
 v0.2.3
 - Updated submodules
+- Fixed a bug that exe can't show error messages.
 
 v0.2.2
 - Updated submodules

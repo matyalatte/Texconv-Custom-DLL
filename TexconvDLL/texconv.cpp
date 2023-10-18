@@ -2340,7 +2340,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     bool preserveAlphaCoverage = false;
 #endif
 #ifdef _WIN32
-    static ComPtr<ID3D11Device> pDevice;
+    ComPtr<ID3D11Device> pDevice;
 #endif
 
     int retVal = 0;

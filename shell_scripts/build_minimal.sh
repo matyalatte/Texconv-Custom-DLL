@@ -10,6 +10,7 @@ cmake \
   -D BUILD_DX11=OFF\
   -D BUILD_DX12=OFF\
   -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
+  -D BC_USE_OPENMP=OFF\
   ../
 cmake --build .
 cp bin/CMake/libtexconv.* ../

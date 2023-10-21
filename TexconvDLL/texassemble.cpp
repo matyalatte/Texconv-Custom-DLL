@@ -22,6 +22,10 @@
 #define NOHELP
 #pragma warning(pop)
 
+#if __cplusplus < 201703L
+#error Requires C++17 (and /Zc:__cplusplus with MSVC)
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -30,6 +34,7 @@
 #include <cstring>
 #include <cwchar>
 #include <cwctype>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <list>
@@ -585,12 +590,14 @@ namespace
                 }
                 else
                 {
+                    std::filesystem::path path(fname + 1);
+                    auto& npath = path.make_preferred();
                     if (wcspbrk(fname, L"?*") != nullptr)
                     {
                         std::list<SConversion> removeFiles;
-                        SearchForFiles(&fname[1], removeFiles, false);
+                        SearchForFiles(npath.wstring().c_str(), removeFiles, false);
 
-                        for (auto it : removeFiles)
+                        for (auto& it : removeFiles)
                         {
                             _wcslwr_s(it.szSrc);
                             excludes.insert(it.szSrc);
@@ -598,7 +605,7 @@ namespace
                     }
                     else
                     {
-                        std::wstring name = (fname + 1);
+                        std::wstring name = npath.wstring().c_str();
                         std::transform(name.begin(), name.end(), name.begin(), towlower);
                         excludes.insert(name);
                     }
@@ -606,12 +613,14 @@ namespace
             }
             else if (wcspbrk(fname, L"?*") != nullptr)
             {
-                SearchForFiles(fname, flist, false);
+                std::filesystem::path path(fname);
+                SearchForFiles(path.make_preferred().wstring().c_str(), flist, false);
             }
             else
             {
                 SConversion conv = {};
-                wcscpy_s(conv.szSrc, MAX_PATH, fname);
+                std::filesystem::path path(fname);
+                wcscpy_s(conv.szSrc, MAX_PATH, path.make_preferred().wstring().c_str());
                 flist.push_back(conv);
             }
 
@@ -743,7 +752,7 @@ namespace
 #endif
 
 #if USE_LOGO
-    void PrintLogo()
+    void PrintLogo(bool versionOnly)
     {
         wchar_t version[32] = {};
 
@@ -771,12 +780,19 @@ namespace
             swprintf_s(version, L"%03d (library)", DIRECTX_TEX_VERSION);
         }
 
-        wprintf(L"Microsoft (R) DirectX Texture Assembler [DirectXTex] Version %ls\n", version);
-        wprintf(L"Copyright (C) Microsoft Corp.\n");
-    #ifdef _DEBUG
-        wprintf(L"*** Debug build ***\n");
-    #endif
-        wprintf(L"\n");
+        if (versionOnly)
+        {
+            wprintf(L"texassemble version %ls\n", version);
+        }
+        else
+        {
+            wprintf(L"Microsoft (R) DirectX Texture Assembler [DirectXTex] Version %ls\n", version);
+            wprintf(L"Copyright (C) Microsoft Corp.\n");
+        #ifdef _DEBUG
+            wprintf(L"*** Debug build ***\n");
+        #endif
+            wprintf(L"\n");
+        }
     }
 #endif
 
@@ -784,11 +800,11 @@ namespace
     void PrintUsage()
     {
     #if USE_LOGO
-        PrintLogo();
+        PrintLogo(false);
     #endif
 
         static const wchar_t* const s_usage =
-            L"Usage: texassemble <command> <options> <files>\n"
+            L"Usage: texassemble <command> <options> [--] <files>\n"
             L"\n"
             L"   cube                create cubemap\n"
             L"   volume              create volume map\n"
@@ -852,7 +868,9 @@ namespace
         #endif
             L"\n"
             L"                       (cube, volume, array, cubearray, merge only)\n"
-            L"   -stripmips          Use only base image from input dds files\n";
+            L"   -stripmips          Use only base image from input dds files\n"
+            L"\n"
+            L"   '-- ' is needed if any input filepath starts with the '-' or '/' character\n";
 
         wprintf(L"%ls", s_usage);
 
@@ -1099,6 +1117,24 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         return 0;
     }
 
+    if (('-' == argv[1][0]) && ('-' == argv[1][1]))
+    {
+        if (!_wcsicmp(argv[1], L"--version"))
+        {
+            #if USE_LOGO
+            PrintLogo(true);
+            #endif
+            return 0;
+        }
+        else if (!_wcsicmp(argv[1], L"--help"))
+        {
+            #if BUILD_AS_EXE
+            PrintUsage();
+            #endif
+            return 0;
+        }
+    }
+
     const uint32_t dwCommand = LookupByName(argv[0], g_pCommands);
     switch (dwCommand)
     {
@@ -1134,13 +1170,42 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
     uint32_t dwOptions = 0;
     std::list<SConversion> conversion;
+    bool allowOpts = true;
 
     for (int iArg = 1; iArg < argc; iArg++)
     {
         PWSTR pArg = argv[iArg];
 
-        //if (('-' == pArg[0]) || ('/' == pArg[0]))
-        if ('-' == pArg[0])  // '/' is used for paths in Unix systems.
+        if (allowOpts
+            && ('-' == pArg[0]) && ('-' == pArg[1]))
+        {
+            if (pArg[2] == 0)
+            {
+                // "-- " is the POSIX standard for "end of options" marking to escape the '-' and '/' characters at the start of filepaths.
+                allowOpts = false;
+            }
+            else if (!_wcsicmp(pArg,L"--version"))
+            {
+                #if USE_LOGO
+                PrintLogo(true);
+                #endif
+                return 0;
+            }
+            else if (!_wcsicmp(pArg, L"--help"))
+            {
+                #if BUILD_AS_EXE
+                PrintUsage();
+                #endif
+                return 0;
+            }
+            else
+            {
+                wprintf(L"Unknown option: %ls\n", pArg);
+                return 1;
+            }
+        }
+        else if (allowOpts
+            && (('-' == pArg[0]) || ('/' == pArg[0])))
         {
             pArg++;
             PWSTR pValue;
@@ -1264,7 +1329,8 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             case OPT_OUTPUTFILE:
                 {
-                    wcscpy_s(szOutputFile, MAX_PATH, pValue);
+                    std::filesystem::path path(pValue);
+                    wcscpy_s(szOutputFile, MAX_PATH, path.make_preferred().wstring().c_str());
 
                     wchar_t ext[_MAX_EXT] = {};
                     _wsplitpath_s(szOutputFile, nullptr, 0, nullptr, 0, nullptr, 0, ext, _MAX_EXT);
@@ -1312,7 +1378,8 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             #if USE_MULTIPLE_FILES
             case OPT_FILELIST:
                 {
-                    std::wifstream inFile(pValue);
+                    std::filesystem::path path(pValue);
+                    std::wifstream inFile(path.make_preferred().wstring().c_str());
                     if (!inFile)
                     {
                         RaiseErrorMessage(err_buf, err_buf_size, L"Error opening -flist file ", pValue, L"\n");
@@ -1398,7 +1465,8 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         else if (wcspbrk(pArg, L"?*") != nullptr)
         {
             const size_t count = conversion.size();
-            SearchForFiles(pArg, conversion, (dwOptions & (1 << OPT_RECURSIVE)) != 0);
+            std::filesystem::path path(pArg);
+            SearchForFiles(path.make_preferred().wstring().c_str(), conversion, (dwOptions & (1 << OPT_RECURSIVE)) != 0);
             if (conversion.size() <= count)
             {
                 RaiseErrorMessage(err_buf, err_buf_size, L"No matching files found for ", pArg, L"\n");
@@ -1409,7 +1477,8 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         else
         {
             SConversion conv = {};
-            wcscpy_s(conv.szSrc, MAX_PATH, pArg);
+            std::filesystem::path path(pArg);
+            wcscpy_s(conv.szSrc, MAX_PATH, path.make_preferred().wstring().c_str());
 
             conversion.push_back(conv);
         }
@@ -1425,7 +1494,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
 #if USE_LOGO
     if (~dwOptions & (1 << OPT_NOLOGO))
-        PrintLogo();
+        PrintLogo(false);
 #endif
 
     switch (dwCommand)

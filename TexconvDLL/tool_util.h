@@ -1,16 +1,8 @@
 #pragma once
 
+#include "TexconvDLL/config.h"
 #include <cstdio>
 #include <wrl/client.h>
-
-// Define slash for paths
-#ifdef _WIN32
-const wchar_t WSLASH = L'\\';
-const char SLASH = '\\';
-#else
-const wchar_t WSLASH = L'/';
-const char SLASH = '/';
-#endif
 
 #ifndef _WIN32
 extern "C"{
@@ -51,8 +43,8 @@ void _wmakepath_s(
         for(;*dir && *dir!= '\0' && s < end;)
             *s++ = *dir++;
     }
-    if (s > &path[0] && s < end && (*(s - 1) != SLASH)) {
-        *s++ = SLASH;
+    if (s > &path[0] && s < end && (*(s - 1) != std::filesystem::path::preferred_separator)) {
+        *s++ = std::filesystem::path::preferred_separator;
     }
     if (fname) {
         for(; *fname && *fname!= '\0' && s < end;)

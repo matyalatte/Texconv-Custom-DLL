@@ -12,6 +12,7 @@ cmake -G "%VS_VERSION%"^
  -A x64^
  -D CMAKE_CONFIGURATION_TYPES=Release^
  -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded^
+ -D BC_USE_OPENMP=OFF^
  ../
 
 cmake --build . --config Release

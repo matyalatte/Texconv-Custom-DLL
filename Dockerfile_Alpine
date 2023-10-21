@@ -18,34 +18,16 @@ ARG alpine_version="3.16.3"
 FROM alpine:${alpine_version}
 
 # Install packages
-RUN apk update \
-    && apk add musl-dev gcc make g++ file alpine-sdk cmake wget
+RUN apk update &&\
+    apk add --no-cache musl-dev gcc make g++ file alpine-sdk cmake wget bash
 
 # Clone repo
 RUN git clone --recursive --depth=1 https://github.com/matyalatte/Texconv-Custom-DLL.git;\
-    ash Texconv-Custom-DLL/shell_scripts/get_sal.sh
+    bash Texconv-Custom-DLL/shell_scripts/get_sal.sh
 
 # Build shared lib
-WORKDIR /Texconv-Custom-DLL/build
-RUN cmake \
-      -D CMAKE_BUILD_TYPE=Release\
-      -D BUILD_DX11=OFF\
-      -D BUILD_DX12=OFF\
-      -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
-      -D TEXCONV_USE_ALL=ON\
-      ../;\
-    cmake --build .;\
-    cp bin/CMake/libtexconv.* ../
+WORKDIR /Texconv-Custom-DLL/shell_scripts
+RUN bash build.sh
 
 # Build executable
-RUN cmake \
-      -D CMAKE_BUILD_TYPE=Release\
-      -D BUILD_DX11=OFF\
-      -D BUILD_DX12=OFF\
-      -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
-      -D TEXCONV_BUILD_AS_EXE=ON\
-      -D TEXCONV_USE_ALL=ON\
-      ../;\
-    cmake --build .;\
-    cp bin/CMake/texconv ../;\
-    cp bin/CMake/texassemble ../
+RUN bash build_as_exe.sh

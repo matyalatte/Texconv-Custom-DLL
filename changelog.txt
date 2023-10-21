@@ -1,5 +1,6 @@
 v0.2.3
 - Updated submodules
+- Fixed memory leaks for gpu resources (ID3D11Device).
 - Fixed a bug that exe can't show error messages.
 
 v0.2.2

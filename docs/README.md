@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.2.2
+# Texconv-Custom-DLL v0.2.3
 
 Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).  
 And you can use it as a DLL (or a shared library).  
@@ -13,7 +13,7 @@ It's the best DDS converter as far as I know.
 
 ## Removable features
 
-Many features are removed from the original build to support unix systems and to reduce the file size.  
+You can remove many features from the original build to support unix systems and to reduce the file size.  
 -   WIC support (.bmp, .jpg, .png, etc.)
 -   3D textures support
 -   Little-used dds formats support (B5G6R5, B5G5R5A1, etc.)
@@ -36,27 +36,24 @@ You can add some features by [cmake options](./CMake-Options.md).
 The official texconv only supports Windows.  
 But the custom build supports the following platforms and compilers.
 
--   Windows 10 + MSVC
+-   Windows 10 (or later) + MSVC
 -   MacOS 10.15 (or later) + AppleClang
--   Ubuntu 20.04 (or later) + GCC
--   Alpine Linux + GCC
-
-And it might work on other linux distributions.  
+-   Linux + GCC 9.1 (or later)
 
 ## Download
 
 You can download the built binary from [the release page](https://github.com/matyalatte/Texconv-Custom-DLL/releases).  
 
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
--   `TexconvCustomDLL*-macOS.tar.bz2` is for Mac (10.15 or later).
--   `TexconvCustomDLL*-Linux.tar.bz2` is for Ubuntu (20.04 or later).
+-   `TexconvCustomDLL*-macOS.tar.bz2` is for macOS (10.15 or later).
+-   `TexconvCustomDLL*-Linux.tar.bz2` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
  
 > Each zip file has a DLL and executables.  
 > You can copy whichever you want to use to your project.  
-> (The execuatble won't refer the DLL.)  
+> (The execuatbles won't refer the DLL.)  
 
-> The linux build only supports Ubuntu due to the glibc dependences.  
-> If you want to use it on other linux distributions, you should get the lib or build texconv by yourself.  
+> The linux build only supports distributions using GLIBC.  
+> Build the executable by yourself if you want to use it on unsupported distros.
 
 ## Usage
 

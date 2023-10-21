@@ -1,6 +1,8 @@
 v0.2.3
+- Updated submodules
 - Added a function to initialize COM.
 - Fixed memory leaks for gpu resources (ID3D11Device).
+- Fixed a bug that exe can't parse args correctly on Unix/Linux systems.
 - Fixed a bug that exe can't show error messages.
 
 v0.2.2

@@ -4274,6 +4274,7 @@ int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
     for(int i=0;i<argc;i++){
         length = strlen(argv_char[i]);
         argv[i] = new wchar_t[length + 1];
+        arnv[i][length] = 0;
         mbstowcs(argv[i], argv_char[i], length);
     }
 

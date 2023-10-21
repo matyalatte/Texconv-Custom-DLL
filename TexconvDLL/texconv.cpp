@@ -4284,4 +4284,20 @@ int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
         return texconv(argc - 1, &argv[1], verbose, init_com);
     }
 }
+#else  // BUILD_AS_EXE
+
+// A function to initialize COM
+#ifdef _WIN32
+extern "C" __declspec(dllexport) int __cdecl init_com()
+{
+    // Return values
+    // 0: Initialized
+    // 1: Failed because it is already initialized
+    // -2147417850: Failed because it is already initialized with single thread mode
+    return CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+}
+#else  // _WIN32
+extern "C" __attribute__((visibility("default"))) int init_com() { return 0; }
+#endif  // _WIN32
+
 #endif  // BUILD_AS_EXE

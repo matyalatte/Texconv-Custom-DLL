@@ -178,16 +178,16 @@ set(LIBRARY_SOURCES
     DirectXTex/DirectXTex/BC4BC5.cpp
     DirectXTex/DirectXTex/BC6HBC7.cpp
     DirectXTex/DirectXTex/DirectXTexCompress.cpp
-    TexconvDLL/DirectXTexConvert.cpp
-    TexconvDLL/DirectXTexDDS.cpp
+    DirectXTex/DirectXTex/DirectXTexConvert.cpp
+    DirectXTex/DirectXTex/DirectXTexDDS.cpp
     DirectXTex/DirectXTex/DirectXTexHDR.cpp
-    TexconvDLL/DirectXTexImage.cpp
-    TexconvDLL/DirectXTexMipmaps.cpp
-    TexconvDLL/DirectXTexMisc.cpp
+    DirectXTex/DirectXTex/DirectXTexImage.cpp
+    DirectXTex/DirectXTex/DirectXTexMipmaps.cpp
+    DirectXTex/DirectXTex/DirectXTexMisc.cpp
     DirectXTex/DirectXTex/DirectXTexNormalMaps.cpp
-    TexconvDLL/DirectXTexResize.cpp
+    DirectXTex/DirectXTex/DirectXTexResize.cpp
     DirectXTex/DirectXTex/DirectXTexTGA.cpp
-    TexconvDLL/DirectXTexUtil.cpp)
+    DirectXTex/DirectXTex/DirectXTexUtil.cpp)
 
 if(TEXCONV_USE_ALPHA_CONFIG)
   set(LIBRARY_SOURCES ${LIBRARY_SOURCES}

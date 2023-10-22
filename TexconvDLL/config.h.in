@@ -6,6 +6,12 @@
 #define __ON__ 1
 #define __OFF__ 0
 
+#ifdef _WIN32
+#define IS_WIN32 1
+#else
+#define IS_WIN32 0
+#endif
+
 #define BUILD_AS_EXE __@TEXCONV_BUILD_AS_EXE@__
 
 //--------------------------------------------------------------------------------------
@@ -15,94 +21,96 @@
 #define USE_WIC __@TEXCONV_USE_WIC@__
 
 // Use .ppm and .pfm, or not
-#define USE_PPM __@TEXCONV_USE_PPM@__
+#define USE_PPM IS_WIN32
 
 // Use planar dds formats
-#define USE_PLANAR __@TEXCONV_USE_PLANAR@__
+#define USE_PLANAR 1
 
 // Use 3D textures
-#define USE_3D __@TEXCONV_USE_3D@__
+#define USE_3D 1
 
 // Use legacy dds formats
-#define USE_LEGACY __@TEXCONV_USE_LEGACY@__
+#define USE_LEGACY 1
 
 // Use 16bpp format (B5G6R5, B5G5R5A1, B4G4R4A4)
-#define USE_16BPP __@TEXCONV_USE_16BPP@__
+#define USE_16BPP 1
 
 //--------------------------------------------------------------------------------------
 // Printing
 //--------------------------------------------------------------------------------------
 // Use PrintLogo() or not
-#define USE_LOGO __@TEXCONV_USE_LOGO@__
+#define USE_LOGO 0
 
 // Use -timing or not
-#define USE_TIMING __@TEXCONV_USE_TIMING@__
+#define USE_TIMING IS_WIN32
 
 // Use PrintInfo and PrintFormat
-#define USE_PRINT_INFO __@TEXCONV_USE_PRINT_INFO@__
+#define USE_PRINT_INFO 1
 
 //--------------------------------------------------------------------------------------
 // Options
 //--------------------------------------------------------------------------------------
 // Use -swizzle or not
-#define USE_SWIZZLE __@TEXCONV_USE_SWIZZLE@__
+#define USE_SWIZZLE 1
 
 // Use -rotatecolor and -nits
-#define USE_ROTATE_COLOR __@TEXCONV_USE_ROTATE_COLOR@__
+#define USE_ROTATE_COLOR 1
 
 // Use -c or not
-#define USE_COLORKEY __@TEXCONV_USE_COLORKEY@__
+#define USE_COLORKEY 1
 
 // Use -hflip and -vflip
-#define USE_FLIP __@TEXCONV_USE_FLIP@__
+#define USE_FLIP IS_WIN32
 
 // Use -r and -flist or not
-#define USE_MULTIPLE_FILES __@TEXCONV_USE_MULTIPLE_FILES@__
+#define USE_MULTIPLE_FILES IS_WIN32
 
 // Use -pmalpha, -alpha, -keepcoverage, -aw, and -at
-#define USE_ALPHA_CONFIG __@TEXCONV_USE_ALPHA_CONFIG@__
+#define USE_ALPHA_CONFIG 1
 
 // Use -wrap and -mirror
-#define USE_ADDRESSING __@TEXCONV_USE_ADDRESSING@__
+#define USE_ADDRESSING 1
 
 // Use -tonemap
-#define USE_TONEMAP __@TEXCONV_USE_TONEMAP@__
+#define USE_TONEMAP 1
 
 // Use -nmap and -nmapamp
-#define USE_NMAP_CONFIG __@TEXCONV_USE_NMAP_CONFIG@__
+#define USE_NMAP_CONFIG 1
 
 // Use -tu, -tf, -dword, -badtails, -fixbc4x4, -xlum, -dx10, and -dx9
-#define USE_MINOR_DDS_CONFIG __@TEXCONV_USE_MINOR_DDS_CONFIG@__
+#define USE_MINOR_DDS_CONFIG 1
 
 // Use -fl
-#define USE_FEATURE_LEVEL __@TEXCONV_USE_FEATURE_LEVEL@__
+#define USE_FEATURE_LEVEL 1
 
 // Use -bc
-#define USE_BC_CONFIG __@TEXCONV_USE_BC_CONFIG@__
+#define USE_BC_CONFIG 1
 
 // Use -srgb, -srgbi, and -srgbo
-#define USE_SRGB __@TEXCONV_USE_SRGB@__
+#define USE_SRGB 1
 
 // Use -px, -sx, and -l
-#define USE_NAME_CONFIG __@TEXCONV_USE_NAME_CONFIG@__
+#define USE_NAME_CONFIG IS_WIN32
 
 // Use dither filters
-#define USE_DITHER __@TEXCONV_USE_DITHER@__
+#define USE_DITHER 1
 
 // Disable GPU codec for BC6 and BC7
 #define NO_GPU_CODEC __@TEXCONV_NO_GPU_CODEC@__
 
 // Use -gpu and -nogpu
-#define USE_GPU_CONFIG __@TEXCONV_USE_GPU_CONFIG@__
+#define USE_GPU_CONFIG 1
 
 // Use -x2bias
-#define USE_X2BIAS __@TEXCONV_USE_X2BIAS@__
+#define USE_X2BIAS 1
 
 // Use -singleproc
-#define USE_SINGLEPROC __@TEXCONV_USE_SINGLEPROC@__
+#define USE_SINGLEPROC 1
 
 // Use -tga20
-#define USE_TGA20 __@TEXCONV_USE_TGA20@__
+#define USE_TGA20 1
 
 // Use texassemble as a dll function
 #define USE_TEXASSEMBLE __@TEXCONV_USE_TEXASSEMBLE@__
+
+#undef IS_WIN32

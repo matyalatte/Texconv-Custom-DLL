@@ -18,39 +18,10 @@ option(TEXCONV_BUILD_AS_EXE "Build texconv as .exe" OFF)
 option(TEXCONV_ICON_FOR_EXE "Use directx.ico for .exe" OFF)
 
 # for texture formats
-option(TEXCONV_USE_WIC "Use WIC-supported format (bmp, jpg, png, jxr, etc.)" OFF)
-option(TEXCONV_USE_PPM "Use .ppm and .pfm" OFF)
-option(TEXCONV_USE_PLANAR "Use planar dds formats" OFF)
-option(TEXCONV_USE_3D "Use 3D textures" OFF)
-option(TEXCONV_USE_LEGACY "Use legacy dds formats" OFF)
-option(TEXCONV_USE_16BPP "Use 16bpp format (B5G6R5, B5G5R5A1, B4G4R4A4)" OFF)
-
-# for printing
-option(TEXCONV_USE_LOGO "Use PrintLogo()" OFF)
-option(TEXCONV_USE_PRINT_INFO "Use PrintInfo() and PrintFormat()" OFF)
-option(TEXCONV_USE_TIMING "Use -timing" OFF)
+set(TEXCONV_USE_WIC ON)
 
 # other options
-option(TEXCONV_USE_FLIP "Use -hflip and -vflip" OFF)
-option(TEXCONV_USE_SWIZZLE "Use -swizzle" OFF)
-option(TEXCONV_USE_ROTATE_COLOR "Use -rotatecolor" OFF)
-option(TEXCONV_USE_COLORKEY "Use -c" OFF)
-option(TEXCONV_USE_ALPHA_CONFIG "Use -pmalpha, -alpha, -keepcoverage, -aw, and -at" OFF)
-option(TEXCONV_USE_ADDRESSING "Use -wrap and -mirror" OFF)
-option(TEXCONV_USE_TONEMAP "Use -tonemap" OFF)
-option(TEXCONV_USE_MULTIPLE_FILES "Use -r and -flist" OFF)
-option(TEXCONV_USE_NMAP_CONFIG "Use -nmap and -nmapamp" OFF)
-option(TEXCONV_USE_MINOR_DDS_CONFIG "Use -tu, -tf, -dword, -badtails, -fixbc4x4, -xlum, -dx10, and -dx9" OFF)
-option(TEXCONV_USE_FEATURE_LEVEL "Use -fl" OFF)
-option(TEXCONV_USE_BC_CONFIG "Use -bc" OFF)
-option(TEXCONV_USE_SRGB "Use -srgb, -srgbi, and -srgbo" OFF)
-option(TEXCONV_USE_NAME_CONFIG "Use -px, -sx, and -l" OFF)
-option(TEXCONV_USE_DITHER "Use dither filters" OFF)
 option(TEXCONV_NO_GPU_CODEC "Disable GPU codec for BC6 and BC7" OFF)
-option(TEXCONV_USE_GPU_CONFIG "Use -gpu and -nogpu" OFF)
-option(TEXCONV_USE_X2BIAS "Use -x2bias" OFF)
-option(TEXCONV_USE_SINGLEPROC "Use -singleproc" OFF)
-option(TEXCONV_USE_TGA20 "Use -tga20 " OFF)
 option(TEXCONV_USE_TEXASSEMBLE "Use texassemble as a dll function" OFF)
 
 # enable all options
@@ -67,13 +38,7 @@ endif()
 # disable windows options
 if(NOT WIN32)
   set(TEXCONV_USE_WIC OFF)
-  set(TEXCONV_USE_PPM OFF)
-  set(TEXCONV_USE_FLIP OFF)
-  set(TEXCONV_USE_LOGO OFF)
-  set(TEXCONV_USE_NAME_CONFIG OFF)
-  set(TEXCONV_USE_MULTIPLE_FILES OFF)
   set(TEXCONV_NO_GPU_CODEC OFF)
-  set(TEXCONV_USE_TIMING OFF)
 endif()
 
 # show variables
@@ -187,15 +152,11 @@ set(LIBRARY_SOURCES
     DirectXTex/DirectXTex/DirectXTexNormalMaps.cpp
     DirectXTex/DirectXTex/DirectXTexResize.cpp
     DirectXTex/DirectXTex/DirectXTexTGA.cpp
-    DirectXTex/DirectXTex/DirectXTexUtil.cpp)
-
-if(TEXCONV_USE_ALPHA_CONFIG)
-  set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
+    DirectXTex/DirectXTex/DirectXTexUtil.cpp
     DirectXTex/DirectXTex/DirectXTexPMAlpha.cpp)
-endif()
 
 if(WIN32)
-  if(TEXCONV_USE_FLIP OR TEXCONV_USE_WIC)
+  if(TEXCONV_USE_WIC)
     set(LIBRARY_SOURCES ${LIBRARY_SOURCES}
         DirectXTex/DirectXTex/DirectXTexFlipRotate.cpp
         DirectXTex/DirectXTex/DirectXTexWIC.cpp)

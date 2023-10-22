@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.2.3
+# Texconv-Custom-DLL v0.3.0
 
 Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).  
 And you can use it as a DLL (or a shared library).  
@@ -10,19 +10,6 @@ is a DDS converter developed by Microsoft.
 It supports all dds formats.  
 There are some dds formats common tools can't handle properly, but Texconv can.  
 It's the best DDS converter as far as I know.  
-
-## Removable features
-
-You can remove many features from the original build to support unix systems and to reduce the file size.  
--   WIC support (.bmp, .jpg, .png, etc.)
--   3D textures support
--   Little-used dds formats support (B5G6R5, B5G5R5A1, etc.)
--   ppm support (.ppm and .pfm)
--   Print functions
--   Mutilple files processing
--   Many optional arguments
-
-If you want to restore them, you need to use [cmake options](./CMake-Options.md).
 
 ## Extra features
 

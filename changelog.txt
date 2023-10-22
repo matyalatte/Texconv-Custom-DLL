@@ -1,9 +1,10 @@
-v0.2.3
-- Updated submodules
+v0.3.0
+- Updated DirectXTex to Sept2023 release.
 - Added a function to initialize COM.
 - Fixed memory leaks for gpu resources (ID3D11Device).
 - Fixed a bug that exe can't parse args correctly on Unix/Linux systems.
 - Fixed a bug that exe can't show error messages.
+- Removed minor cmake options.
 
 v0.2.2
 - Updated submodules

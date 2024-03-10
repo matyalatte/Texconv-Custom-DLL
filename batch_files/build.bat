@@ -19,3 +19,4 @@ cmake --build . --config Release
 copy bin\CMake\Release\texconv.dll ..\
 @popd
 
+pause

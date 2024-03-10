@@ -1,3 +1,6 @@
+v0.4.0
+- Updated DirectXTex to March 2023 release.
+
 v0.3.0
 - Updated DirectXTex to Sept2023 release.
 - Added a function to initialize COM.

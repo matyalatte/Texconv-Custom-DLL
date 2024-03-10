@@ -13,7 +13,7 @@ project (DirectXTex
   VERSION ${DIRECTXTEX_VERSION}
   DESCRIPTION "DirectX Texture Library"
   HOMEPAGE_URL "https://go.microsoft.com/fwlink/?LinkId=248926"
-  LANGUAGES CXX)
+  LANGUAGES C CXX)
 
 option(BUILD_TOOLS "Build tex command-line tools" ON)
 
@@ -73,38 +73,39 @@ if((DEFINED XBOX_CONSOLE_TARGET) AND (NOT (XBOX_CONSOLE_TARGET STREQUAL "durango
 endif()
 
 include(GNUInstallDirs)
+include("options.cmake")
 
 #--- Library
 set(LIBRARY_HEADERS
-    DirectXTex/DirectXTex.h
-    DirectXTex/DirectXTex.inl)
+    DirectXTex/DirectXTex/DirectXTex.h
+    DirectXTex/DirectXTex/DirectXTex.inl)
 
 set(LIBRARY_SOURCES
-    DirectXTex/BC.h
-    DirectXTex/DDS.h
-    DirectXTex/DirectXTexP.h
-    DirectXTex/filters.h
-    DirectXTex/scoped.h
-    DirectXTex/BC.cpp
-    DirectXTex/BC4BC5.cpp
-    DirectXTex/BC6HBC7.cpp
-    DirectXTex/DirectXTexCompress.cpp
-    DirectXTex/DirectXTexConvert.cpp
-    DirectXTex/DirectXTexDDS.cpp
-    DirectXTex/DirectXTexHDR.cpp
-    DirectXTex/DirectXTexImage.cpp
-    DirectXTex/DirectXTexMipmaps.cpp
-    DirectXTex/DirectXTexMisc.cpp
-    DirectXTex/DirectXTexNormalMaps.cpp
-    DirectXTex/DirectXTexPMAlpha.cpp
-    DirectXTex/DirectXTexResize.cpp
-    DirectXTex/DirectXTexTGA.cpp
-    DirectXTex/DirectXTexUtil.cpp)
+    DirectXTex/DirectXTex/BC.h
+    DirectXTex/DirectXTex/DDS.h
+    DirectXTex/DirectXTex/DirectXTexP.h
+    DirectXTex/DirectXTex/filters.h
+    DirectXTex/DirectXTex/scoped.h
+    DirectXTex/DirectXTex/BC.cpp
+    DirectXTex/DirectXTex/BC4BC5.cpp
+    DirectXTex/DirectXTex/BC6HBC7.cpp
+    DirectXTex/DirectXTex/DirectXTexCompress.cpp
+    DirectXTex/DirectXTex/DirectXTexConvert.cpp
+    DirectXTex/DirectXTex/DirectXTexDDS.cpp
+    DirectXTex/DirectXTex/DirectXTexHDR.cpp
+    DirectXTex/DirectXTex/DirectXTexImage.cpp
+    DirectXTex/DirectXTex/DirectXTexMipmaps.cpp
+    DirectXTex/DirectXTex/DirectXTexMisc.cpp
+    DirectXTex/DirectXTex/DirectXTexNormalMaps.cpp
+    DirectXTex/DirectXTex/DirectXTexPMAlpha.cpp
+    DirectXTex/DirectXTex/DirectXTexResize.cpp
+    DirectXTex/DirectXTex/DirectXTexTGA.cpp
+    DirectXTex/DirectXTex/DirectXTexUtil.cpp)
 
 if(WIN32)
    list(APPEND LIBRARY_SOURCES
-       DirectXTex/DirectXTexFlipRotate.cpp
-       DirectXTex/DirectXTexWIC.cpp)
+       DirectXTex/DirectXTex/DirectXTexFlipRotate.cpp
+       DirectXTex/DirectXTex/DirectXTexWIC.cpp)
 endif()
 
 if(DEFINED XBOX_CONSOLE_TARGET)
@@ -143,22 +144,22 @@ elseif((BUILD_XBOX_EXTS_XBOXONE OR BUILD_XBOX_EXTS_SCARLETT) AND WIN32)
 endif()
 
 set(SHADER_SOURCES
-    DirectXTex/Shaders/BC6HEncode.hlsl
-    DirectXTex/Shaders/BC7Encode.hlsl)
+    DirectXTex/DirectXTex/Shaders/BC6HEncode.hlsl
+    DirectXTex/DirectXTex/Shaders/BC7Encode.hlsl)
 
 if(BUILD_DX11 AND WIN32)
    list(APPEND LIBRARY_SOURCES
-       DirectXTex/BCDirectCompute.h
-       DirectXTex/BCDirectCompute.cpp
-       DirectXTex/DirectXTexCompressGPU.cpp
-       DirectXTex/DirectXTexD3D11.cpp)
+       DirectXTex/DirectXTex/BCDirectCompute.h
+       DirectXTex/DirectXTex/BCDirectCompute.cpp
+       DirectXTex/DirectXTex/DirectXTexCompressGPU.cpp
+       DirectXTex/DirectXTex/DirectXTexD3D11.cpp)
 endif()
 
 if(BUILD_DX12)
-   list(APPEND LIBRARY_SOURCES DirectXTex/DirectXTexD3D12.cpp)
+   list(APPEND LIBRARY_SOURCES DirectXTex/DirectXTex/DirectXTexD3D12.cpp)
 
    if(NOT (DEFINED XBOX_CONSOLE_TARGET))
-       list(APPEND LIBRARY_SOURCES DirectXTex/d3dx12.h)
+       list(APPEND LIBRARY_SOURCES DirectXTex/DirectXTex/d3dx12.h)
    endif()
 endif()
 
@@ -171,16 +172,16 @@ if(ENABLE_LIBJPEG_SUPPORT)
     if(WIN32)
         message(STATUS "Use of the Windows Imaging Component (WIC) instead of libjpeg is recommended.")
     endif()
-    list(APPEND LIBRARY_HEADERS Auxiliary/DirectXTexJPEG.h)
-    list(APPEND LIBRARY_SOURCES Auxiliary/DirectXTexJPEG.cpp)
+    list(APPEND LIBRARY_HEADERS DirectXTex/Auxiliary/DirectXTexJPEG.h)
+    list(APPEND LIBRARY_SOURCES DirectXTex/Auxiliary/DirectXTexJPEG.cpp)
 endif()
 
 if(ENABLE_LIBPNG_SUPPORT)
     if(WIN32)
         message(STATUS "Use of the Windows Imaging Component (WIC) instead of libpng is recommended.")
     endif()
-    list(APPEND LIBRARY_HEADERS Auxiliary/DirectXTexPNG.h)
-    list(APPEND LIBRARY_SOURCES Auxiliary/DirectXTexPNG.cpp)
+    list(APPEND LIBRARY_HEADERS DirectXTex/Auxiliary/DirectXTexPNG.h)
+    list(APPEND LIBRARY_SOURCES DirectXTex/Auxiliary/DirectXTexPNG.cpp)
 endif()
 
 if(BUILD_DX11 AND WIN32)
@@ -199,11 +200,11 @@ if(BUILD_DX11 AND WIN32)
     if(NOT USE_PREBUILT_SHADERS)
         add_custom_command(
             OUTPUT "${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc"
-            MAIN_DEPENDENCY "${PROJECT_SOURCE_DIR}/DirectXTex/Shaders/CompileShaders.cmd"
+            MAIN_DEPENDENCY "${PROJECT_SOURCE_DIR}/DirectXTex/DirectXTex/Shaders/CompileShaders.cmd"
             DEPENDS ${SHADER_SOURCES}
             COMMENT "Generating HLSL shaders..."
             COMMAND ${CMAKE_COMMAND} -E env CompileShadersOutput="${COMPILED_SHADERS}" CompileShaders.cmd > "${COMPILED_SHADERS}/compileshaders.log"
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/DirectXTex/Shaders"
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/DirectXTex/DirectXTex/Shaders"
             USES_TERMINAL)
     endif()
 endif()
@@ -214,11 +215,11 @@ if(BUILD_DX11 AND WIN32)
    target_include_directories(${PROJECT_NAME} PRIVATE ${COMPILED_SHADERS})
 endif()
 
-source_group(${PROJECT_NAME} REGULAR_EXPRESSION DirectXTex/*.*)
+source_group(${PROJECT_NAME} REGULAR_EXPRESSION DirectXTex/DirectXTex/*.*)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DirectXTex>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  ${CMAKE_CURRENT_BINARY_DIR}
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DirectXTex/DirectXTex>)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 
@@ -299,126 +300,118 @@ if(ENABLE_LIBPNG_SUPPORT)
 endif()
 
 if(NOT MINGW)
-    target_precompile_headers(${PROJECT_NAME} PRIVATE DirectXTex/DirectXTexP.h)
+    target_precompile_headers(${PROJECT_NAME} PRIVATE DirectXTex/DirectXTex/DirectXTexP.h)
 endif()
 
 if(MINGW OR (NOT WIN32))
-    find_package(directxmath CONFIG REQUIRED)
-    find_package(directx-headers CONFIG REQUIRED)
+    if (WIN32)
+      find_package(directxmath CONFIG REQUIRED)
+      find_package(directx-headers CONFIG REQUIRED)
+    else()
+      message("INFO: Using a subdirectory 'unix_external' for DirectX-Headers, DirectXMath, and safestringlib.")
+      add_subdirectory(unix_external)
+    endif()
 else()
     find_package(directxmath CONFIG QUIET)
     find_package(directx-headers CONFIG QUIET)
 endif()
 
-if(directxmath_FOUND)
+if(directxmath_FOUND OR (NOT WIN32))
     message(STATUS "Using DirectXMath package")
     target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft::DirectXMath)
 endif()
 
-if(directx-headers_FOUND)
+if(directx-headers_FOUND OR (NOT WIN32))
     message(STATUS "Using DirectX-Headers package")
     target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft::DirectX-Headers)
     target_compile_definitions(${PROJECT_NAME} PUBLIC USING_DIRECTX_HEADERS)
 endif()
 
-#--- Package
-include(CMakePackageConfigHelpers)
-
-string(TOLOWER ${PROJECT_NAME} PACKAGE_NAME)
-
-write_basic_package_version_file(
-  ${PACKAGE_NAME}-config-version.cmake
-  VERSION ${DIRECTXTEX_VERSION}
-  COMPATIBILITY AnyNewerVersion)
-
-install(TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}-targets
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/build/${PROJECT_NAME}-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
-
-install(EXPORT ${PROJECT_NAME}-targets
-  FILE ${PROJECT_NAME}-targets.cmake
-  NAMESPACE Microsoft::
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
-
-install(FILES ${LIBRARY_HEADERS}
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config-version.cmake
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
-
-# Create pkg-config file
-include(build/JoinPaths.cmake)
-# from: https://github.com/jtojnar/cmake-snips#concatenating-paths-when-building-pkg-config-files
-join_paths(DIRECTXTEX_INCLUDEDIR_FOR_PKG_CONFIG "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
-join_paths(DIRECTXTEX_LIBDIR_FOR_PKG_CONFIG "\${prefix}"     "${CMAKE_INSTALL_LIBDIR}")
-
-set(DIRECTXTEX_DEP_L "")
-if(ENABLE_OPENEXR_SUPPORT)
-  list(APPEND DIRECTXTEX_DEP_L "OpenEXR")
-endif()
-if(directxmath_FOUND)
-  list(APPEND DIRECTXTEX_DEP_L "DirectXMath")
-endif()
-if(directx-headers_FOUND)
-  list(APPEND DIRECTXTEX_DEP_L "DirectX-Headers")
-endif()
-if(ENABLE_LIBJPEG_SUPPORT AND JPEG_FOUND)
-  list(APPEND DIRECTXTEX_DEP_L "libjpeg")
-endif()
-if(ENABLE_LIBPNG_SUPPORT AND PNG_FOUND)
-  list(APPEND DIRECTXTEX_DEP_L "libpng")
-endif()
-
-list(LENGTH DIRECTXTEX_DEP_L DEP_L)
-if(DEP_L)
-  STRING(REPLACE ";" ", " DIRECTXTEX_DEP " ${DIRECTXTEX_DEP_L}")
-endif()
-
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/build/DirectXTex.pc.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/DirectXTex.pc" @ONLY)
-
-# Install the pkg-config file
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/DirectXTex.pc"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-
 #--- Command-line tools
 set(TOOL_EXES "")
 
-if(BUILD_TOOLS AND WIN32)
-  add_executable(texassemble
-    Texassemble/texassemble.cpp
-    Texassemble/texassemble.rc
-    Texassemble/settings.manifest
-    Texassemble/AnimatedGif.cpp)
+if (BUILD_TOOLS)
+  configure_file(${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in ${CMAKE_BINARY_DIR}/TexconvDLL/config.h @ONLY)
+endif()
+
+if (BUILD_TOOLS AND TEXCONV_USE_TEXASSEMBLE AND TEXCONV_BUILD_AS_EXE)
+  set(TEXASSEMBLE_FILES
+    ${CMAKE_BINARY_DIR}/TexconvDLL/config.h
+    ${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in
+    TexconvDLL/tool_util.h
+    TexconvDLL/tool_util.cpp
+    TexconvDLL/texassemble.cpp)
+  if (WIN32)
+    if (TEXCONV_USE_WIC)
+      set(TEXASSEMBLE_FILES ${TEXASSEMBLE_FILES}
+        DirectXTex/Texassemble/AnimatedGif.cpp)
+    endif()
+    if (TEXCONV_ICON_FOR_EXE)
+      set(TEXASSEMBLE_FILES ${TEXASSEMBLE_FILES}
+        TexconvDLL/texconv.rc)
+    endif()
+    set(TEXASSEMBLE_FILES ${TEXASSEMBLE_FILES}
+      DirectXTex/Texassemble/settings.manifest)
+  endif()
+    add_executable(texassemble ${TEXASSEMBLE_FILES})
   target_compile_features(texassemble PRIVATE cxx_std_17)
-  target_link_libraries(texassemble PRIVATE ${PROJECT_NAME} ole32.lib version.lib)
-  source_group(texassemble REGULAR_EXPRESSION Texassemble/*.*)
+  if (WIN32)
+    target_link_libraries(texassemble PRIVATE ${PROJECT_NAME} ole32.lib version.lib)
+  else()
+    # unix need a library for safe functions
+    target_link_libraries(texassemble PRIVATE ${PROJECT_NAME} safestring_static)
+  endif()
+  source_group(texassemble FILES ${TEXASSEMBLE_FILES})
   list(APPEND TOOL_EXES texassemble)
 endif()
 
-if(BUILD_TOOLS AND BUILD_DX11 AND WIN32)
-  add_executable(texconv
-    Texconv/texconv.cpp
-    Texconv/texconv.rc
-    Texconv/settings.manifest
-    Texconv/ExtendedBMP.cpp
-    Texconv/PortablePixMap.cpp)
+if(BUILD_TOOLS)
+  set(TEXCONV_FILES
+    ${CMAKE_BINARY_DIR}/TexconvDLL/config.h
+    ${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in
+    TexconvDLL/tool_util.h
+    TexconvDLL/tool_util.cpp
+    TexconvDLL/texconv.cpp)
+  if (TEXCONV_USE_TEXASSEMBLE)
+    if (NOT TEXCONV_BUILD_AS_EXE)
+      set(TEXCONV_FILES ${TEXCONV_FILES}
+        TexconvDLL/texassemble.cpp)
+      if (TEXCONV_USE_WIC AND WIN32)
+        set(TEXCONV_FILES ${TEXCONV_FILES}
+          DirectXTex/Texassemble/AnimatedGif.cpp)
+      endif()
+    endif()
+  endif()
+  if (TEXCONV_USE_WIC AND WIN32)
+    set(TEXCONV_FILES ${TEXCONV_FILES}
+      DirectXTex/Texconv/ExtendedBMP.cpp
+      DirectXTex/Texconv/PortablePixMap.cpp)
+  endif()
+  if (TEXCONV_BUILD_AS_EXE)
+    if (WIN32)
+      if (TEXCONV_ICON_FOR_EXE)
+        set(TEXCONV_FILES ${TEXCONV_FILES}
+          TexconvDLL/texconv.rc)
+      endif()
+      set(TEXCONV_FILES ${TEXCONV_FILES}
+        DirectXTex/Texconv/settings.manifest)
+    endif()
+    add_executable(texconv ${TEXCONV_FILES})
+  else()
+    add_library(texconv SHARED ${TEXCONV_FILES})
+  endif()
   target_compile_features(texconv PRIVATE cxx_std_17)
-  target_link_libraries(texconv PRIVATE ${PROJECT_NAME} ole32.lib shell32.lib version.lib)
-  source_group(texconv REGULAR_EXPRESSION Texconv/*.*)
+  if (WIN32)
+    target_link_libraries(texconv PRIVATE ${PROJECT_NAME} ole32.lib shell32.lib version.lib)
+  else()
+    # unix need a library for safe functions
+    target_link_libraries(texconv PRIVATE ${PROJECT_NAME} safestring_static)
+  endif()
+  source_group(texconv FILES ${TEXCONV_FILES})
   list(APPEND TOOL_EXES texconv)
 endif()
 
-if(BUILD_TOOLS AND WIN32)
+if(FALSE)
   add_executable(texdiag
     Texdiag/texdiag.cpp
     Texdiag/texdiag.rc
@@ -429,30 +422,30 @@ if(BUILD_TOOLS AND WIN32)
   list(APPEND TOOL_EXES texdiag)
 endif()
 
-if(BUILD_TOOLS AND WIN32)
+if(BUILD_TOOLS)
   if(ENABLE_OPENEXR_SUPPORT)
     foreach(t IN LISTS TOOL_EXES)
-      target_include_directories(${t} PRIVATE Auxiliary)
+      target_include_directories(${t} PRIVATE DirectXTex/Auxiliary)
       target_link_libraries(${t} PRIVATE ${OPENEXR_ILMIMF_LIBRARY})
       target_compile_definitions(${t} PRIVATE USE_OPENEXR)
     endforeach()
   endif()
   if(ENABLE_LIBJPEG_SUPPORT)
     foreach(t IN LISTS TOOL_EXES)
-      target_include_directories(${t} PRIVATE Auxiliary)
+      target_include_directories(${t} PRIVATE DirectXTex/Auxiliary)
       target_link_libraries(${t} PRIVATE JPEG::JPEG)
       target_compile_definitions(${t} PRIVATE USE_LIBJPEG)
     endforeach()
   endif()
   if(ENABLE_LIBPNG_SUPPORT)
     foreach(t IN LISTS TOOL_EXES)
-      target_include_directories(${t} PRIVATE Auxiliary)
+      target_include_directories(${t} PRIVATE DirectXTex/Auxiliary)
       target_link_libraries(${t} PRIVATE PNG::PNG)
       target_compile_definitions(${t} PRIVATE USE_LIBPNG)
     endforeach()
   endif()
   if(BUILD_XBOX_EXTS_SCARLETT OR BUILD_XBOX_EXTS_XBOXONE)
-    target_include_directories(texconv PRIVATE Auxiliary)
+    target_include_directories(texconv PRIVATE DirectXTex/Auxiliary)
     target_compile_definitions(texconv PRIVATE USE_XBOX_EXTS)
     target_link_libraries(texconv PUBLIC $<TARGET_NAME_IF_EXISTS:Xbox::GDKX> $<TARGET_NAME_IF_EXISTS:Xbox::XDK>)
 
@@ -520,7 +513,7 @@ if(MSVC)
     endif()
 endif()
 
-include(build/CompilerAndLinker.cmake)
+include(DirectXTex/build/CompilerAndLinker.cmake)
 
 foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
   target_compile_definitions(${t} PRIVATE ${COMPILER_DEFINES})

@@ -13,5 +13,5 @@ cmake \
   -D TEXCONV_USE_ALL=ON\
   ../
 cmake --build .
-cp bin/CMake/libtexconv.* ../
+cp lib/libtexconv.* ../
 popd

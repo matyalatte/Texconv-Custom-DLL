@@ -16,7 +16,7 @@ cmake -G "%VS_VERSION%"^
  ../
 
 cmake --build . --config Release
-copy bin\CMake\Release\texconv.dll ..\
+copy bin\Release\texconv.dll ..\
 @popd
 
 pause

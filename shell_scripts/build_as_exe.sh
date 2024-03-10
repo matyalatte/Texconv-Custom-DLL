@@ -14,6 +14,6 @@ cmake \
   -D TEXCONV_USE_ALL=ON\
   ../
 cmake --build .
-cp bin/CMake/texconv ../
-cp bin/CMake/texassemble ../
+cp bin/texconv ../
+cp bin/texassemble ../
 popd

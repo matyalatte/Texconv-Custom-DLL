@@ -339,7 +339,6 @@ if (BUILD_TOOLS AND TEXCONV_USE_TEXASSEMBLE AND TEXCONV_BUILD_AS_EXE)
     ${CMAKE_BINARY_DIR}/TexconvDLL/config.h
     ${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in
     TexconvDLL/tool_util.h
-    TexconvDLL/tool_util.cpp
     TexconvDLL/texassemble.cpp)
   if (WIN32)
     if (TEXCONV_USE_WIC)
@@ -370,7 +369,6 @@ if(BUILD_TOOLS)
     ${CMAKE_BINARY_DIR}/TexconvDLL/config.h
     ${CMAKE_SOURCE_DIR}/TexconvDLL/config.h.in
     TexconvDLL/tool_util.h
-    TexconvDLL/tool_util.cpp
     TexconvDLL/texconv.cpp)
   if (TEXCONV_USE_TEXASSEMBLE)
     if (NOT TEXCONV_BUILD_AS_EXE)

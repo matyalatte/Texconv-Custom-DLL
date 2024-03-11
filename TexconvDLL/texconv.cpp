@@ -23,7 +23,9 @@
 #pragma warning(pop)
 #endif
 
+#if _WIN32
 #include <ShlObj.h>
+#endif
 
 #if __cplusplus < 201703L
 #error Requires C++17 (and /Zc:__cplusplus with MSVC)
@@ -48,13 +50,20 @@
 #include <string>
 #include <tuple>
 
-#include <wrl\client.h>
+#include <wrl/client.h>
 
+#ifdef _WIN32
 #include <d3d11.h>
 #include <dxgi.h>
 #include <dxgiformat.h>
 
 #include <wincodec.h>
+#else //!_WIN32
+#include <directx/d3d12.h>
+#include <directx/dxgiformat.h>
+#endif //_WIN32
+
+#include "tool_util.h"
 
 #ifdef  _MSC_VER
 #pragma warning(disable : 4619 4616 26812)
@@ -498,23 +507,30 @@ namespace
 
     const SValue<uint32_t> g_pSaveFileTypes[] =   // valid formats to write to
     {
+#if USE_WIC
         { L"bmp",   WIC_CODEC_BMP  },
+#endif
 #ifdef USE_LIBJPEG
         { L"jpg",   CODEC_JPEG     },
         { L"jpeg",  CODEC_JPEG     },
 #else
+#if USE_WIC
         { L"jpg",   WIC_CODEC_JPEG },
         { L"jpeg",  WIC_CODEC_JPEG },
+#endif
 #endif
 #ifdef USE_LIBPNG
         { L"png",   CODEC_PNG      },
 #else
+#if USE_WIC
         { L"png",   WIC_CODEC_PNG  },
+#endif
 #endif
         { L"dds",   CODEC_DDS      },
         { L"ddx",   CODEC_DDS      },
         { L"tga",   CODEC_TGA      },
         { L"hdr",   CODEC_HDR      },
+#if USE_WIC
         { L"tif",   WIC_CODEC_TIFF },
         { L"tiff",  WIC_CODEC_TIFF },
         { L"wdp",   WIC_CODEC_WMP  },
@@ -527,6 +543,7 @@ namespace
     #endif
         { L"heic",  WIC_CODEC_HEIF },
         { L"heif",  WIC_CODEC_HEIF },
+#endif
         { nullptr,  CODEC_DDS      }
     };
 
@@ -550,6 +567,7 @@ namespace
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
+#if USE_WIC
 HRESULT __cdecl LoadFromBMPEx(
     _In_z_ const wchar_t* szFile,
     _In_ WIC_FLAGS flags,
@@ -573,6 +591,7 @@ HRESULT __cdecl LoadFromPortablePixMapHDR(
 HRESULT __cdecl SaveToPortablePixMapHDR(
     _In_ const Image& image,
     _In_z_ const wchar_t* szFile) noexcept;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -584,11 +603,13 @@ HRESULT __cdecl SaveToPortablePixMapHDR(
 
 namespace
 {
+#if USE_WILDCARD
     inline HANDLE safe_handle(HANDLE h) noexcept { return (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
 
     struct find_closer { void operator()(HANDLE h) noexcept { assert(h != INVALID_HANDLE_VALUE); if (h) FindClose(h); } };
 
     using ScopedFindHandle = std::unique_ptr<void, find_closer>;
+#endif
 
     constexpr static bool ispow2(size_t x)
     {
@@ -627,6 +648,7 @@ namespace
         return L"";
     }
 
+#if USE_WILDCARD
     void SearchForFiles(const std::filesystem::path& path, std::list<SConversion>& files, bool recursive, const wchar_t* folder)
     {
         // Process files
@@ -642,7 +664,7 @@ namespace
                 if (!(findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY)))
                 {
                     SConversion conv = {};
-                    conv.szSrc = path.parent_path().append(findData.cFileName).native();
+                    conv.szSrc = path.parent_path().append(findData.cFileName).wstring();
                     if (folder)
                     {
                         conv.szFolder = folder;
@@ -688,6 +710,7 @@ namespace
             }
         }
     }
+#endif
 
     void ProcessFileList(std::wifstream& inFile, std::list<SConversion>& files)
     {
@@ -717,6 +740,7 @@ namespace
                     auto& npath = path.make_preferred();
                     if (wcspbrk(fname.c_str(), L"?*") != nullptr)
                     {
+                    #if USE_WILDCARD
                         std::list<SConversion> removeFiles;
                         SearchForFiles(npath, removeFiles, false, nullptr);
 
@@ -726,10 +750,13 @@ namespace
                             std::transform(name.begin(), name.end(), name.begin(), towlower);
                             excludes.insert(name);
                         }
+                    #else
+                        wprintf(L"WARNING: Wildcard is not supported. (%ls)", fname.c_str());
+                    #endif
                     }
                     else
                     {
-                        std::wstring name = npath.c_str();
+                        std::wstring name = npath.wstring().c_str();
                         std::transform(name.begin(), name.end(), name.begin(), towlower);
                         excludes.insert(name);
                     }
@@ -737,14 +764,18 @@ namespace
             }
             else if (wcspbrk(fname.c_str(), L"?*") != nullptr)
             {
+            #if USE_WILDCARD
                 std::filesystem::path path(fname.c_str());
                 SearchForFiles(path.make_preferred(), flist, false, nullptr);
+            #else
+                wprintf(L"WARNING: Wildcard is not supported. (%ls)", fname.c_str());
+            #endif
             }
             else
             {
                 SConversion conv = {};
                 std::filesystem::path path(fname.c_str());
-                conv.szSrc = path.make_preferred().native();
+                conv.szSrc = path.make_preferred().wstring();
                 flist.push_back(conv);
             }
         }
@@ -888,6 +919,7 @@ namespace
     {
         wchar_t version[32] = {};
 
+    #ifdef _WIN32
         wchar_t appName[_MAX_PATH] = {};
         if (GetModuleFileNameW(nullptr, appName, _MAX_PATH))
         {
@@ -906,10 +938,11 @@ namespace
                 }
             }
         }
+    #endif
 
         if (!*version || wcscmp(version, L"1.0.0.0") == 0)
         {
-            swprintf_s(version, L"%03d (library)", DIRECTX_TEX_VERSION);
+            swprintf_s(version, 31, L"%03d (library)", DIRECTX_TEX_VERSION);
         }
 
         if (versionOnly)
@@ -933,6 +966,7 @@ namespace
         }
     }
 
+#if !NO_GPU_CODEC
     _Success_(return)
         bool GetDXGIFactory(_Outptr_ IDXGIFactory1** pFactory)
     {
@@ -958,6 +992,7 @@ namespace
 
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
+#endif
 
     void PrintUsage()
     {
@@ -1082,6 +1117,7 @@ namespace
         wprintf(L"\n   <feature-level>: ");
         PrintList(13, g_pFeatureLevels);
 
+    #if !NO_GPU_CODEC
         ComPtr<IDXGIFactory1> dxgiFactory;
         if (GetDXGIFactory(dxgiFactory.GetAddressOf()))
         {
@@ -1099,10 +1135,12 @@ namespace
                 }
             }
         }
+    #endif
     }
 
     const wchar_t* GetErrorDesc(HRESULT hr)
     {
+    #ifdef _WIN32
         static wchar_t desc[1024] = {};
 
         LPWSTR errorText = nullptr;
@@ -1136,8 +1174,12 @@ namespace
         }
 
         return desc;
+    #else
+        return L"";
+    #endif
     }
 
+#if !NO_GPU_CODEC
     _Success_(return)
         bool CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
     {
@@ -1179,7 +1221,7 @@ namespace
             {
                 if (FAILED(dxgiFactory->EnumAdapters(static_cast<UINT>(adapter), pAdapter.GetAddressOf())))
                 {
-                    wprintf(L"\nERROR: Invalid GPU adapter index (%d)!\n", adapter);
+                    wprintf(L"\nERROR:Invalid GPU adapter index (%d)!\n", adapter);
                     return false;
                 }
             }
@@ -1235,6 +1277,7 @@ namespace
         else
             return false;
     }
+#endif
 
     void FitPowerOf2(size_t origx, size_t origy, _Inout_ size_t& targetx, _Inout_ size_t& targety, size_t maxsize)
     {
@@ -1475,8 +1518,15 @@ namespace
 #pragma prefast(disable : 28198, "Command-line tool, frees all memory on exit")
 #endif
 
-int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+#ifdef _WIN32
+extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, bool allow_slow_codec = true, wchar_t* err_buf = nullptr, int err_buf_size = 0)
 {
+#else
+extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, bool allow_slow_codec = true, wchar_t* err_buf = nullptr, int err_buf_size = 0)
+{
+    init_com = false;
+#endif
+
     // Parameters and defaults
     size_t width = 0;
     size_t height = 0;
@@ -1513,20 +1563,26 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     // Set locale for output since GetErrorDesc can get localized strings.
     std::locale::global(std::locale(""));
 
+    HRESULT hr = S_OK;
+#if USE_WIC
     // Initialize COM (needed for WIC)
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr))
-    {
-        wprintf(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
-        return 1;
+    if (init_com){
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (FAILED(hr))
+        {
+            RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+            return 1;
+        }
     }
+#endif
+
 
     // Process command line
     uint64_t dwOptions = 0;
     std::list<SConversion> conversion;
     bool allowOpts = true;
 
-    for (int iArg = 1; iArg < argc; iArg++)
+    for (int iArg = 0; iArg < argc; iArg++)
     {
         PWSTR pArg = argv[iArg];
 
@@ -1550,7 +1606,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             }
             else
             {
-                wprintf(L"Unknown option: %ls\n", pArg);
+                RaiseError(L"Unknown option: %ls\n", pArg);
                 return 1;
             }
         }
@@ -1624,7 +1680,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_WIDTH:
                 if (swscanf_s(pValue, L"%zu", &width) != 1)
                 {
-                    wprintf(L"Invalid value specified with -w (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -w (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
@@ -1634,7 +1690,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_HEIGHT:
                 if (swscanf_s(pValue, L"%zu", &height) != 1)
                 {
-                    wprintf(L"Invalid value specified with -h (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -h (%ls)\n", pValue);
                     printf("\n");
                     PrintUsage();
                     return 1;
@@ -1644,7 +1700,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_MIPLEVELS:
                 if (swscanf_s(pValue, L"%zu", &mipLevels) != 1)
                 {
-                    wprintf(L"Invalid value specified with -m (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -m (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
@@ -1671,7 +1727,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                             break;
 
                         default:
-                            wprintf(L"Invalid value specified with -f (%ls)\n", pValue);
+                            RaiseError(L"Invalid value specified with -f (%ls)\n", pValue);
                             wprintf(L"\n");
                             PrintUsage();
                             return 1;
@@ -1684,7 +1740,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 dwFilter = static_cast<TEX_FILTER_FLAGS>(LookupByName(pValue, g_pFilters));
                 if (!dwFilter)
                 {
-                    wprintf(L"Invalid value specified with -if (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -if (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
@@ -1695,7 +1751,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 dwRotateColor = LookupByName(pValue, g_pRotateColor);
                 if (!dwRotateColor)
                 {
-                    wprintf(L"Invalid value specified with -rotatecolor (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -rotatecolor (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
@@ -1741,7 +1797,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 FileType = LookupByName(pValue, g_pSaveFileTypes);
                 if (!FileType)
                 {
-                    wprintf(L"Invalid value specified with -ft (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -ft (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
@@ -1751,7 +1807,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_PREMUL_ALPHA:
                 if (dwOptions & (uint64_t(1) << OPT_DEMUL_ALPHA))
                 {
-                    wprintf(L"Can't use -pmalpha and -alpha at same time\n\n");
+                    RaiseError(L"Can't use -pmalpha and -alpha at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1760,7 +1816,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_DEMUL_ALPHA:
                 if (dwOptions & (uint64_t(1) << OPT_PREMUL_ALPHA))
                 {
-                    wprintf(L"Can't use -pmalpha and -alpha at same time\n\n");
+                    RaiseError(L"Can't use -pmalpha and -alpha at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1769,7 +1825,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_TA_WRAP:
                 if (dwFilterOpts & TEX_FILTER_MIRROR)
                 {
-                    wprintf(L"Can't use -wrap and -mirror at same time\n\n");
+                    RaiseError(L"Can't use -wrap and -mirror at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1779,7 +1835,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_TA_MIRROR:
                 if (dwFilterOpts & TEX_FILTER_WRAP)
                 {
-                    wprintf(L"Can't use -wrap and -mirror at same time\n\n");
+                    RaiseError(L"Can't use -wrap and -mirror at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1812,7 +1868,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     }
                     else
                     {
-                        wprintf(L"Invalid value specified for -nmap (%ls), missing l, r, g, b, or a\n\n", pValue);
+                        RaiseError(L"Invalid value specified for -nmap (%ls), missing l, r, g, b, or a\n\n", pValue);
                         return 1;
                     }
 
@@ -1847,19 +1903,19 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_NORMAL_MAP_AMPLITUDE:
                 if (!dwNormalMap)
                 {
-                    wprintf(L"-nmapamp requires -nmap\n\n");
+                    RaiseError(L"-nmapamp requires -nmap\n\n");
                     PrintUsage();
                     return 1;
                 }
                 else if (swscanf_s(pValue, L"%f", &nmapAmplitude) != 1)
                 {
-                    wprintf(L"Invalid value specified with -nmapamp (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -nmapamp (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (nmapAmplitude < 0.f)
                 {
-                    wprintf(L"Normal map amplitude must be positive (%ls)\n\n", pValue);
+                    RaiseError(L"Normal map amplitude must be positive (%ls)\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1867,13 +1923,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_GPU:
                 if (swscanf_s(pValue, L"%d", &adapter) != 1)
                 {
-                    wprintf(L"Invalid value specified with -gpu (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -gpu (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (adapter < 0)
                 {
-                    wprintf(L"Invalid adapter index (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid adapter index (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1883,7 +1939,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 maxSize = LookupByName(pValue, g_pFeatureLevels);
                 if (!maxSize)
                 {
-                    wprintf(L"Invalid value specified with -fl (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -fl (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
@@ -1893,14 +1949,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_ALPHA_THRESHOLD:
                 if (swscanf_s(pValue, L"%f", &alphaThreshold) != 1)
                 {
-                    wprintf(L"Invalid value specified with -at (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -at (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
                 }
                 else if (alphaThreshold < 0.f)
                 {
-                    wprintf(L"-at (%ls) parameter must be positive\n", pValue);
+                    RaiseError(L"-at (%ls) parameter must be positive\n", pValue);
                     wprintf(L"\n");
                     return 1;
                 }
@@ -1909,14 +1965,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_ALPHA_WEIGHT:
                 if (swscanf_s(pValue, L"%f", &alphaWeight) != 1)
                 {
-                    wprintf(L"Invalid value specified with -aw (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -aw (%ls)\n", pValue);
                     wprintf(L"\n");
                     PrintUsage();
                     return 1;
                 }
                 else if (alphaWeight < 0.f)
                 {
-                    wprintf(L"-aw (%ls) parameter must be positive\n", pValue);
+                    RaiseError(L"-aw (%ls) parameter must be positive\n", pValue);
                     wprintf(L"\n");
                     return 1;
                 }
@@ -1953,14 +2009,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
                     if ((dwCompress & (TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_BC7_USE_3SUBSETS)) == (TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_BC7_USE_3SUBSETS))
                     {
-                        wprintf(L"Can't use -bc x (max) and -bc q (quick) at same time\n\n");
+                        RaiseError(L"Can't use -bc x (max) and -bc q (quick) at same time\n\n");
                         PrintUsage();
                         return 1;
                     }
 
                     if (!found)
                     {
-                        wprintf(L"Invalid value specified for -bc (%ls), missing d, u, q, or x\n\n", pValue);
+                        RaiseError(L"Invalid value specified for -bc (%ls), missing d, u, q, or x\n\n", pValue);
                         return 1;
                     }
                 }
@@ -1971,7 +2027,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     || (wicQuality < 0.f)
                     || (wicQuality > 1.f))
                 {
-                    wprintf(L"Invalid value specified with -wicq (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -wicq (%ls)\n", pValue);
                     printf("\n");
                     PrintUsage();
                     return 1;
@@ -1996,7 +2052,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_USE_DX10:
                 if (dwOptions & (uint64_t(1) << OPT_USE_DX9))
                 {
-                    wprintf(L"Can't use -dx9 and -dx10 at same time\n\n");
+                    RaiseError(L"Can't use -dx9 and -dx10 at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -2005,7 +2061,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_USE_DX9:
                 if (dwOptions & (uint64_t(1) << OPT_USE_DX10))
                 {
-                    wprintf(L"Can't use -dx9 and -dx10 at same time\n\n");
+                    RaiseError(L"Can't use -dx9 and -dx10 at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -2021,7 +2077,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     }
                     else if (_wcsicmp(pValue, L"flatten") != 0)
                     {
-                        wprintf(L"For recursive use -r, -r:flatten, or -r:keep\n\n");
+                        RaiseError(L"For recursive use -r, -r:flatten, or -r:keep\n\n");
                         PrintUsage();
                         return 1;
                     }
@@ -2034,7 +2090,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     std::wifstream inFile(path.make_preferred().c_str());
                     if (!inFile)
                     {
-                        wprintf(L"Error opening -flist file %ls\n", pValue);
+                        RaiseError(L"Error opening -flist file %ls\n", pValue);
                         return 1;
                     }
 
@@ -2047,13 +2103,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_PAPER_WHITE_NITS:
                 if (swscanf_s(pValue, L"%f", &paperWhiteNits) != 1)
                 {
-                    wprintf(L"Invalid value specified with -nits (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -nits (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (paperWhiteNits > 10000.f || paperWhiteNits <= 0.f)
                 {
-                    wprintf(L"-nits (%ls) parameter must be between 0 and 10000\n\n", pValue);
+                    RaiseError(L"-nits (%ls) parameter must be between 0 and 10000\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -2061,13 +2117,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_PRESERVE_ALPHA_COVERAGE:
                 if (swscanf_s(pValue, L"%f", &preserveAlphaCoverageRef) != 1)
                 {
-                    wprintf(L"Invalid value specified with -keepcoverage (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -keepcoverage (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (preserveAlphaCoverageRef < 0.0f || preserveAlphaCoverageRef > 1.0f)
                 {
-                    wprintf(L"-keepcoverage (%ls) parameter must be between 0.0 and 1.0\n\n", pValue);
+                    RaiseError(L"-keepcoverage (%ls) parameter must be between 0.0 and 1.0\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -2075,13 +2131,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_SWIZZLE:
                 if (!*pValue || wcslen(pValue) > 4)
                 {
-                    wprintf(L"Invalid value specified with -swizzle (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -swizzle (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (!ParseSwizzleMask(pValue, swizzleElements, zeroElements, oneElements))
                 {
-                    wprintf(L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1\n");
+                    RaiseError(L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1\n");
                     return 1;
                 }
                 break;
@@ -2123,20 +2179,24 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
         else if (wcspbrk(pArg, L"?*") != nullptr)
         {
+        #if USE_WILDCARD
             const size_t count = conversion.size();
             std::filesystem::path path(pArg);
             SearchForFiles(path.make_preferred(), conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
-                wprintf(L"No matching files found for %ls\n", pArg);
+                RaiseError(L"No matching files found for %ls\n", pArg);
                 return 1;
             }
+        #else
+            wprintf(L"WARNING: Wildcard is not supported. (%ls)", pArg);
+        #endif
         }
         else
         {
             SConversion conv = {};
             std::filesystem::path path(pArg);
-            conv.szSrc = path.make_preferred().native();
+            conv.szSrc = path.make_preferred().wstring();
             conversion.push_back(conv);
         }
     }
@@ -2147,8 +2207,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         return 0;
     }
 
+#if BUILD_AS_EXE
     if (~dwOptions & (uint64_t(1) << OPT_NOLOGO))
         PrintLogo(false);
+#endif
 
     auto fileTypeName = LookupByValue(FileType, g_pSaveFileTypes);
 
@@ -2167,28 +2229,33 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         mipLevels = 1;
     }
 
+#if USE_TIMING
     LARGE_INTEGER qpcFreq = {};
     std::ignore = QueryPerformanceFrequency(&qpcFreq);
 
     LARGE_INTEGER qpcStart = {};
     std::ignore = QueryPerformanceCounter(&qpcStart);
+#endif
 
     // Convert images
     bool sizewarn = false;
     bool nonpow2warn = false;
     bool non4bc = false;
     bool preserveAlphaCoverage = false;
+
+#if !NO_GPU_CODEC
     ComPtr<ID3D11Device> pDevice;
+#endif
 
     int retVal = 0;
 
     for (auto pConv = conversion.begin(); pConv != conversion.end(); ++pConv)
     {
         if (pConv != conversion.begin())
-            wprintf(L"\n");
+            PrintVerbose(L"\n");
 
         // --- Load source image -------------------------------------------------------
-        wprintf(L"reading %ls", pConv->szSrc.c_str());
+        PrintVerbose(L"reading %ls", pConv->szSrc.c_str());
         fflush(stdout);
 
         TexMetadata info;
@@ -2196,7 +2263,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
         if (!image)
         {
-            wprintf(L"\nERROR: Memory allocation failed\n");
+            RaiseError(L"\nERROR:Memory allocation failed\n");
             return 1;
         }
 
@@ -2207,13 +2274,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         constexpr
     #endif
         bool isXbox = false;
-        if (_wcsicmp(ext.c_str(), L".dds") == 0 || _wcsicmp(ext.c_str(), L".ddx") == 0)
+        if (_wcsicmp(ext.wstring().c_str(), L".dds") == 0 || _wcsicmp(ext.wstring().c_str(), L".ddx") == 0)
         {
         #ifdef USE_XBOX_EXTS
-            hr = Xbox::GetMetadataFromDDSFile(curpath.c_str(), info, isXbox);
+            hr = Xbox::GetMetadataFromDDSFile(curpath.wstring().c_str(), info, isXbox);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2222,7 +2289,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             {
                 Xbox::XboxImage xbox;
 
-                hr = Xbox::LoadFromDDSFile(curpath.c_str(), &info, xbox);
+                hr = Xbox::LoadFromDDSFile(curpath.wstring().c_str(), &info, xbox);
                 if (SUCCEEDED(hr))
                 {
                     hr = Xbox::Detile(xbox, *image);
@@ -2241,11 +2308,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 if (dwOptions & (uint64_t(1) << OPT_DDS_PERMISSIVE))
                     ddsFlags |= DDS_FLAGS_PERMISSIVE;
 
-                hr = LoadFromDDSFile(curpath.c_str(), ddsFlags, &info, *image);
+                hr = LoadFromDDSFile(curpath.wstring().c_str(), ddsFlags, &info, *image);
             }
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2263,7 +2330,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
                 if (IsTypeless(info.format))
                 {
-                    wprintf(L" FAILED due to Typeless format %d\n", info.format);
+                    RaiseError(L" FAILED due to Typeless format %d\n", info.format);
                     retVal = 1;
                     continue;
                 }
@@ -2271,17 +2338,19 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 image->OverrideFormat(info.format);
             }
         }
-        else if (_wcsicmp(ext.c_str(), L".bmp") == 0)
+    #if USE_WIC
+        else if (_wcsicmp(ext.wstring().c_str(), L".bmp") == 0)
         {
-            hr = LoadFromBMPEx(curpath.c_str(), WIC_FLAGS_NONE | dwFilter, &info, *image);
+            hr = LoadFromBMPEx(curpath.wstring().c_str(), WIC_FLAGS_NONE | dwFilter, &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
         }
-        else if (_wcsicmp(ext.c_str(), L".tga") == 0)
+    #endif
+        else if (_wcsicmp(ext.wstring().c_str(), L".tga") == 0)
         {
             TGA_FLAGS tgaFlags = (IsBGR(format)) ? TGA_FLAGS_BGR : TGA_FLAGS_NONE;
             if (dwOptions & (uint64_t(1) << OPT_TGAZEROALPHA))
@@ -2289,75 +2358,77 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 tgaFlags |= TGA_FLAGS_ALLOW_ALL_ZERO_ALPHA;
             }
 
-            hr = LoadFromTGAFile(curpath.c_str(), tgaFlags, &info, *image);
+            hr = LoadFromTGAFile(curpath.wstring().c_str(), tgaFlags, &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
         }
-        else if (_wcsicmp(ext.c_str(), L".hdr") == 0)
+        else if (_wcsicmp(ext.wstring().c_str(), L".hdr") == 0)
         {
-            hr = LoadFromHDRFile(curpath.c_str(), &info, *image);
+            hr = LoadFromHDRFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
         }
-        else if (_wcsicmp(ext.c_str(), L".ppm") == 0)
+    #if USE_WIC
+        else if (_wcsicmp(ext.wstring().c_str(), L".ppm") == 0)
         {
-            hr = LoadFromPortablePixMap(curpath.c_str(), &info, *image);
+            hr = LoadFromPortablePixMap(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
         }
-        else if (_wcsicmp(ext.c_str(), L".pfm") == 0)
+        else if (_wcsicmp(ext.wstring().c_str(), L".pfm") == 0)
         {
-            hr = LoadFromPortablePixMapHDR(curpath.c_str(), &info, *image);
+            hr = LoadFromPortablePixMapHDR(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
         }
+    #endif
     #ifdef USE_OPENEXR
-        else if (_wcsicmp(ext.c_str(), L".exr") == 0)
+        else if (_wcsicmp(ext.wstring().c_str(), L".exr") == 0)
         {
-            hr = LoadFromEXRFile(curpath.c_str(), &info, *image);
+            hr = LoadFromEXRFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
         }
     #endif
     #ifdef USE_LIBJPEG
-        else if (_wcsicmp(ext.c_str(), L".jpg") == 0 || _wcsicmp(ext.c_str(), L".jpeg") == 0)
+        else if (_wcsicmp(ext.wstring().c_str(), L".jpg") == 0 || _wcsicmp(ext.wstring().c_str(), L".jpeg") == 0)
         {
-            hr = LoadFromJPEGFile(curpath.c_str(), &info, *image);
+            hr = LoadFromJPEGFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
         }
     #endif
     #ifdef USE_LIBPNG
-        else if (_wcsicmp(ext.c_str(), L".png") == 0)
+        else if (_wcsicmp(ext.wstring().c_str(), L".png") == 0)
         {
-            hr = LoadFromPNGFile(curpath.c_str(), &info, *image);
+            hr = LoadFromPNGFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2365,6 +2436,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     #endif
         else
         {
+        #if USE_WIC
             // WIC shares the same filter values for mode and dither
             static_assert(static_cast<int>(WIC_FLAGS_DITHER) == static_cast<int>(TEX_FILTER_DITHER), "WIC_FLAGS_* & TEX_FILTER_* should match");
             static_assert(static_cast<int>(WIC_FLAGS_DITHER_DIFFUSION) == static_cast<int>(TEX_FILTER_DITHER_DIFFUSION), "WIC_FLAGS_* & TEX_FILTER_* should match");
@@ -2377,32 +2449,37 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             if (FileType == CODEC_DDS)
                 wicFlags |= WIC_FLAGS_ALL_FRAMES;
 
-            hr = LoadFromWICFile(curpath.c_str(), wicFlags, &info, *image);
+            hr = LoadFromWICFile(curpath.wstring().c_str(), wicFlags, &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 if (hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */)
                 {
-                    if (_wcsicmp(ext.c_str(), L".heic") == 0 || _wcsicmp(ext.c_str(), L".heif") == 0)
+                    if (_wcsicmp(ext.wstring().c_str(), L".heic") == 0 || _wcsicmp(ext.wstring().c_str(), L".heif") == 0)
                     {
                         wprintf(L"INFO: This format requires installing the HEIF Image Extensions - https://aka.ms/heif\n");
                     }
-                    else if (_wcsicmp(ext.c_str(), L".webp") == 0)
+                    else if (_wcsicmp(ext.wstring().c_str(), L".webp") == 0)
                     {
                         wprintf(L"INFO: This format requires installing the WEBP Image Extensions - https://www.microsoft.com/p/webp-image-extensions/9pg2dk419drg\n");
                     }
                 }
                 continue;
             }
+        #else
+            RaiseError(L"ERROR: This format requires WIC\n");
+            retVal = 1;
+            continue;
+        #endif
         }
 
-        PrintInfo(info, isXbox);
+        PrintInfoVerbose(info, isXbox);
 
         size_t tMips = (!mipLevels && info.mipLevels > 1) ? info.mipLevels : mipLevels;
 
         // Convert texture
-        wprintf(L" as");
+        PrintVerbose(L" as");
         fflush(stdout);
 
         // --- Planar ------------------------------------------------------------------
@@ -2415,14 +2492,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
             hr = ConvertToSinglePlane(img, nimg, info, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [converttosingleplane] (%08X%ls)\n",
+                RaiseError(L" FAILED [converttosingleplane] (%08X%ls)\n",
                     static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
@@ -2457,7 +2534,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                     if (!timage)
                     {
-                        wprintf(L"\nERROR: Memory allocation failed\n");
+                        RaiseError(L"\nERROR:Memory allocation failed\n");
                         return 1;
                     }
 
@@ -2475,7 +2552,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     hr = timage->Initialize(mdata);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [BC non-multiple-of-4 fixup] (%08X%ls)\n",
+                        RaiseError(L" FAILED [BC non-multiple-of-4 fixup] (%08X%ls)\n",
                             static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
@@ -2519,14 +2596,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
             hr = Decompress(img, nimg, info, DXGI_FORMAT_UNKNOWN /* picks good default */, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [decompress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [decompress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2577,14 +2654,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR:Memory allocation failed\n");
                     return 1;
                 }
 
                 hr = PremultiplyAlpha(img, nimg, info, TEX_PMALPHA_REVERSE | dwSRGB, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [demultiply alpha] (%08X%ls)\n",
+                    RaiseError(L" FAILED [demultiply alpha] (%08X%ls)\n",
                         static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     retVal = 1;
                     continue;
@@ -2612,7 +2689,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -2626,10 +2703,15 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             assert(dwFlags != 0);
 
+        #if USE_WIC
             hr = FlipRotate(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwFlags, *timage);
+        #else
+            RaiseError(L"ERROR: FlipRotate() requires WIC.\n");
+            return 1;
+        #endif
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [fliprotate] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [fliprotate] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2678,14 +2760,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
             hr = Resize(image->GetImages(), image->GetImageCount(), image->GetMetadata(), twidth, theight, dwFilter | dwFilterOpts, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [resize] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [resize] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2726,7 +2808,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -2748,7 +2830,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [swizzle] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [swizzle] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2777,7 +2859,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR:Memory allocation failed\n");
                     return 1;
                 }
 
@@ -2785,7 +2867,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     dwFilter | dwFilterOpts | dwSRGB | dwConvert, alphaThreshold, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -2811,7 +2893,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3017,7 +3099,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             }
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [rotate color apply] (%08X%ls)\n",
+                RaiseError(L" FAILED [rotate color apply] (%08X%ls)\n",
                     static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
@@ -3045,7 +3127,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3069,7 +3151,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 });
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [tonemap maxlum] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [tonemap maxlum] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3098,7 +3180,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [tonemap apply] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [tonemap apply] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3125,7 +3207,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3153,7 +3235,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             hr = ComputeNormalMap(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwNormalMap, nmapAmplitude, nmfmt, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [normalmap] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [normalmap] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3178,7 +3260,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3186,7 +3268,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 dwFilter | dwFilterOpts | dwSRGB | dwConvert, alphaThreshold, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3214,7 +3296,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3245,7 +3327,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [colorkey] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [colorkey] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3272,7 +3354,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3294,7 +3376,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [inverty] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [inverty] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3321,7 +3403,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3355,7 +3437,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [reconstructz] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [reconstructz] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3406,7 +3488,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3415,7 +3497,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             hr = timage->Initialize(mdata);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [copy to single level] (%08X%ls)\n",
+                RaiseError(L" FAILED [copy to single level] (%08X%ls)\n",
                     static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
@@ -3428,7 +3510,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                         *timage->GetImage(0, 0, d), TEX_FILTER_DEFAULT, 0, 0);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [copy to single level] (%08X%ls)\n",
+                        RaiseError(L" FAILED [copy to single level] (%08X%ls)\n",
                             static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
@@ -3442,7 +3524,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                         *timage->GetImage(0, i, 0), TEX_FILTER_DEFAULT, 0, 0);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -3459,7 +3541,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 hr = timage->Initialize(mdata);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [copy compressed to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [copy compressed to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -3497,7 +3579,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
@@ -3511,7 +3593,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             }
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [mipmaps] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [mipmaps] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3536,14 +3618,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR:Memory allocation failed\n");
                 return 1;
             }
 
             hr = timage->Initialize(image->GetMetadata());
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3556,7 +3638,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 hr = ScaleMipMapsAlphaForCoverage(img, info.mipLevels, info, item, preserveAlphaCoverageRef, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
             }
@@ -3595,14 +3677,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR:Memory allocation failed\n");
                     return 1;
                 }
 
                 hr = PremultiplyAlpha(img, nimg, info, TEX_PMALPHA_DEFAULT | dwSRGB, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [premultiply alpha] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [premultiply alpha] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     retVal = 1;
                     continue;
                 }
@@ -3634,7 +3716,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR:Memory allocation failed\n");
                     return 1;
                 }
 
@@ -3652,7 +3734,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                         }, *timage);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [DXT5nm] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [DXT5nm] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -3670,7 +3752,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                         }, *timage);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [DXT5 RXGB] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [DXT5 RXGB] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -3726,7 +3808,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                     if (!timage)
                     {
-                        wprintf(L"\nERROR: Memory allocation failed\n");
+                        RaiseError(L"\nERROR:Memory allocation failed\n");
                         return 1;
                     }
 
@@ -3748,12 +3830,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                             {
                                 s_tryonce = true;
 
+                            #if !NO_GPU_CODEC
                                 if (!(dwOptions & (uint64_t(1) << OPT_NOGPU)))
                                 {
                                     if (!CreateDevice(adapter, pDevice.GetAddressOf()))
                                         wprintf(L"\nWARNING: DirectCompute is not available, using BC6H / BC7 CPU codec\n");
                                 }
                                 else
+                            #endif
                                 {
                                     wprintf(L"\nWARNING: using BC6H / BC7 CPU codec\n");
                                 }
@@ -3778,17 +3862,29 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                         non4bc = true;
                     }
 
+                #if !NO_GPU_CODEC
                     if (bc6hbc7 && pDevice)
                     {
                         hr = Compress(pDevice.Get(), img, nimg, info, tformat, dwCompress | dwSRGB, alphaWeight, *timage);
                     }
                     else
+                #endif
                     {
+                        if (bc6hbc7) {
+                            if (allow_slow_codec) {
+                                wprintf(L"\nWARNING: Using CPU codec for BC6 or BC7. It'll take a long time for conversion.\n");
+                            } else {
+                                wprintf(L"\n");
+                                RaiseError(L"Error: Can NOT use CPU codec for BC6 and BC7. Or enable the allow_slow_codec option.\n");
+                                retVal = 1;
+                                continue;
+                            }
+                        }
                         hr = Compress(img, nimg, info, tformat, cflags | dwSRGB, alphaThreshold, *timage);
                     }
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [compress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [compress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         retVal = 1;
                         continue;
                     }
@@ -3852,8 +3948,8 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         #else
             constexpr bool isXboxOut = false;
         #endif
-            PrintInfo(info, isXboxOut);
-            wprintf(L"\n");
+            PrintInfoVerbose(info, isXboxOut);
+            PrintVerbose(L"\n");
 
             // Figure out dest filename
             std::filesystem::path dest(outputDir);
@@ -3867,19 +3963,29 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
                 if (ec)
                 {
-                    wprintf(L" get full path FAILED (%hs)\n", ec.message().c_str());
+                    RaiseError(L" get full path FAILED (%hs)\n", ec.message().c_str());
                     retVal = 1;
                     continue;
                 }
 
+            #ifdef _WIN32
                 auto const err = static_cast<DWORD>(SHCreateDirectoryExW(nullptr, apath.c_str(), nullptr));
                 if (err != ERROR_SUCCESS && err != ERROR_ALREADY_EXISTS)
                 {
-                    wprintf(L" directory creation FAILED (%08X%ls)\n",
+                    RaiseError(L" directory creation FAILED (%08X%ls)\n",
                         static_cast<unsigned int>(HRESULT_FROM_WIN32(err)), GetErrorDesc(HRESULT_FROM_WIN32(err)));
                     retVal = 1;
                     continue;
                 }
+            #else
+                std::filesystem::create_directory(apath, ec);
+                if (ec)
+                {
+                    RaiseError(L" directory creation FAILED (%hs)\n", ec.message().c_str());
+                    retVal = 1;
+                    continue;
+                }
+            #endif
             }
 
             if (*szPrefix)
@@ -3894,21 +4000,25 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 dest.concat(szSuffix);
             }
 
-            std::wstring destName = dest.c_str();
+            std::wstring destName = dest.wstring().c_str();
             if (dwOptions & (uint64_t(1) << OPT_TOLOWER))
             {
                 std::transform(destName.begin(), destName.end(), destName.begin(), towlower);
             }
 
             // Write texture
-            wprintf(L"writing %ls", destName.c_str());
+            PrintVerbose(L"writing %ls", destName.c_str());
             fflush(stdout);
 
             if (~dwOptions & (uint64_t(1) << OPT_OVERWRITE))
             {
+            #ifdef _WIN32
                 if (GetFileAttributesW(destName.c_str()) != INVALID_FILE_ATTRIBUTES)
+            #else
+                if (std::filesystem::exists(destName.c_str()))
+            #endif
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite:\n");
+                    RaiseError(L"\nERROR:Output file already exists, use -y to overwrite:\n");
                     retVal = 1;
                     continue;
                 }
@@ -3958,6 +4068,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 hr = SaveToHDRFile(img[0], destName.c_str());
                 break;
 
+            #if USE_WIC
             case CODEC_PPM:
                 hr = SaveToPortablePixMap(img[0], destName.c_str());
                 break;
@@ -3965,6 +4076,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case CODEC_PFM:
                 hr = SaveToPortablePixMapHDR(img[0], destName.c_str());
                 break;
+            #endif
 
             #ifdef USE_OPENEXR
             case CODEC_EXR:
@@ -3984,6 +4096,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             default:
                 {
+                #if USE_WIC
                     const WICCodecs codec = (FileType == CODEC_HDP || FileType == CODEC_JXR) ? WIC_CODEC_WMP : static_cast<WICCodecs>(FileType);
                     const size_t nimages = (dwOptions & (uint64_t(1) << OPT_WIC_MULTIFRAME)) ? nimg : 1;
                     hr = SaveToWICFile(img, nimages, WIC_FLAGS_NONE, GetWICCodec(codec), destName.c_str(), nullptr,
@@ -4048,21 +4161,28 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                                 break;
                             }
                         });
+                #else
+                    RaiseError(L"ERROR: This format requires WIC\n");
+                    retVal = 1;
+                    continue;
+                #endif
                 }
                 break;
             }
 
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
+            #if USE_WIC
                 if ((hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */) && (FileType == WIC_CODEC_HEIF))
                 {
                     wprintf(L"INFO: This format requires installing the HEIF Image Extensions - https://aka.ms/heif\n");
                 }
+            #endif
                 continue;
             }
-            wprintf(L"\n");
+            PrintVerbose(L"\n");
         }
     }
 
@@ -4080,6 +4200,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     if (non4bc)
         wprintf(L"\nWARNING: Direct3D requires BC image to be multiple of 4 in width & height\n");
 
+#if USE_TIMING
     if (dwOptions & (uint64_t(1) << OPT_TIMING))
     {
         LARGE_INTEGER qpcEnd = {};
@@ -4088,6 +4209,58 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         const LONGLONG delta = qpcEnd.QuadPart - qpcStart.QuadPart;
         wprintf(L"\n Processing time: %f seconds\n", double(delta) / double(qpcFreq.QuadPart));
     }
+#endif
 
     return retVal;
 }
+
+// Main function for exe
+#if BUILD_AS_EXE
+#ifdef _WIN32
+int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+{
+    bool verbose = true;
+    bool init_com = true;
+#else
+int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
+{
+    bool verbose = true;
+    bool init_com = false;
+
+    wchar_t* argv[argc];
+    size_t length;
+    for(int i=0;i<argc;i++){
+        length = strlen(argv_char[i]);
+        argv[i] = new wchar_t[length + 1];
+        argv[i][length] = 0;
+        mbstowcs(argv[i], argv_char[i], length);
+    }
+
+#endif  // _WIN32
+    if (argc == 0){
+        return texconv(0, argv, verbose, init_com);
+    } else {
+        return texconv(argc - 1, &argv[1], verbose, init_com);
+    }
+}
+#else  // BUILD_AS_EXE
+
+// A function to initialize COM
+#ifdef _WIN32
+extern "C" __declspec(dllexport) int __cdecl init_com()
+{
+#if USE_WIC
+    // Return values
+    // 0: Initialized
+    // 1: Failed because it is already initialized
+    // -2147417850: Failed because it is already initialized with single thread mode
+    return CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+#else
+    return 0;
+#endif
+}
+#else  // _WIN32
+extern "C" __attribute__((visibility("default"))) int init_com() { return 0; }
+#endif  // _WIN32
+
+#endif  // BUILD_AS_EXE

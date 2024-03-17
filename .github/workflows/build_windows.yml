@@ -3,7 +3,7 @@ name: build_windows
 
 on:
   workflow_dispatch:
-  
+
 env:
   ZIP_NAME: TexconvCustomDLL
 
@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: git submodule update --init --recursive DirectXTex
 
       - name: build exe
@@ -21,30 +21,28 @@ jobs:
 
       - name: Copy files
         run: |
-          mkdir -p ../release
-          cp texconv.dll ../release/
-          cp texconv.exe ../release/
-          cp texassemble.exe ../release/
-          cp changelog.txt ../release/
-          cp LICENSE ../release/
+          mkdir -p release
+          cp texconv.dll release/
+          cp texconv.exe release/
+          cp texassemble.exe release/
+          cp changelog.txt release/
+          cp LICENSE release/
         shell: bash
 
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
-          directory: '../release'
+          directory: 'release'
           type: 'zip'
-          filename: '${{ env.ZIP_NAME }}.zip'
+          filename: '${{ env.ZIP_NAME }}-${{ runner.os }}.zip'
           exclusions: '*.git* .gitignore'
-          
+
       - name: Create Release Draft
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: create-release
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          name: ${{ github.ref }}
           body: |
             Changelog
             - First Change
@@ -53,12 +51,6 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ../release/${{ env.ZIP_NAME }}.zip
-          asset_name: ${{ env.ZIP_NAME }}-${{ runner.os }}.zip
-          asset_content_type: application/zip
+        run: gh release upload ${{ github.ref }} release/${{ env.ZIP_NAME }}-${{ runner.os }}.zip

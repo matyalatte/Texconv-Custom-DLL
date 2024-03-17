@@ -6,7 +6,7 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
-  
+
 env:
   ZIP_NAME: TexconvCustomDLL
   CACHE_NAME: main
@@ -15,41 +15,38 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.check-tag.outputs.version }}
-      url: ${{ steps.create-release.outputs.upload_url }}
+      tag: ${{ steps.check-tag.outputs.tag }}
     steps:
-    
+
       - name: Check tag
         id: check-tag
         run: |
           if [[ ${{ github.ref }} == refs/tags/v* ]]; then
-            VERSION=-$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+            TAG=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
           else
-            VERSION=""
+            TAG=$(echo ${{ github.sha }} | cut -c1-7)
           fi
-          echo "::set-output name=version::$VERSION"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
         shell: bash
-      
+
       - name: Create Release Draft
         id: create-release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: ${{ steps.check-tag.outputs.tag }}
+          name: ${{ steps.check-tag.outputs.tag }}
           body: |
             Changelog
             - First Change
             - Second Change
           draft: true
           prerelease: false
-       
+
   build_windows:
     runs-on: windows-2022
     needs: setup
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: git submodule update --init --recursive DirectXTex
 
       - name: build exe
@@ -59,33 +56,27 @@ jobs:
 
       - name: Copy files
         run: |
-          mkdir -p ../release
-          cp texconv.dll ../release/
-          cp texconv.exe ../release/
-          cp texassemble.exe ../release/
-          cp changelog.txt ../release/
-          cp LICENSE ../release/
+          mkdir -p release
+          cp texconv.dll release/
+          cp texconv.exe release/
+          cp texassemble.exe release/
+          cp changelog.txt release/
+          cp LICENSE release/
         shell: bash
 
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
-          directory: '../release'
+          directory: 'release'
           type: 'zip'
-          filename: '${{ env.ZIP_NAME }}.zip'
+          filename: '${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}.zip'
           exclusions: '*.git* .gitignore'
-          
-      - name: Upload Release Asset for windows
-        id: upload-release-asset-windows
-        uses: actions/upload-release-asset@v1
+
+      - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.setup.outputs.url }}
-          asset_path: ../release/${{ env.ZIP_NAME }}.zip
-          asset_name: ${{ env.ZIP_NAME }}${{ needs.setup.outputs.version }}-${{ runner.os }}.zip
-          asset_content_type: application/zip
-          
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}.zip
+
   build_unix:
     strategy:
       matrix:
@@ -94,7 +85,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: setup
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
           git submodule update --init --recursive
           bash shell_scripts/get_sal.sh
@@ -113,22 +104,16 @@ jobs:
 
       - name: Copy files
         run: |
-          mkdir -p ../release/${{ env.ZIP_NAME }}
-          cp libtexconv.* ../release/${{ env.ZIP_NAME }}
-          cp texconv ../release/${{ env.ZIP_NAME }}
-          cp texassemble ../release/${{ env.ZIP_NAME }}
-          cp changelog.txt ../release/${{ env.ZIP_NAME }}
-          cp LICENSE ../release/${{ env.ZIP_NAME }}
-          cd ../release
-          tar -jcvf ${{ env.ZIP_NAME }}.tar.bz2 ${{ env.ZIP_NAME }}
+          mkdir -p release/${{ env.ZIP_NAME }}
+          cp libtexconv.* release/${{ env.ZIP_NAME }}
+          cp texconv release/${{ env.ZIP_NAME }}
+          cp texassemble release/${{ env.ZIP_NAME }}
+          cp changelog.txt release/${{ env.ZIP_NAME }}
+          cp LICENSE release/${{ env.ZIP_NAME }}
+          cd release
+          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
 
-      - name: Upload Release Asset for ubuntu
-        id: upload-release-asset-ubuntu
-        uses: actions/upload-release-asset@v1
+      - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.setup.outputs.url }}
-          asset_path: ../release/${{ env.ZIP_NAME }}.tar.bz2
-          asset_name: ${{ env.ZIP_NAME }}${{ needs.setup.outputs.version }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-dep') || '' }}.tar.bz2
-          asset_content_type: application/zip
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2

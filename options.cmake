@@ -22,12 +22,15 @@ if(TEXCONV_USE_ALL)
   set(TEXCONV_USE_TEXASSEMBLE ON)
 endif()
 
-# disable windows options
+# disable options for windows
 if(NOT WIN32)
   set(TEXCONV_USE_WIC OFF)
   set(TEXCONV_NO_GPU_CODEC ON)
-  set(ENABLE_LIBJPEG_SUPPORT OFF)
-  set(ENABLE_LIBPNG_SUPPORT OFF)
+endif()
+
+if(APPLE)
+  # support macOS 10.15 or later
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
 endif()
 
 # show variables

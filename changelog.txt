@@ -1,5 +1,6 @@
 v0.4.0
 - Updated DirectXTex to March 2023 release.
+- Supported jpg and png on Unix/Linux systems.
 
 v0.3.0
 - Updated DirectXTex to Sept2023 release.

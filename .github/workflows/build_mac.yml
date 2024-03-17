@@ -9,6 +9,9 @@ env:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        use_libs: [false, true]
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v3
@@ -16,10 +19,17 @@ jobs:
           git submodule update --init --recursive
           bash shell_scripts/get_sal.sh
 
-      - name: build shared library
+      - name: build texconv
+        if: matrix.use_libs == false
         run: |
           bash shell_scripts/build.sh
           bash shell_scripts/build_as_exe.sh
+
+      - name: build texconv with libjpeg and libpng
+        if: matrix.use_libs == true
+        run: |
+          bash shell_scripts/build_with_jpg_png.sh
+          bash shell_scripts/build_as_exe_with_jpg_png.sh
 
       - name: Copy files
         run: |
@@ -55,5 +65,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ../release/${{ env.ZIP_NAME }}.tar.bz2
-          asset_name: ${{ env.ZIP_NAME }}-${{ runner.os }}.tar.bz2
+          asset_name: ${{ env.ZIP_NAME }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-dep') || '' }}.tar.bz2
           asset_content_type: application/zip

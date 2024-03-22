@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.3.0
+# Texconv-Custom-DLL v0.4.0
 
 Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).  
 And you can use it as a DLL (or a shared library).  
@@ -34,10 +34,13 @@ You can download the built binary from [the release page](https://github.com/mat
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
 -   `TexconvCustomDLL*-macOS.tar.bz2` is for macOS (10.15 or later).
 -   `TexconvCustomDLL*-Linux.tar.bz2` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
- 
+
 > Each zip file has a DLL and executables.  
 > You can copy whichever you want to use to your project.  
-> (The execuatbles won't refer the DLL.)  
+> (The executables don't refer the DLL.)
+
+> Linux and macOS builds requrie libjpeg and libpng.  
+> Or use `*-no-deps.tar.bz2` versions that don't support jpg and png.
 
 > The linux build only supports distributions using GLIBC.  
 > Build the executable by yourself if you want to use it on unsupported distros.

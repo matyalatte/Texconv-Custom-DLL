@@ -8,9 +8,8 @@ cd build
 cmake \
   -D CMAKE_BUILD_TYPE=Release\
   -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
+  -D CMAKE_OSX_ARCHITECTURES="arm64;x86_64"\
   -D TEXCONV_USE_ALL=ON\
-  -D ENABLE_LIBJPEG_SUPPORT=ON\
-  -D ENABLE_LIBPNG_SUPPORT=ON\
   ../
 cmake --build .
 cp lib/libtexconv.* ../

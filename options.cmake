@@ -26,6 +26,8 @@ endif()
 if(NOT WIN32)
   set(TEXCONV_USE_WIC OFF)
   set(TEXCONV_NO_GPU_CODEC ON)
+  set(BUILD_DX11 OFF)
+  set(BUILD_DX12 OFF)
 endif()
 
 if(APPLE)

@@ -16,14 +16,14 @@ These commands will convert `test.dds` to `outdir/test.tga`.
 
 ```bat
 mkdir outdir
-texconv.exe -ft tga -o outdir -y test.dds
+texconv.exe -ft tga -o outdir -y -- test.dds
 ```
 
 #### for Unix
 
 ```shell
 mkdir outdir
-./texconv -ft tga -o outdir -y test.dds
+./texconv -ft tga -o outdir -y -- test.dds
 ```
 
 ## DLL (or shared library)
@@ -103,7 +103,7 @@ dll = ctypes.cdll.LoadLibrary(dll_path)
 
 # Make arguments
 dds_file = 'test.dds'
-argv = ['-ft', 'tga', '-o', 'outdir', '-y', dds_file]
+argv = ['-ft', 'tga', '-o', 'outdir', '-y', '--', dds_file]
 argv = [ctypes.c_wchar_p(arg) for arg in argv]
 argv = (ctypes.c_wchar_p*len(argv))(*argv)
 err_buf = ctypes.create_unicode_buffer(512)

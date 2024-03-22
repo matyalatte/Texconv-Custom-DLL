@@ -2,7 +2,7 @@
 
 REM Builds texconv.dll with CMake and Visual Studio.
 REM texconv.dll will be generated in ..\
-REM The built dll does NOT require vcruntime140.dll
+REM The built dll requires vcruntime140.dll
 
 set VS_VERSION=Visual Studio 17 2022
 
@@ -12,7 +12,7 @@ mkdir %~dp0\..\build
 cmake -G "%VS_VERSION%"^
  -A x64^
  -D CMAKE_CONFIGURATION_TYPES=Release^
- -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded^
+ -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL^
  -D TEXCONV_USE_ALL=ON^
  ../
 

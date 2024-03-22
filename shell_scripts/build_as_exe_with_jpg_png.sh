@@ -7,8 +7,6 @@ mkdir build_exe
 cd build_exe
 cmake \
   -D CMAKE_BUILD_TYPE=Release\
-  -D BUILD_DX11=OFF\
-  -D BUILD_DX12=OFF\
   -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
   -D TEXCONV_BUILD_AS_EXE=ON\
   -D TEXCONV_USE_ALL=ON\

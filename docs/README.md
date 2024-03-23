@@ -59,10 +59,10 @@ There is a document for Windows users.
 
 It only supports Visual Studio 2022, but you can see [the batch files](../batch_files/) to find a way to build it with your environment.  
 
-### Ubuntu and Mac
+### Linux and Mac
 
-There is a document for Mac and Ubuntu users.  
-[Building Workflow for Ubuntu and MacOS](./Build-on-Unix.md)  
+There is a document for Linux and Mac users.  
+[Building Workflow for Linux and MacOS](./Build-on-Unix.md)  
 And you can see [the shell scripts](../shell_scripts/) to understand the workflow.  
 
 ### Docker

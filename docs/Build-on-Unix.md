@@ -1,4 +1,4 @@
-# Building Workflow for Ubuntu and MacOS
+# Building Workflow for Linux and MacOS
 
 You can build texconv on Linux and macOS.  
 But please note that there are some limitations.  
@@ -12,7 +12,6 @@ I made sure I can build it with the following platforms and compilers.
 But it might not work on your environment.  
 
 -   Ubuntu 20.04 + GCC 9.4
--   MacOS 10.15 + AppleClang 12.0
 -   MacOS 11 + AppleClang 13.0
 
 ## 0. Requirements
@@ -47,3 +46,10 @@ If you want an executable, use `build_as_exe.sh` instead of `build.sh`.
 (Or use `build_as_exe_with_jpg_png.sh` to support `.jpg` and `.png`.)  
 `texconv` and `texassemble` will be generated in `./Texconv-Custom-DLL/`.  
 You can use them on the terminal. (e.g. `./texconv -ft tga -y -o outdir test.dds`)  
+
+## 5. Build universal binary on macOS (optional)
+
+`build_universal.sh` can build universal binary.  
+The built shared library works on both of x64 and arm64 chips.  
+Also, you might be able to add `ENABLE_LIBJPEG_SUPPORT=ON` and `ENABLE_LIBPNG_SUPPORT=ON` to cmake options to support jpeg and png.  
+But they should require arm64 version of libjpeg and libpng.

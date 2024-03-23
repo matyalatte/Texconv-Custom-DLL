@@ -27,3 +27,8 @@ Then, you can build texconv.dll.
 If you want executables, use `build_as_exe.bat` instead of `build.bat`.  
 `texconv.exe` and `texassemble.exe` will be generated in `./Texconv-Custom-DLL/`.  
 You can use them on the command prompt. (e.g. `texconv.exe -ft tga -y -o outdir test.dds`)  
+
+## 4. Build .dll with dynamic linked runtime (optional)
+
+If your app can access to `vcruntime140.dll`, you can use `build_without_vcruntime.bat` to link the dynamic vcruntime to `texconv.dll`.  
+The binary size will be about 500KB smaller than the static linked dll.

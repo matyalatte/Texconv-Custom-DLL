@@ -10,8 +10,13 @@ extern "C"{
 }
 #include <filesystem>
 
+//#define S_OK 0
+//#define E_FAIL 0x80004005
+//#define FAILED(hr) hr != S_OK
+
 // Todo: Use secure function
 #define swscanf_s swscanf
+#define swprintf_s swprintf
 
 // wcsicmp for Windows = wcscasecmp for Unix
 #define _wcsicmp wcscasecmp
@@ -63,25 +68,75 @@ void _wmakepath_s(
 }
 
 // wsplitpath_s for unix
-void _wsplitpath_s(const WCHAR* path, WCHAR* drv, int drvnum, WCHAR* dir, int dirnum, WCHAR* name, int namenum, WCHAR* ext, int extnum);
+static void _wsplitpath_s(const WCHAR* path, WCHAR* drv, int drvnum, WCHAR* dir, int dirnum, WCHAR* name, int namenum, WCHAR* ext, int extnum)
+{
+    const WCHAR* end; /* end of processed string */
+    const WCHAR* p;      /* search pointer */
+    const WCHAR* s;      /* copy pointer */
+
+    /* extract drive name */
+    if (path[0] && path[1]==':') {
+            if (drv) {
+                    *drv++ = *path++;
+                    *drv++ = *path++;
+                    *drv = '\0';
+            }
+    } else if (drv)
+            *drv = '\0';
+
+    /* search for end of string or stream separator */
+    for(end=path; *end && *end!=':'; )
+            end++;
+
+
+    /* search for begin of file extension */
+    for(p=end; p>path && *--p!='\\' && *p!='/'; )
+            if (*p == '.') {
+                    end = p;
+                    break;
+            }
+
+    if (ext)
+            for(s=end; (*ext=*s++); )
+                    ext++;
+
+    /* search for end of directory name */
+    for(p=end; p>path; )
+            if (*--p=='\\' || *p=='/') {
+                    p++;
+                    break;
+            }
+
+    if (name) {
+            for(s=p; s<end; )
+                    *name++ = *s++;
+
+            *name = '\0';
+    }
+
+    if (dir) {
+            for(s=path; s<p; )
+                    *dir++ = *s++;
+
+            *dir = '\0';
+    }
+}
 #endif
 
-const wchar_t* GetErrorDesc(HRESULT hr);
+#ifdef _WIN32
+#define ErrorIsMissingPath(hr) hr == -2147024893;
+#else
+#define ErrorIsMissingPath(hr) hr == -2147467259;
+#endif
 
-bool ErrorIsMissingPath(HRESULT hr);
+#define RaiseError(...) \
+    fwprintf(stderr, __VA_ARGS__); \
+    if (err_buf != nullptr) { \
+        swprintf(err_buf, err_buf_size, __VA_ARGS__); \
+    }
 
-void RaiseErrorMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg);
+#define PrintInfoVerbose(...) \
+    if (verbose) PrintInfo(__VA_ARGS__)
 
-void RaiseErrorMessage(wchar_t* err_buf, size_t err_buf_size, int num);
-
-void RaiseErrorMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, const wchar_t* msg2, const wchar_t* msg3);
-
-void RaiseMemoryAllocError(wchar_t* err_buf, size_t err_buf_size);
-
-void RaiseErrorCodeMessage(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, HRESULT hr);
-
-void RaiseInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* option, const wchar_t* pValue);
-
-void RaiseInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg);
-
-void RaiseInvalidOptionError(wchar_t* err_buf, size_t err_buf_size, const wchar_t* msg, const wchar_t* msg2, const wchar_t* msg3);
+#define PrintVerbose(...) \
+    if (verbose) wprintf(__VA_ARGS__)

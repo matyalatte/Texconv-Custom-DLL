@@ -9,8 +9,10 @@ build
 build_exe
 *.so
 *.dll
+*.dylib
 *.exe
 texconv
+texassemble
 
 # test
 python

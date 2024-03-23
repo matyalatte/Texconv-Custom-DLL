@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.2.3
+# Texconv-Custom-DLL v0.4.0
 
 Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).  
 And you can use it as a DLL (or a shared library).  
@@ -10,19 +10,6 @@ is a DDS converter developed by Microsoft.
 It supports all dds formats.  
 There are some dds formats common tools can't handle properly, but Texconv can.  
 It's the best DDS converter as far as I know.  
-
-## Removable features
-
-You can remove many features from the original build to support unix systems and to reduce the file size.  
--   WIC support (.bmp, .jpg, .png, etc.)
--   3D textures support
--   Little-used dds formats support (B5G6R5, B5G5R5A1, etc.)
--   ppm support (.ppm and .pfm)
--   Print functions
--   Mutilple files processing
--   Many optional arguments
-
-If you want to restore them, you need to use [cmake options](./CMake-Options.md).
 
 ## Extra features
 
@@ -47,10 +34,13 @@ You can download the built binary from [the release page](https://github.com/mat
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
 -   `TexconvCustomDLL*-macOS.tar.bz2` is for macOS (10.15 or later).
 -   `TexconvCustomDLL*-Linux.tar.bz2` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
- 
+
 > Each zip file has a DLL and executables.  
 > You can copy whichever you want to use to your project.  
-> (The execuatbles won't refer the DLL.)  
+> (The executables don't refer the DLL.)
+
+> Linux and macOS builds requrie libjpeg and libpng.  
+> Or use `*-no-deps.tar.bz2` versions that don't support jpg and png.
 
 > The linux build only supports distributions using GLIBC.  
 > Build the executable by yourself if you want to use it on unsupported distros.
@@ -69,10 +59,10 @@ There is a document for Windows users.
 
 It only supports Visual Studio 2022, but you can see [the batch files](../batch_files/) to find a way to build it with your environment.  
 
-### Ubuntu and Mac
+### Linux and Mac
 
-There is a document for Mac and Ubuntu users.  
-[Building Workflow for Ubuntu and MacOS](./Build-on-Unix.md)  
+There is a document for Linux and Mac users.  
+[Building Workflow for Linux and MacOS](./Build-on-Unix.md)  
 And you can see [the shell scripts](../shell_scripts/) to understand the workflow.  
 
 ### Docker

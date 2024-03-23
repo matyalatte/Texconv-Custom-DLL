@@ -19,6 +19,8 @@ cmake -G "%VS_VERSION%"^
  ../
 
 cmake --build . --config Release
-copy bin\CMake\Release\texconv.exe ..\
-copy bin\CMake\Release\texassemble.exe ..\
+copy bin\Release\texconv.exe ..\
+copy bin\Release\texassemble.exe ..\
 @popd
+
+pause

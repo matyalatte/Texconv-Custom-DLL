@@ -41,7 +41,7 @@ int texconv(int argc, wchar_t* argv[], bool verbose = true,
 -   `argc`: The number of arguments for texconv.
 -   `argv`: An array of arguments for texconv.
 -   `verbose`: Show info
--   `init_com`: Initialize COM for WIC.
+-   `init_com`: This flag was used for old versions. It does nothing.
 -   `allow_slow_codec`: Allow to use CPU coded for BC6 and BC7.
 -   `err_buf`: A buffer to store error messages.
 -   `err_buf_size`: The size of the buffer.
@@ -63,28 +63,13 @@ int texassemble(int argc, wchar_t* argv[], bool verbose = true,
 -   `argc`: The number of arguments for texassemble.
 -   `argv`: An array of arguments for texassemble.
 -   `verbose`: Show info
--   `init_com`: Initialize COM for WIC.
+-   `init_com`: This flag was used for old versions. It does nothing.
 -   `err_buf`: A buffer to store error messages.
 -   `err_buf_size`: The size of the buffer.
 
 The return value is the execution status.  
 0 means no errors.  
 And 1 means failed to convert.  
-
-#### init_com
-
-```c++
-int init_com()
-```
-
-On Windows, you should initialize [COM](https://learn.microsoft.com/en-us/windows/win32/com/the-component-object-model) once in a process.  
-This function provides a way to do.  
-It will do nothing on Unix/Linux systems.  
-  
-The return value is the same as [CoInitializeEx](https://learn.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-coinitializeex)'s one.  
-0 means "Initialized."  
-1 means "It is already initialized."  
--2147417850 means "It is already initialized with single thread mode."  
 
 ### Example for Python
 
@@ -109,7 +94,6 @@ argv = (ctypes.c_wchar_p*len(argv))(*argv)
 err_buf = ctypes.create_unicode_buffer(512)
 
 # Convert DDS to TGA
-dll.init_com()
 result = dll.texconv(len(argv), argv, verbose=True, init_com=False, allow_slow_codec=False,
                      err_buf=err_buf, err_buf_size=512)
 

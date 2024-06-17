@@ -1055,7 +1055,22 @@ namespace
 
 //int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[]) {
 #ifdef _WIN32
+static int texassemble_base(int argc, wchar_t* argv[], bool verbose, bool init_com, wchar_t* err_buf, int err_buf_size);
 extern "C" __declspec(dllexport) int __cdecl texassemble(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, wchar_t* err_buf = nullptr, int err_buf_size = 0)
+{
+    // Initialize COM
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+    {
+        RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+        return 1;
+    }
+    int ret = texassemble_base(argc, argv, verbose, init_com, err_buf, err_buf_size);
+    CoUninitialize();
+    return ret;
+}
+
+static int texassemble_base(int argc, wchar_t* argv[], bool verbose, bool init_com, wchar_t* err_buf, int err_buf_size)
 {
 #else
 extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, wchar_t* err_buf = nullptr, int err_buf_size = 0)
@@ -1091,18 +1106,6 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     std::locale::global(std::locale(""));
 
     HRESULT hr = S_OK;
-    #if USE_WIC
-    // Initialize COM (needed for WIC)
-    if (init_com)
-    {
-        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        if (FAILED(hr))
-        {
-            RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
-            return 1;
-        }
-    }
-    #endif
 
     // Process command line
     if (argc < 1)

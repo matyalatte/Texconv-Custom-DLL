@@ -1058,15 +1058,20 @@ namespace
 static int texassemble_base(int argc, wchar_t* argv[], bool verbose, bool init_com, wchar_t* err_buf, int err_buf_size);
 extern "C" __declspec(dllexport) int __cdecl texassemble(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, wchar_t* err_buf = nullptr, int err_buf_size = 0)
 {
+    HRESULT hr = S_OK;
+
     // Initialize COM
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
-    {
-        RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
-        return 1;
+    if (init_com) {
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+        {
+            RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+            return 1;
+        }
     }
     int ret = texassemble_base(argc, argv, verbose, init_com, err_buf, err_buf_size);
-    CoUninitialize();
+    if (init_com && hr != RPC_E_CHANGED_MODE)
+        CoUninitialize();
     return ret;
 }
 

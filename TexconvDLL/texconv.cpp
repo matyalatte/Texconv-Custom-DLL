@@ -1522,15 +1522,20 @@ namespace
 static int texconv_base(int argc, wchar_t* argv[], bool verbose, bool init_com, bool allow_slow_codec, wchar_t* err_buf, int err_buf_size);
 extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, bool allow_slow_codec = true, wchar_t* err_buf = nullptr, int err_buf_size = 0)
 {
+    HRESULT hr = S_OK;
+
     // Initialize COM
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
-    {
-        RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
-        return 1;
+    if (init_com) {
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+        {
+            RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+            return 1;
+        }
     }
     int ret = texconv_base(argc, argv, verbose, init_com, allow_slow_codec, err_buf, err_buf_size);
-    CoUninitialize();
+    if (init_com && hr != RPC_E_CHANGED_MODE)
+        CoUninitialize();
     return ret;
 }
 
@@ -4249,9 +4254,20 @@ int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
 
 // A function to initialize COM
 #ifdef _WIN32
-extern "C" __declspec(dllexport) int __cdecl init_com() { return 0; }
+extern "C" __declspec(dllexport) int __cdecl init_com() {
+    // Return values
+    // 0: Initialized
+    // 1: Failed because it is already initialized
+    // -2147417850: Failed because it is already initialized with single thread mode
+    return CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+}
+
+extern "C" __declspec(dllexport) void __cdecl uninit_com() {
+    CoUninitialize();
+}
 #else  // _WIN32
 extern "C" __attribute__((visibility("default"))) int init_com() { return 0; }
+extern "C" __attribute__((visibility("default"))) void uninit_com() {}
 #endif  // _WIN32
 
 #endif  // BUILD_AS_EXE

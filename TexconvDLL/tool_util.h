@@ -21,10 +21,14 @@ extern "C"{
 // wcsicmp for Windows = wcscasecmp for Unix
 #define _wcsicmp wcscasecmp
 
-// undefined parameters for unix
-#define _MAX_PATH 260
-#define _MAX_EXT 256
-#define _MAX_FNAME 256
+// replace MAX_PATH with PATH_MAX for unix
+#ifdef PATH_MAX
+#define MAX_PATH PATH_MAX
+#else  // PATH_MAX
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+#endif  // PATH_MAX
 
 // Todo: define _wcslwr_s for unix
 // (for USE_NAME_CONFIG)

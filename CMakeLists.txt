@@ -75,6 +75,12 @@ endif()
 include(GNUInstallDirs)
 include("options.cmake")
 
+# setup for mac
+if(APPLE)
+  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
+endif()
+
 #--- Library
 set(LIBRARY_HEADERS
     DirectXTex/DirectXTex/DirectXTex.h

@@ -80,7 +80,7 @@ jobs:
   build_unix:
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-11]
+        os: [ubuntu-20.04, macos-13]
         use_libs: [false, true]
     runs-on: ${{ matrix.os }}
     needs: setup

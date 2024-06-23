@@ -3,7 +3,7 @@
 
 cmake_minimum_required (VERSION 3.20)
 
-set(DIRECTXTEX_VERSION 2.0.3)
+set(DIRECTXTEX_VERSION 2.0.4)
 
 if(WINDOWS_STORE OR (DEFINED XBOX_CONSOLE_TARGET))
   set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
@@ -551,6 +551,13 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.37)
+       AND (NOT (${DIRECTX_ARCH} MATCHES "^arm"))
+       AND ((${DIRECTX_ARCH} MATCHES "x64") OR (CMAKE_SIZEOF_VOID_P EQUAL 8)))
+       # Enable since DirectXTex library has a lot of large switch statements
+      target_compile_options(${PROJECT_NAME} PRIVATE /jumptablerdata)
+    endif()
+
     if(ENABLE_CODE_ANALYSIS)
       foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
         target_compile_options(${t} PRIVATE /analyze)

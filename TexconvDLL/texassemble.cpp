@@ -1107,9 +1107,6 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
     std::wstring outputFile;
 
-    // Set locale for output since GetErrorDesc can get localized strings.
-    std::locale::global(std::locale(""));
-
     HRESULT hr = S_OK;
 
     // Process command line
@@ -2908,6 +2905,9 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 #ifdef _WIN32
 int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 {
+    // Set locale for output since GetErrorDesc can get localized strings.
+    std::locale::global(std::locale(""));
+
     bool verbose = true;
     bool init_com = true;
 #else

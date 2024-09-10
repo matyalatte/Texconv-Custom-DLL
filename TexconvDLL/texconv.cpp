@@ -1579,9 +1579,6 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     wchar_t szSuffix[MAX_PATH] = {};
     std::filesystem::path outputDir;
 
-    // Set locale for output since GetErrorDesc can get localized strings.
-    std::locale::global(std::locale(""));
-
     HRESULT hr = S_OK;
 
     // Process command line
@@ -4226,6 +4223,9 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 #ifdef _WIN32
 int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 {
+    // Set locale for output since GetErrorDesc can get localized strings.
+    std::locale::global(std::locale(""));
+
     bool verbose = true;
     bool init_com = true;
 #else

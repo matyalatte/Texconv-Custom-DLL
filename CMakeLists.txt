@@ -72,6 +72,11 @@ if((DEFINED XBOX_CONSOLE_TARGET) AND (NOT (XBOX_CONSOLE_TARGET STREQUAL "durango
   set(BUILD_DX11 OFF)
 endif()
 
+# setup for mac
+if(APPLE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
+endif()
+
 include(GNUInstallDirs)
 include("options.cmake")
 

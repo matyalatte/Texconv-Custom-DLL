@@ -1,3 +1,6 @@
+v0.4.2
+- Fixed a bug that DLL functions change locale settings.
+
 v0.4.1
 - Updated DirectXTex to June2024 release.
 - Added uninit_com()

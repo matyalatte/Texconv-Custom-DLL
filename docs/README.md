@@ -1,4 +1,4 @@
-# Texconv-Custom-DLL v0.4.1
+# Texconv-Custom-DLL v0.4.2
 
 Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).  
 And you can use it as a DLL (or a shared library).  

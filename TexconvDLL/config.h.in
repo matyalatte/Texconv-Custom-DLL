@@ -6,12 +6,6 @@
 #define __ON__ 1
 #define __OFF__ 0
 
-#ifdef _WIN32
-#define IS_WIN32 1
-#else
-#define IS_WIN32 0
-#endif
-
 #define BUILD_AS_EXE __@TEXCONV_BUILD_AS_EXE@__
 
 //--------------------------------------------------------------------------------------
@@ -24,17 +18,15 @@
 // Printing
 //--------------------------------------------------------------------------------------
 // Use -timing or not
-#define USE_TIMING IS_WIN32
+#define USE_TIMING (defined(_WIN32))
 
 //--------------------------------------------------------------------------------------
 // Options
 //--------------------------------------------------------------------------------------
-#define USE_WILDCARD IS_WIN32
+#define USE_WILDCARD (defined(_WIN32))
 
 // Disable GPU codec for BC6 and BC7
 #define NO_GPU_CODEC __@TEXCONV_NO_GPU_CODEC@__
 
 // Use texassemble as a dll function
 #define USE_TEXASSEMBLE __@TEXCONV_USE_TEXASSEMBLE@__
-
-#undef IS_WIN32

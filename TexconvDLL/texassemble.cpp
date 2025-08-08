@@ -2342,11 +2342,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
-            #ifdef _WIN32
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
-            #else
-                if (std::filesystem::exists(outputFile.c_str()))
-            #endif
+                if (std::filesystem::exists(outputFile))
                 {
                     RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2414,11 +2410,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
-            #ifdef _WIN32
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
-            #else
-                if (std::filesystem::exists(outputFile.c_str()))
-            #endif
+                if (std::filesystem::exists(outputFile))
                 {
                     RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2487,11 +2479,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
-            #ifdef _WIN32
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
-            #else
-                if (std::filesystem::exists(outputFile.c_str()))
-            #endif
+                if (std::filesystem::exists(outputFile))
                 {
                     RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2695,11 +2683,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
-            #ifdef _WIN32
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
-            #else
-                if (std::filesystem::exists(outputFile.c_str()))
-            #endif
+                if (std::filesystem::exists(outputFile))
                 {
                     RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2757,11 +2741,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
-            #ifdef _WIN32
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
-            #else
-                if (std::filesystem::exists(outputFile.c_str()))
-            #endif
+                if (std::filesystem::exists(outputFile))
                 {
                     RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2874,11 +2854,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (~dwOptions & (1 << OPT_OVERWRITE))
             {
-            #ifdef _WIN32
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
-            #else
-                if (std::filesystem::exists(outputFile.c_str()))
-            #endif
+                if (std::filesystem::exists(outputFile))
                 {
                     RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;

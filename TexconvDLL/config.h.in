@@ -23,22 +23,13 @@
 //--------------------------------------------------------------------------------------
 // Printing
 //--------------------------------------------------------------------------------------
-// Use PrintLogo() or not
-#define USE_LOGO 0
-
 // Use -timing or not
 #define USE_TIMING IS_WIN32
-
-// Use PrintInfo and PrintFormat
-#define USE_PRINT_INFO 1
 
 //--------------------------------------------------------------------------------------
 // Options
 //--------------------------------------------------------------------------------------
 #define USE_WILDCARD IS_WIN32
-
-// Use -px, -sx, and -l
-#define USE_NAME_CONFIG IS_WIN32
 
 // Disable GPU codec for BC6 and BC7
 #define NO_GPU_CODEC __@TEXCONV_NO_GPU_CODEC@__

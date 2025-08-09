@@ -18,28 +18,17 @@ jobs:
       - run: |
           git submodule update --init --recursive --recommend-shallow --depth 1
 
-      - name: Install requirements
-        if: matrix.use_libs
-        run: sudo apt-get update && sudo apt-get install -y libjpeg-dev libpng-dev
-
       - name: build texconv
-        if: matrix.use_libs == false
         run: |
-          bash shell_scripts/build.sh
-          bash shell_scripts/build_as_exe.sh
-
-      - name: build texconv with libjpeg and libpng
-        if: matrix.use_libs == true
-        run: |
-          bash shell_scripts/build_with_jpg_png.sh
-          bash shell_scripts/build_as_exe_with_jpg_png.sh
+          docker build --build-arg JPGPNG=${{ matrix.use_libs }} -t texconv -f Dockerfile_Ubuntu ./
 
       - name: Copy files
         run: |
           mkdir -p release/${{ env.ZIP_NAME }}
-          cp libtexconv.so release/${{ env.ZIP_NAME }}
-          cp texconv release/${{ env.ZIP_NAME }}
-          cp texassemble release/${{ env.ZIP_NAME }}
+          docker run --name texconv texconv
+          docker cp texconv:/Texconv-Custom-DLL/libtexconv.so ./release/${{ env.ZIP_NAME }}
+          docker cp texconv:/Texconv-Custom-DLL/texconv ./release/${{ env.ZIP_NAME }}
+          docker cp texconv:/Texconv-Custom-DLL/texassemble ./release/${{ env.ZIP_NAME }}
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
           cd release

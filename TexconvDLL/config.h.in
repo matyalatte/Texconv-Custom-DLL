@@ -14,16 +14,18 @@
 // Use non-DDS formats (bmp, jpg, png, jxr, etc.) or not
 #define USE_WIC __@TEXCONV_USE_WIC@__
 
-//--------------------------------------------------------------------------------------
-// Printing
-//--------------------------------------------------------------------------------------
-// Use -timing or not
-#define USE_TIMING (defined(_WIN32))
+#ifdef _WIN32
 
-//--------------------------------------------------------------------------------------
-// Options
-//--------------------------------------------------------------------------------------
-#define USE_WILDCARD (defined(_WIN32))
+// Use -timing or not
+#define USE_TIMING 1
+
+// Use wildcard in paths or not
+#define USE_WILDCARD 1
+
+#else  // _WIN32
+#define USE_TIMING 0
+#define USE_WILDCARD 0
+#endif  // _WIN32
 
 // Disable GPU codec for BC6 and BC7
 #define NO_GPU_CODEC __@TEXCONV_NO_GPU_CODEC@__

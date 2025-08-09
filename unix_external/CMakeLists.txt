@@ -4,13 +4,20 @@ cmake_minimum_required (VERSION 3.14)
 # DirectX-Headers
 add_library(DirectX-Headers INTERFACE)
 target_include_directories(DirectX-Headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/DirectX-Headers/include)
-if (NOT WIN32)
-    target_include_directories(DirectX-Headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/DirectX-Headers/include/wsl/stubs)
-endif()
+target_include_directories(DirectX-Headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/DirectX-Headers/include/wsl/stubs)
 add_library(Microsoft::DirectX-Headers ALIAS DirectX-Headers)
 
+# Download sal.h
+set(SAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/sal)
+file(MAKE_DIRECTORY ${SAL_DIR})
+file(DOWNLOAD
+    https://raw.githubusercontent.com/dotnet/corert/master/src/Native/inc/unix/sal.h
+    ${SAL_DIR}/sal.h
+    SHOW_PROGRESS
+    EXPECTED_HASH SHA256=bb9ea7c1d05cdfc10a17fe80d87a7cd160c1063c7e5fa089cd6405c31c610a1b
+)
+
 # DirectXMath
-# it needs sal.h in Texconv-Custom-DLL/unix_external/sal/ (https://github.com/dotnet/corert/blob/master/src/Native/inc/unix/sal.h)
 add_library(DirectXMath INTERFACE)
 target_include_directories(DirectXMath INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/DirectXMath/Inc

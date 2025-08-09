@@ -12,25 +12,39 @@
 #
 # 4. Also, you can get the built shared library.
 #    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/libtexconv.so ./
+#
+# Notes:
+#   -You can add JPEG and PNG support with build-arg
+#    docker build --build-arg JPGPNG=true -t texconv -f Dockerfile_Ubuntu ./
 
 # Base image
-ARG ubuntu_version="20.04"
-FROM ubuntu:${ubuntu_version}
+FROM matyalatte/ubuntu20.04-cmake3.25:latest
+
+# Add JPEG and PNG support when true
+ARG JPGPNG=false
 
 # Install packages
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       wget ca-certificates build-essential git cmake \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        wget ca-certificates build-essential git cmake && \
+    if [ "$JPGPNG" = "true" ]; then \
+        apt-get install -y --no-install-recommends libjpeg-dev libpng-dev; \
+    fi && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Clone repo
-RUN git clone --recursive --depth=1 https://github.com/matyalatte/Texconv-Custom-DLL.git
+COPY . /Texconv-Custom-DLL
+WORKDIR /Texconv-Custom-DLL
+RUN git submodule update --init --recursive --recommend-shallow --depth 1
 
-# Build shared lib
+# Build
 WORKDIR /Texconv-Custom-DLL/shell_scripts
-RUN bash build.sh
-
-# Build executable
-RUN bash build_as_exe.sh
+RUN if [ "$JPGPNG" = "true" ]; then \
+        bash build_with_jpg_png.sh && \
+        bash build_as_exe_with_jpg_png.sh; \
+    else \
+        bash build.sh && \
+        bash build_as_exe.sh; \
+    fi

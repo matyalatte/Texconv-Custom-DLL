@@ -3,7 +3,7 @@
 # 1. Use this docker file to build the executable.
 #    docker build -t texconv -f Dockerfile_Alpine ./
 #
-# 2. Run the built image. 
+# 2. Run the built image.
 #    docker run texconv
 #
 # 3. Use "docker cp" to get the built executables.
@@ -12,21 +12,35 @@
 #
 # 4. Also, you can get the built shared library.
 #    docker cp <CONTAINER ID>:/Texconv-Custom-DLL/libtexconv.so ./
+#
+# Notes:
+#   -You can add JPEG and PNG support with build-arg
+#    docker build --build-arg JPGPNG=true -t texconv -f Dockerfile_Alpine ./
 
 # Base image
-ARG alpine_version="3.16.3"
-FROM alpine:${alpine_version}
+FROM matyalatte/alpine3.16-cmake3.25:latest
+
+# Add JPEG and PNG support when true
+ARG JPGPNG=false
 
 # Install packages
-RUN apk update &&\
-    apk add --no-cache musl-dev gcc make g++ file alpine-sdk cmake wget bash
+RUN apk update && \
+    apk add --no-cache musl-dev gcc make g++ file alpine-sdk cmake wget bash && \
+    if [ "$JPGPNG" = "true" ]; then \
+        apk add --no-cache libjpeg-turbo-dev libpng-dev; \
+    fi
 
 # Clone repo
-RUN git clone --recursive --depth=1 https://github.com/matyalatte/Texconv-Custom-DLL.git
+COPY . /Texconv-Custom-DLL
+WORKDIR /Texconv-Custom-DLL
+RUN git submodule update --init --recursive --recommend-shallow --depth 1
 
-# Build shared lib
+# Build
 WORKDIR /Texconv-Custom-DLL/shell_scripts
-RUN bash build.sh
-
-# Build executable
-RUN bash build_as_exe.sh
+RUN if [ "$JPGPNG" = "true" ]; then \
+        bash build_with_jpg_png.sh && \
+        bash build_as_exe_with_jpg_png.sh; \
+    else \
+        bash build.sh && \
+        bash build_as_exe.sh; \
+    fi

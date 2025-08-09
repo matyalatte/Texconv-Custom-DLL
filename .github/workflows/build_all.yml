@@ -43,7 +43,7 @@ jobs:
           prerelease: false
 
   build_windows:
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: setup
     steps:
       - uses: actions/checkout@v4
@@ -80,15 +80,18 @@ jobs:
   build_unix:
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-13]
+        os: [ubuntu-latest, macos-latest]
         use_libs: [false, true]
     runs-on: ${{ matrix.os }}
     needs: setup
     steps:
       - uses: actions/checkout@v4
       - run: |
-          git submodule update --init --recursive
-          bash shell_scripts/get_sal.sh
+          git submodule update --init --recursive --recommend-shallow --depth 1
+
+      - name: Install requirements
+        if: (runner.os == 'Linux') && matrix.use_libs
+        run: sudo apt-get update && sudo apt-get install -y libjpeg-dev libpng-dev
 
       - name: build texconv
         if: matrix.use_libs == false

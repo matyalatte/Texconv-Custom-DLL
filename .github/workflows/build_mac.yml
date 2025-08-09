@@ -12,12 +12,11 @@ jobs:
     strategy:
       matrix:
         use_libs: [false, true]
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - run: |
-          git submodule update --init --recursive
-          bash shell_scripts/get_sal.sh
+          git submodule update --init --recursive --recommend-shallow --depth 1
 
       - name: build texconv
         if: matrix.use_libs == false

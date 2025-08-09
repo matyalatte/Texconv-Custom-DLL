@@ -12,12 +12,15 @@ jobs:
     strategy:
       matrix:
         use_libs: [false, true]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: |
-          git submodule update --init --recursive
-          bash shell_scripts/get_sal.sh
+          git submodule update --init --recursive --recommend-shallow --depth 1
+
+      - name: Install requirements
+        if: matrix.use_libs
+        run: sudo apt-get update && sudo apt-get install -y libjpeg-dev libpng-dev
 
       - name: build texconv
         if: matrix.use_libs == false
@@ -34,7 +37,7 @@ jobs:
       - name: Copy files
         run: |
           mkdir -p release/${{ env.ZIP_NAME }}
-          cp libtexconv.dylib release/${{ env.ZIP_NAME }}
+          cp libtexconv.so release/${{ env.ZIP_NAME }}
           cp texconv release/${{ env.ZIP_NAME }}
           cp texassemble release/${{ env.ZIP_NAME }}
           cp changelog.txt release/${{ env.ZIP_NAME }}

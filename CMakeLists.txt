@@ -164,7 +164,7 @@ if(BUILD_DX12)
    list(APPEND LIBRARY_SOURCES DirectXTex/DirectXTex/DirectXTexD3D12.cpp)
 
    if(NOT (DEFINED XBOX_CONSOLE_TARGET))
-       list(APPEND LIBRARY_SOURCES DirectXTex/DirectXTex/d3dx12.h)
+       list(APPEND LIBRARY_SOURCES DirectXTex/Common/d3dx12.h)
    endif()
 endif()
 
@@ -355,7 +355,7 @@ if (BUILD_TOOLS AND TEXCONV_USE_TEXASSEMBLE AND TEXCONV_BUILD_AS_EXE)
         TexconvDLL/texconv.rc)
     endif()
     set(TEXASSEMBLE_FILES ${TEXASSEMBLE_FILES}
-      DirectXTex/Texassemble/settings.manifest)
+      DirectXTex/Common/settings.manifest)
   endif()
     add_executable(texassemble ${TEXASSEMBLE_FILES})
   target_compile_features(texassemble PRIVATE cxx_std_17)
@@ -397,7 +397,7 @@ if(BUILD_TOOLS)
           TexconvDLL/texconv.rc)
       endif()
       set(TEXCONV_FILES ${TEXCONV_FILES}
-        DirectXTex/Texconv/settings.manifest)
+        DirectXTex/Common/settings.manifest)
     endif()
     add_executable(texconv ${TEXCONV_FILES})
   else()
@@ -418,12 +418,16 @@ if(FALSE)
   add_executable(texdiag
     Texdiag/texdiag.cpp
     Texdiag/texdiag.rc
-    Texdiag/settings.manifest)
+    Common/settings.manifest)
   target_compile_features(texdiag PRIVATE cxx_std_17)
   target_link_libraries(texdiag PRIVATE ${PROJECT_NAME} ole32.lib version.lib)
   source_group(texdiag REGULAR_EXPRESSION Texdiag/*.*)
   list(APPEND TOOL_EXES texdiag)
 endif()
+
+foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+  target_include_directories(${t} PRIVATE DirectXTex/Common)
+endforeach()
 
 if(BUILD_TOOLS)
   if(ENABLE_OPENEXR_SUPPORT)

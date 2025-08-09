@@ -43,7 +43,7 @@ jobs:
           prerelease: false
 
   build_windows:
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: setup
     steps:
       - uses: actions/checkout@v4
@@ -69,26 +69,24 @@ jobs:
         with:
           directory: 'release'
           type: 'zip'
-          filename: '${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}.zip'
+          filename: '${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64.zip'
           exclusions: '*.git* .gitignore'
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}.zip
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64.zip
 
-  build_unix:
+  build_macos:
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-13]
         use_libs: [false, true]
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     needs: setup
     steps:
       - uses: actions/checkout@v4
       - run: |
-          git submodule update --init --recursive
-          bash shell_scripts/get_sal.sh
+          git submodule update --init --recursive --recommend-shallow --depth 1
 
       - name: build texconv
         if: matrix.use_libs == false
@@ -111,9 +109,41 @@ jobs:
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
           cd release
-          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
+          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2
+
+  build_linux:
+    strategy:
+      matrix:
+        use_libs: [false, true]
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git submodule update --init --recursive --recommend-shallow --depth 1
+
+      - name: build texconv
+        run: |
+          docker build --build-arg JPGPNG=${{ matrix.use_libs }} -t texconv -f Dockerfile_Ubuntu ./
+
+      - name: Copy files
+        run: |
+          mkdir -p release/${{ env.ZIP_NAME }}
+          docker run --name texconv texconv
+          docker cp texconv:/Texconv-Custom-DLL/libtexconv.so ./release/${{ env.ZIP_NAME }}
+          docker cp texconv:/Texconv-Custom-DLL/texconv ./release/${{ env.ZIP_NAME }}
+          docker cp texconv:/Texconv-Custom-DLL/texassemble ./release/${{ env.ZIP_NAME }}
+          cp changelog.txt release/${{ env.ZIP_NAME }}
+          cp LICENSE release/${{ env.ZIP_NAME }}
+          cd release
+          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
+
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2

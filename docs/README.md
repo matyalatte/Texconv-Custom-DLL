@@ -29,19 +29,18 @@ But the custom build supports the following platforms and compilers.
 
 ## Download
 
-You can download the built binary from [the release page](https://github.com/matyalatte/Texconv-Custom-DLL/releases).  
+You can download built binaries from [the release page](https://github.com/matyalatte/Texconv-Custom-DLL/releases).  
+Each zip file has a DLL and executables. The executables don't refer the DLL.
 
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
 -   `TexconvCustomDLL*-macOS.tar.bz2` is for macOS (10.15 or later).
 -   `TexconvCustomDLL*-Linux.tar.bz2` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
 
-> Each zip file has a DLL and executables.  
-> You can copy whichever you want to use to your project.  
-> (The executables don't refer the DLL.)
-
+> [!Note]
 > Linux and macOS builds requrie libjpeg and libpng.  
 > Or use `*-no-deps.tar.bz2` versions that don't support jpg and png.
 
+> [!Note]
 > The linux build only supports distributions using GLIBC.  
 > Build the executable by yourself if you want to use it on unsupported distros.
 

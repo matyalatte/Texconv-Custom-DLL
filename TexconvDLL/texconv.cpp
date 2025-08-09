@@ -3972,24 +3972,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     continue;
                 }
 
-            #ifdef _WIN32
-                auto const err = static_cast<DWORD>(SHCreateDirectoryExW(nullptr, apath.c_str(), nullptr));
-                if (err != ERROR_SUCCESS && err != ERROR_ALREADY_EXISTS)
-                {
-                    RaiseError(L" directory creation FAILED (%08X%ls)\n",
-                        static_cast<unsigned int>(HRESULT_FROM_WIN32(err)), GetErrorDesc(HRESULT_FROM_WIN32(err)));
-                    retVal = 1;
-                    continue;
-                }
-            #else
-                std::filesystem::create_directory(apath, ec);
+                std::filesystem::create_directories(apath, ec);
                 if (ec)
                 {
                     RaiseError(L" directory creation FAILED (%hs)\n", ec.message().c_str());
                     retVal = 1;
                     continue;
                 }
-            #endif
             }
 
             if (*szPrefix)
@@ -4016,11 +4005,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
             if (~dwOptions & (uint64_t(1) << OPT_OVERWRITE))
             {
-            #ifdef _WIN32
-                if (GetFileAttributesW(destName.c_str()) != INVALID_FILE_ATTRIBUTES)
-            #else
-                if (std::filesystem::exists(destName.c_str()))
-            #endif
+                if (std::filesystem::exists(destName))
                 {
                     RaiseError(L"\nERROR:Output file already exists, use -y to overwrite:\n");
                     retVal = 1;

@@ -69,13 +69,13 @@ jobs:
         with:
           directory: 'release'
           type: 'zip'
-          filename: '${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}.zip'
+          filename: '${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64.zip'
           exclusions: '*.git* .gitignore'
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}.zip
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64.zip
 
   build_macos:
     strategy:
@@ -109,12 +109,12 @@ jobs:
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
           cd release
-          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
+          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2
 
   build_linux:
     strategy:
@@ -141,9 +141,9 @@ jobs:
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
           cd release
-          tar -jcvf ${{ env.ZIP_NAME }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
+          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2

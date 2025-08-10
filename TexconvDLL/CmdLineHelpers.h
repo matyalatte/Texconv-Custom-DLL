@@ -209,7 +209,7 @@ namespace Helpers
                 if (!(findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY)))
                 {
                     SConversion conv = {};
-                    conv.szSrc = path.parent_path().append(findData.cFileName).native();
+                    conv.szSrc = path.parent_path().append(findData.cFileName).wstring();
                     if (folder)
                     {
                         conv.szFolder = folder;
@@ -301,7 +301,7 @@ namespace Helpers
                     }
                     else
                     {
-                        std::wstring name = npath.c_str();
+                        std::wstring name = npath.wstring().c_str();
                         std::transform(name.begin(), name.end(), name.begin(), towlower);
                         excludes.insert(name);
                     }
@@ -320,7 +320,7 @@ namespace Helpers
             {
                 SConversion conv = {};
                 std::filesystem::path path(fname.c_str());
-                conv.szSrc = path.make_preferred().native();
+                conv.szSrc = path.make_preferred().wstring();
                 flist.push_back(conv);
             }
         }

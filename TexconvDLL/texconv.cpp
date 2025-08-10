@@ -3698,11 +3698,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     continue;
                 }
 
-                const auto err = static_cast<DWORD>(SHCreateDirectoryExW(nullptr, apath.c_str(), nullptr));
-                if (err != ERROR_SUCCESS && err != ERROR_ALREADY_EXISTS)
+                std::filesystem::create_directories(apath, ec);
+                if (ec)
                 {
-                    wprintf(L" directory creation FAILED (%08X%ls)\n",
-                        static_cast<unsigned int>(HRESULT_FROM_WIN32(err)), GetErrorDesc(HRESULT_FROM_WIN32(err)));
+                    wprintf(L" directory creation FAILED (%hs)\n", ec.message().c_str());
                     retVal = 1;
                     continue;
                 }
@@ -3732,7 +3731,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (~dwOptions & (UINT64_C(1) << OPT_OVERWRITE))
             {
-                if (GetFileAttributesW(destName.c_str()) != INVALID_FILE_ATTRIBUTES)
+                if (std::filesystem::exists(destName))
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite:\n");
                     retVal = 1;

@@ -2060,7 +2060,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
+                if (std::filesystem::exists(outputFile))
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2128,7 +2128,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
+                if (std::filesystem::exists(outputFile))
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2197,7 +2197,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
+                if (std::filesystem::exists(outputFile))
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2396,7 +2396,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
+                if (std::filesystem::exists(outputFile))
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2454,7 +2454,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
+                if (std::filesystem::exists(outputFile))
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
@@ -2567,7 +2567,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
-                if (GetFileAttributesW(outputFile.c_str()) != INVALID_FILE_ATTRIBUTES)
+                if (std::filesystem::exists(outputFile))
                 {
                     wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;

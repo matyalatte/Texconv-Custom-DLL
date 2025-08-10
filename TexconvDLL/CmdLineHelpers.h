@@ -33,6 +33,7 @@
 
 namespace Helpers
 {
+#if USE_WILDCARD
     struct handle_closer { void operator()(HANDLE h) { if (h) CloseHandle(h); } };
 
     using ScopedHandle = std::unique_ptr<void, handle_closer>;
@@ -42,6 +43,7 @@ namespace Helpers
     struct find_closer { void operator()(HANDLE h) noexcept { assert(h != INVALID_HANDLE_VALUE); if (h) FindClose(h); } };
 
     using ScopedFindHandle = std::unique_ptr<void, find_closer>;
+#endif
 
 #ifdef _PREFAST_
 #pragma prefast(disable : 26018, "Only used with static internal arrays")
@@ -150,6 +152,7 @@ namespace Helpers
     {
         wchar_t version[32] = {};
 
+    #ifdef _WIN32
         wchar_t appName[_MAX_PATH] = {};
         if (GetModuleFileNameW(nullptr, appName, _MAX_PATH))
         {
@@ -168,6 +171,7 @@ namespace Helpers
                 }
             }
         }
+    #endif
 
         if (!*version || wcscmp(version, L"1.0.0.0") == 0)
         {
@@ -189,6 +193,7 @@ namespace Helpers
         }
     }
 
+#if USE_WILDCARD
     void SearchForFiles(const std::filesystem::path& path, std::list<SConversion>& files, bool recursive, _In_opt_z_ const wchar_t* folder)
     {
         // Process files
@@ -250,6 +255,7 @@ namespace Helpers
             }
         }
     }
+#endif
 
     void ProcessFileList(std::wifstream& inFile, std::list<SConversion>& files)
     {
@@ -279,6 +285,7 @@ namespace Helpers
                     auto& npath = path.make_preferred();
                     if (wcspbrk(fname.c_str(), L"?*") != nullptr)
                     {
+                    #if USE_WILDCARD
                         std::list<SConversion> removeFiles;
                         SearchForFiles(npath, removeFiles, false, nullptr);
 
@@ -288,6 +295,9 @@ namespace Helpers
                             std::transform(name.begin(), name.end(), name.begin(), towlower);
                             excludes.insert(name);
                         }
+                    #else
+                        wprintf(L"WARNING: Wildcard is not supported. (%ls)", fname.c_str());
+                    #endif
                     }
                     else
                     {
@@ -299,8 +309,12 @@ namespace Helpers
             }
             else if (wcspbrk(fname.c_str(), L"?*") != nullptr)
             {
+            #if USE_WILDCARD
                 std::filesystem::path path(fname.c_str());
                 SearchForFiles(path.make_preferred(), flist, false, nullptr);
+            #else
+                wprintf(L"WARNING: Wildcard is not supported. (%ls)", fname.c_str());
+            #endif
             }
             else
             {
@@ -341,6 +355,7 @@ namespace Helpers
 
     const wchar_t* GetErrorDesc(HRESULT hr)
     {
+    #ifdef _WIN32
         static wchar_t desc[1024] = {};
 
         LPWSTR errorText = nullptr;
@@ -374,5 +389,8 @@ namespace Helpers
         }
 
         return desc;
+    #else
+        return L"";
+    #endif
     }
 }

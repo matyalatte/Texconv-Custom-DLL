@@ -23,7 +23,9 @@
 #pragma warning(pop)
 #endif
 
+#ifdef _WIN32
 #include <ShlObj.h>
+#endif
 
 #if __cplusplus < 201703L
 #error Requires C++17 (and /Zc:__cplusplus with MSVC)
@@ -573,23 +575,30 @@ namespace
 
     const SValue<uint32_t> g_pSaveFileTypes[] =   // valid formats to write to
     {
+    #if USE_WIC
         { L"bmp",   WIC_CODEC_BMP  },
+    #endif
     #ifdef USE_LIBJPEG
         { L"jpg",   CODEC_JPEG     },
         { L"jpeg",  CODEC_JPEG     },
     #else
+    #if USE_WIC
         { L"jpg",   WIC_CODEC_JPEG },
         { L"jpeg",  WIC_CODEC_JPEG },
+    #endif
     #endif
     #ifdef USE_LIBPNG
         { L"png",   CODEC_PNG      },
     #else
+    #if USE_WIC
         { L"png",   WIC_CODEC_PNG  },
+    #endif
     #endif
         { L"dds",   CODEC_DDS      },
         { L"ddx",   CODEC_DDS      },
         { L"tga",   CODEC_TGA      },
         { L"hdr",   CODEC_HDR      },
+    #if USE_WIC
         { L"tif",   WIC_CODEC_TIFF },
         { L"tiff",  WIC_CODEC_TIFF },
         { L"wdp",   WIC_CODEC_WMP  },
@@ -597,10 +606,13 @@ namespace
         { L"jxr",   CODEC_JXR      },
         { L"ppm",   CODEC_PPM      },
         { L"pfm",   CODEC_PFM      },
+    #endif
     #ifdef USE_OPENEXR
         { L"exr",   CODEC_EXR      },
     #endif
+    #if USE_WIC
         { L"heif",  WIC_CODEC_HEIF },
+    #endif
         { nullptr,  CODEC_DDS      }
     };
 
@@ -624,6 +636,7 @@ namespace
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
+#if USE_WIC
 HRESULT __cdecl LoadFromBMPEx(
     _In_z_ const wchar_t* szFile,
     _In_ WIC_FLAGS flags,
@@ -647,6 +660,7 @@ HRESULT __cdecl LoadFromPortablePixMapHDR(
 HRESULT __cdecl SaveToPortablePixMapHDR(
     _In_ const Image& image,
     _In_z_ const wchar_t* szFile) noexcept;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -727,6 +741,7 @@ namespace
         wprintf(L")");
     }
 
+#if !NO_GPU_CODEC
     _Success_(return)
         bool GetDXGIFactory(_Outptr_ IDXGIFactory1** pFactory)
     {
@@ -752,6 +767,7 @@ namespace
 
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
+#endif
 
     void PrintUsage()
     {
@@ -893,6 +909,7 @@ namespace
         wprintf(L"\n   <feature-level>: ");
         PrintList(13, g_pFeatureLevels);
 
+    #if !NO_GPU_CODEC
         ComPtr<IDXGIFactory1> dxgiFactory;
         if (GetDXGIFactory(dxgiFactory.GetAddressOf()))
         {
@@ -910,8 +927,10 @@ namespace
                 }
             }
         }
+    #endif
     }
 
+#if !NO_GPU_CODEC
     _Success_(return)
         bool CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
     {
@@ -1009,6 +1028,7 @@ namespace
         else
             return false;
     }
+#endif
 
     void FitPowerOf2(size_t origx, size_t origy, _Inout_ size_t& targetx, _Inout_ size_t& targety, size_t maxsize)
     {
@@ -1937,6 +1957,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
         else if (wcspbrk(pArg, L"?*") != nullptr)
         {
+        #if USE_WILDCARD
             const size_t count = conversion.size();
             std::filesystem::path path(pArg);
             SearchForFiles(path.make_preferred(), conversion, (dwOptions & (UINT64_C(1) << OPT_RECURSIVE)) != 0, nullptr);
@@ -1945,6 +1966,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 wprintf(L"No matching files found for %ls\n", pArg);
                 return 1;
             }
+        #else
+            wprintf(L"WARNING: Wildcard is not supported. (%ls)", pArg);
+            return 1;
+        #endif
         }
         else
         {
@@ -1981,18 +2006,23 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         mipLevels = 1;
     }
 
+#if USE_TIMING
     LARGE_INTEGER qpcFreq = {};
     std::ignore = QueryPerformanceFrequency(&qpcFreq);
 
     LARGE_INTEGER qpcStart = {};
     std::ignore = QueryPerformanceCounter(&qpcStart);
+#endif
 
     // Convert images
     bool sizewarn = false;
     bool nonpow2warn = false;
     bool non4bc = false;
     bool preserveAlphaCoverage = false;
+
+#if !NO_GPU_CODEC
     ComPtr<ID3D11Device> pDevice;
+#endif
 
     int retVal = 0;
 
@@ -2087,6 +2117,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 image->OverrideFormat(info.format);
             }
         }
+    #if USE_WIC
         else if (_wcsicmp(ext.c_str(), L".bmp") == 0)
         {
             hr = LoadFromBMPEx(curpath.c_str(), WIC_FLAGS_NONE | dwFilter, &info, *image);
@@ -2097,6 +2128,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 continue;
             }
         }
+    #endif
         else if (_wcsicmp(ext.c_str(), L".tga") == 0)
         {
             TGA_FLAGS tgaFlags = (IsBGR(format)) ? TGA_FLAGS_BGR : TGA_FLAGS_NONE;
@@ -2127,6 +2159,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 continue;
             }
         }
+    #if USE_WIC
         else if (_wcsicmp(ext.c_str(), L".ppm") == 0)
         {
             hr = LoadFromPortablePixMap(curpath.c_str(), &info, *image);
@@ -2147,6 +2180,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 continue;
             }
         }
+    #endif
     #ifdef USE_OPENEXR
         else if (_wcsicmp(ext.c_str(), L".exr") == 0)
         {
@@ -2185,6 +2219,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     #endif
         else
         {
+        #if USE_WIC
             // WIC shares the same filter values for mode and dither
             static_assert(static_cast<int>(WIC_FLAGS_DITHER) == static_cast<int>(TEX_FILTER_DITHER), "WIC_FLAGS_* & TEX_FILTER_* should match");
             static_assert(static_cast<int>(WIC_FLAGS_DITHER_DIFFUSION) == static_cast<int>(TEX_FILTER_DITHER_DIFFUSION), "WIC_FLAGS_* & TEX_FILTER_* should match");
@@ -2221,6 +2256,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }
                 continue;
             }
+        #else
+            wprintf(L"ERROR: This format requires WIC\n");
+            retVal = 1;
+            continue;
+        #endif
         }
 
         PrintInfo(info, isXbox);
@@ -2451,8 +2491,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 dwFlags |= TEX_FR_FLIP_VERTICAL;
 
             assert(dwFlags != 0);
-
+        
+        #if USE_WIC
             hr = FlipRotate(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwFlags, *timage);
+        #else
+            wprintf(L"ERROR: FlipRotate() requires WIC.\n");
+            return 1;
+        #endif
             if (FAILED(hr))
             {
                 wprintf(L" FAILED [fliprotate] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -3574,12 +3619,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                             {
                                 s_tryonce = true;
 
+                            #if !NO_GPU_CODEC
                                 if (!(dwOptions & (UINT64_C(1) << OPT_NOGPU)))
                                 {
                                     if (!CreateDevice(adapter, pDevice.GetAddressOf()))
                                         wprintf(L"\nWARNING: DirectCompute is not available, using BC6H / BC7 CPU codec\n");
                                 }
                                 else
+                            #endif
                                 {
                                     wprintf(L"\nWARNING: using BC6H / BC7 CPU codec\n");
                                 }
@@ -3604,11 +3651,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                         non4bc = true;
                     }
 
+                #if !NO_GPU_CODEC
                     if (bc6hbc7 && pDevice)
                     {
                         hr = Compress(pDevice.Get(), img, nimg, info, tformat, dwCompress | dwSRGB, alphaWeight, *timage);
                     }
                     else
+                #endif
                     {
                         hr = Compress(img, nimg, info, tformat, cflags | dwSRGB, alphaThreshold, *timage);
                     }
@@ -3783,6 +3832,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 hr = SaveToHDRFile(img[0], destName.c_str());
                 break;
 
+            #if USE_WIC
             case CODEC_PPM:
                 hr = SaveToPortablePixMap(img[0], destName.c_str());
                 break;
@@ -3790,7 +3840,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case CODEC_PFM:
                 hr = SaveToPortablePixMapHDR(img[0], destName.c_str());
                 break;
-
+            #endif
             #ifdef USE_OPENEXR
             case CODEC_EXR:
                 hr = SaveToEXRFile(img[0], destName.c_str());
@@ -3809,6 +3859,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             default:
                 {
+                #if USE_WIC
                     const WICCodecs codec = (FileType == CODEC_HDP || FileType == CODEC_JXR) ? WIC_CODEC_WMP : static_cast<WICCodecs>(FileType);
                     const size_t nimages = (dwOptions & (UINT64_C(1) << OPT_WIC_MULTIFRAME)) ? nimg : 1;
                     hr = SaveToWICFile(img, nimages, WIC_FLAGS_NONE, GetWICCodec(codec), destName.c_str(), nullptr,
@@ -3899,6 +3950,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                                 break;
                             }
                         });
+                #else
+                    wprintf(L"ERROR: This format requires WIC\n");
+                    retVal = 1;
+                    continue;
+                #endif
                 }
                 break;
             }
@@ -3907,10 +3963,12 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             {
                 wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
+            #if USE_WIC
                 if ((hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */) && (FileType == WIC_CODEC_HEIF))
                 {
                     wprintf(L"INFO: This format requires installing the HEIF Image Extensions - https://aka.ms/heif\n");
                 }
+            #endif
                 continue;
             }
             wprintf(L"\n");
@@ -3931,6 +3989,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     if (non4bc)
         wprintf(L"\nWARNING: Direct3D requires BC image to be multiple of 4 in width & height\n");
 
+#if USE_TIMING
     if (dwOptions & (UINT64_C(1) << OPT_TIMING))
     {
         LARGE_INTEGER qpcEnd = {};
@@ -3939,6 +3998,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         const LONGLONG delta = qpcEnd.QuadPart - qpcStart.QuadPart;
         wprintf(L"\n Processing time: %f seconds\n", double(delta) / double(qpcFreq.QuadPart));
     }
+#endif
 
     return retVal;
 }

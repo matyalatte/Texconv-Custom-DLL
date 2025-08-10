@@ -364,27 +364,35 @@ namespace
 
     const SValue<uint32_t> g_pExtFileTypes[] =
     {
+    #if USE_WIC
         { L".BMP",  WIC_CODEC_BMP  },
+    #endif
     #ifdef USE_LIBJPEG
         { L".JPG",  CODEC_JPEG     },
         { L".JPEG", CODEC_JPEG     },
     #else
+    #if USE_WIC
         { L".JPG",  WIC_CODEC_JPEG },
         { L".JPEG", WIC_CODEC_JPEG },
+    #endif
     #endif
     #ifdef USE_LIBPNG
         { L".PNG",  CODEC_PNG      },
     #else
+    #if USE_WIC
         { L".PNG",  WIC_CODEC_PNG  },
+    #endif
     #endif
         { L".DDS",  CODEC_DDS      },
         { L".TGA",  CODEC_TGA      },
         { L".HDR",  CODEC_HDR      },
+    #if USE_WIC
         { L".TIF",  WIC_CODEC_TIFF },
         { L".TIFF", WIC_CODEC_TIFF },
         { L".WDP",  WIC_CODEC_WMP  },
         { L".HDP",  WIC_CODEC_WMP  },
         { L".JXR",  WIC_CODEC_WMP  },
+    #endif
     #ifdef USE_OPENEXR
         { L".EXR",  CODEC_EXR      },
     #endif
@@ -456,9 +464,11 @@ namespace
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
+#if USE_WIC
 HRESULT LoadAnimatedGif(const wchar_t* szFile,
     std::vector<std::unique_ptr<ScratchImage>>& loadedImages,
     bool usebgcolor);
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -631,12 +641,16 @@ namespace
 
         default:
             {
+            #if USE_WIC
                 HRESULT hr = SaveToWICFile(img, WIC_FLAGS_NONE, GetWICCodec(static_cast<WICCodecs>(fileType)), szOutputFile);
                 if ((hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */) && (fileType == WIC_CODEC_HEIF))
                 {
                     wprintf(L"\nINFO: This format requires installing the HEIF Image Extensions - https://aka.ms/heif\n");
                 }
                 return hr;
+            #else
+                return E_FAIL;
+            #endif
             }
         }
     }
@@ -784,7 +798,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     TEX_FILTER_FLAGS dwFilter = TEX_FILTER_DEFAULT;
     TEX_FILTER_FLAGS dwSRGB = TEX_FILTER_DEFAULT;
     TEX_FILTER_FLAGS dwFilterOpts = TEX_FILTER_DEFAULT;
+#if USE_WIC
     uint32_t fileType = WIC_CODEC_BMP;
+#else
+    uint32_t fileType = CODEC_TGA;
+#endif
     uint32_t maxSize = 16384;
     uint32_t maxCube = 16384;
     uint32_t maxArray = 2048;
@@ -1170,6 +1188,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
         else if (wcspbrk(pArg, L"?*") != nullptr)
         {
+        #if USE_WILDCARD
             const size_t count = conversion.size();
             std::filesystem::path path(pArg);
             SearchForFiles(path.make_preferred(), conversion, (dwOptions & (UINT32_C(1) << OPT_RECURSIVE)) != 0, nullptr);
@@ -1178,6 +1197,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 wprintf(L"No matching files found for %ls\n", pArg);
                 return 1;
             }
+        #else
+            wprintf(L"WARNING: Wildcard is not supported. (%ls)", pArg);
+            return 1;
+        #endif
         }
         else
         {
@@ -1249,7 +1272,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             outputFile = curpath.stem().concat(L".dds").native();
         }
 
+    #if USE_WIC
         hr = LoadAnimatedGif(curpath.c_str(), loadedImages, (dwOptions & (UINT32_C(1) << OPT_GIF_BGCOLOR)) != 0);
+    #else
+        hr = E_FAIL;
+    #endif
         if (FAILED(hr))
         {
             wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1449,6 +1476,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
                 else
                 {
+                #if USE_WIC
                     // WIC shares the same filter values for mode and dither
                     static_assert(static_cast<int>(WIC_FLAGS_DITHER) == static_cast<int>(TEX_FILTER_DITHER), "WIC_FLAGS_* & TEX_FILTER_* should match");
                     static_assert(static_cast<int>(WIC_FLAGS_DITHER_DIFFUSION) == static_cast<int>(TEX_FILTER_DITHER_DIFFUSION), "WIC_FLAGS_* & TEX_FILTER_* should match");
@@ -1458,9 +1486,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     static_assert(static_cast<int>(WIC_FLAGS_FILTER_FANT) == static_cast<int>(TEX_FILTER_FANT), "WIC_FLAGS_* & TEX_FILTER_* should match");
 
                     hr = LoadFromWICFile(curpath.c_str(), WIC_FLAGS_ALL_FRAMES | dwFilter, &info, *image);
+                #else
+                    hr = E_FAIL;
+                #endif
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    #if USE_WIC
                         if (hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */)
                         {
                             if (_wcsicmp(ext.c_str(), L".heic") == 0 || _wcsicmp(ext.c_str(), L".heif") == 0)
@@ -1472,6 +1504,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                                 wprintf(L"INFO: This format requires installing the WEBP Image Extensions - https://www.microsoft.com/p/webp-image-extensions/9pg2dk419drg\n");
                             }
                         }
+                    #endif
                         return 1;
                     }
                 }
@@ -2028,12 +2061,17 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
                 if (flipRotate != TEX_FR_ROTATE0)
                 {
+                #if USE_WIC
                     ScratchImage tmp;
                     hr = FlipRotate(*img, flipRotate, tmp);
                     if (SUCCEEDED(hr))
                     {
                         hr = CopyRectangle(*tmp.GetImage(0, 0, 0), rect, *dest, dwFilter | dwFilterOpts, offsetx, offsety);
                     }
+                #else
+                    wprintf(L"FlipRotate() requires WIC\n");
+                    return 1;
+                #endif
                 }
                 else
                 {
@@ -2374,12 +2412,17 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
                 if (flipRotate != TEX_FR_ROTATE0)
                 {
+                #if USE_WIC
                     ScratchImage tmp;
                     hr = FlipRotate(*dest, flipRotate, tmp);
                     if (SUCCEEDED(hr))
                     {
                         hr = CopyRectangle(*tmp.GetImage(0, 0, 0), Rect(0, 0, twidth, theight), *dest, dwFilter | dwFilterOpts, 0, 0);
                     }
+                #else
+                    wprintf(L"FlipRotate() requires WIC\n");
+                    return 1;
+                #endif
                 }
             }
 

@@ -788,8 +788,35 @@ namespace
 #pragma prefast(disable : 28198, "Command-line tool, frees all memory on exit")
 #endif
 
-int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+//int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[]) {
+#ifdef _WIN32
+static int texassemble_base(int argc, wchar_t* argv[], bool verbose, bool init_com, wchar_t* err_buf, int err_buf_size);
+extern "C" __declspec(dllexport) int __cdecl texassemble(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, wchar_t* err_buf = nullptr, int err_buf_size = 0)
 {
+    HRESULT hr = S_OK;
+
+    // Initialize COM
+    if (init_com) {
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+        {
+            RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+            return 1;
+        }
+    }
+    int ret = texassemble_base(argc, argv, verbose, init_com, err_buf, err_buf_size);
+    if (init_com && hr != RPC_E_CHANGED_MODE)
+        CoUninitialize();
+    return ret;
+}
+
+static int texassemble_base(int argc, wchar_t* argv[], bool verbose, bool init_com, wchar_t* err_buf, int err_buf_size)
+{
+#else
+extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, wchar_t* err_buf = nullptr, int err_buf_size = 0)
+{
+    init_com = false;
+#endif
     // Parameters and defaults
     size_t width = 0;
     size_t height = 0;
@@ -815,40 +842,32 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
     std::wstring outputFile;
 
-    // Set locale for output since GetErrorDesc can get localized strings.
-    std::locale::global(std::locale(""));
-
     // Initialize COM (needed for WIC)
-    HRESULT hr = hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr))
-    {
-        wprintf(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
-        return 1;
-    }
+    HRESULT hr = S_OK;
 
     // Process command line
-    if (argc < 2)
+    if (argc < 1)
     {
         PrintUsage();
         return 0;
     }
 
     // check for these before the command
-    if (('-' == argv[1][0]) && ('-' == argv[1][1]))
+    if (('-' == argv[0][0]) && ('-' == argv[0][1]))
     {
-        if (!_wcsicmp(argv[1], L"--version"))
+        if (!_wcsicmp(argv[0], L"--version"))
         {
             PrintLogo(true, g_ToolName, g_Description);
             return 0;
         }
-        else if (!_wcsicmp(argv[1], L"--help"))
+        else if (!_wcsicmp(argv[0], L"--help"))
         {
             PrintUsage();
             return 0;
         }
     }
 
-    const uint32_t dwCommand = LookupByName(argv[1], g_pCommands);
+    const uint32_t dwCommand = LookupByName(argv[0], g_pCommands);
     switch (dwCommand)
     {
     case CMD_CUBE:
@@ -883,7 +902,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     std::list<SConversion> conversion;
     bool allowOpts = true;
 
-    for (int iArg = 2; iArg < argc; ++iArg)
+    for (int iArg = 1; iArg < argc; ++iArg)
     {
         PWSTR pArg = argv[iArg];
 
@@ -1217,8 +1236,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         return 0;
     }
 
+#if BUILD_AS_EXE
     if (~dwOptions & (UINT32_C(1) << OPT_NOLOGO))
         PrintLogo(false, g_ToolName, g_Description);
+#endif
 
     switch (dwCommand)
     {
@@ -2631,3 +2652,37 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
     return 0;
 }
+
+// Main function for exe
+#if BUILD_AS_EXE
+#ifdef _WIN32
+int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+{
+    // Set locale for output since GetErrorDesc can get localized strings.
+    std::locale::global(std::locale(""));
+
+    bool verbose = true;
+    bool init_com = true;
+#else
+int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
+{
+    bool verbose = true;
+    bool init_com = false;
+
+    wchar_t* argv[argc];
+    size_t length;
+    for(int i=0;i<argc;i++){
+        length = strlen(argv_char[i]);
+        argv[i] = new wchar_t[length + 1];
+        argv[i][length] = 0;
+        mbstowcs(argv[i], argv_char[i], length);
+    }
+
+#endif  // _WIN32
+    if (argc == 0){
+        return texassemble(0, argv, verbose, init_com);
+    } else {
+        return texassemble(argc - 1, &argv[1], verbose, init_com);
+    }
+}
+#endif  // BUILD_AS_EXE

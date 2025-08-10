@@ -1269,8 +1269,33 @@ namespace
 #pragma prefast(disable : 28198, "Command-line tool, frees all memory on exit")
 #endif
 
-int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+#ifdef _WIN32
+static int texconv_base(int argc, wchar_t* argv[], bool verbose, bool init_com, bool allow_slow_codec, wchar_t* err_buf, int err_buf_size);
+extern "C" __declspec(dllexport) int __cdecl texconv(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, bool allow_slow_codec = true, wchar_t* err_buf = nullptr, int err_buf_size = 0)
 {
+    HRESULT hr = S_OK;
+
+    // Initialize COM
+    if (init_com) {
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+        {
+            RaiseError(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+            return 1;
+        }
+    }
+    int ret = texconv_base(argc, argv, verbose, init_com, allow_slow_codec, err_buf, err_buf_size);
+    if (init_com && hr != RPC_E_CHANGED_MODE)
+        CoUninitialize();
+    return ret;
+}
+
+static int texconv_base(int argc, wchar_t* argv[], bool verbose, bool init_com, bool allow_slow_codec, wchar_t* err_buf, int err_buf_size)
+{
+#else
+extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t* argv[], bool verbose = true, bool init_com = false, bool allow_slow_codec = true, wchar_t* err_buf = nullptr, int err_buf_size = 0)
+{
+#endif
     // Parameters and defaults
     size_t width = 0;
     size_t height = 0;
@@ -1304,16 +1329,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     wchar_t szSuffix[MAX_PATH] = {};
     std::filesystem::path outputDir;
 
-    // Set locale for output since GetErrorDesc can get localized strings.
-    std::locale::global(std::locale(""));
-
-    // Initialize COM (needed for WIC)
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr))
-    {
-        wprintf(L"Failed to initialize COM (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
-        return 1;
-    }
+    HRESULT hr = S_OK;
 
     // Process command line
     uint64_t dwOptions = 0;
@@ -1986,8 +2002,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         return 0;
     }
 
+#if BUILD_AS_EXE
     if (~dwOptions & (UINT64_C(1) << OPT_NOLOGO))
         PrintLogo(false, g_ToolName, g_Description);
+#endif
 
     auto fileTypeName = LookupByValue(FileType, g_pSaveFileTypes);
 
@@ -3654,6 +3672,16 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 #if !NO_GPU_CODEC
                     if (bc6hbc7 && pDevice)
                     {
+                        if (bc6hbc7) {
+                            if (allow_slow_codec) {
+                                wprintf(L"\nWARNING: Using CPU codec for BC6 or BC7. It'll take a long time for conversion.\n");
+                            } else {
+                                wprintf(L"\n");
+                                RaiseError(L"Error: Can NOT use CPU codec for BC6 and BC7. Or enable the allow_slow_codec option.\n");
+                                retVal = 1;
+                                continue;
+                            }
+                        }
                         hr = Compress(pDevice.Get(), img, nimg, info, tformat, dwCompress | dwSRGB, alphaWeight, *timage);
                     }
                     else
@@ -4002,3 +4030,57 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
     return retVal;
 }
+
+// Main function for exe
+#if BUILD_AS_EXE
+#ifdef _WIN32
+int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
+{
+    // Set locale for output since GetErrorDesc can get localized strings.
+    std::locale::global(std::locale(""));
+
+    bool verbose = true;
+    bool init_com = true;
+#else
+int main(_In_ int argc, _In_z_count_(argc) char* argv_char[])
+{
+    bool verbose = true;
+    bool init_com = false;
+
+    wchar_t* argv[argc];
+    size_t length;
+    for(int i=0;i<argc;i++){
+        length = strlen(argv_char[i]);
+        argv[i] = new wchar_t[length + 1];
+        argv[i][length] = 0;
+        mbstowcs(argv[i], argv_char[i], length);
+    }
+
+#endif  // _WIN32
+    if (argc == 0){
+        return texconv(0, argv, verbose, init_com);
+    } else {
+        return texconv(argc - 1, &argv[1], verbose, init_com);
+    }
+}
+#else  // BUILD_AS_EXE
+
+// A function to initialize COM
+#ifdef _WIN32
+extern "C" __declspec(dllexport) int __cdecl init_com() {
+    // Return values
+    // 0: Initialized
+    // 1: Failed because it is already initialized
+    // -2147417850: Failed because it is already initialized with single thread mode
+    return CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+}
+
+extern "C" __declspec(dllexport) void __cdecl uninit_com() {
+    CoUninitialize();
+}
+#else  // _WIN32
+extern "C" __attribute__((visibility("default"))) int init_com() { return 0; }
+extern "C" __attribute__((visibility("default"))) void uninit_com() {}
+#endif  // _WIN32
+
+#endif  // BUILD_AS_EXE

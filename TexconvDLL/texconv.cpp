@@ -1336,7 +1336,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     std::list<SConversion> conversion;
     bool allowOpts = true;
 
-    for (int iArg = 1; iArg < argc; ++iArg)
+    for (int iArg = 0; iArg < argc; ++iArg)
     {
         PWSTR pArg = argv[iArg];
 

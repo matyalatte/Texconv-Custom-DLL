@@ -893,7 +893,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         break;
 
     default:
-        wprintf(L"Must use one of: ");
+        RaiseError(L"Must use one of: ");
         PrintList(4, g_pCommands);
         return 1;
     }
@@ -946,7 +946,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 {
                     if (LookupByName(pArg, g_pOptionsLong))
                     {
-                        wprintf(L"ERROR: did you mean `--%ls` (with two dashes)?\n", pArg);
+                        RaiseError(L"ERROR: did you mean `--%ls` (with two dashes)?\n", pArg);
                         return 1;
                     }
                 }
@@ -955,7 +955,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             switch (dwOption)
             {
             case 0:
-                wprintf(L"ERROR: Unknown option: `%ls`\n\nUse %ls --help\n", pArg, g_ToolName);
+                RaiseError(L"ERROR: Unknown option: `%ls`\n\nUse %ls --help\n", pArg, g_ToolName);
                 return 1;
 
             case OPT_FILELIST:
@@ -983,7 +983,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             default:
                 if (dwOptions & (UINT32_C(1) << dwOption))
                 {
-                    wprintf(L"ERROR: Duplicate option: `%ls`\n\n", pArg);
+                    RaiseError(L"ERROR: Duplicate option: `%ls`\n\n", pArg);
                     return 1;
                 }
 
@@ -1024,7 +1024,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             case OPT_WIDTH:
                 if (swscanf_s(pValue, L"%zu", &width) != 1)
                 {
-                    wprintf(L"Invalid value specified with -w (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -w (%ls)\n", pValue);
                     return 1;
                 }
                 break;
@@ -1032,7 +1032,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             case OPT_HEIGHT:
                 if (swscanf_s(pValue, L"%zu", &height) != 1)
                 {
-                    wprintf(L"Invalid value specified with -h (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -h (%ls)\n", pValue);
                     return 1;
                 }
                 break;
@@ -1044,7 +1044,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     format = static_cast<DXGI_FORMAT>(LookupByName(pValue, g_pFormatAliases));
                     if (!format)
                     {
-                        wprintf(L"Invalid value specified with -f (%ls)\n", pValue);
+                        RaiseError(L"Invalid value specified with -f (%ls)\n", pValue);
                         return 1;
                     }
                 }
@@ -1054,7 +1054,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 dwFilter = static_cast<TEX_FILTER_FLAGS>(LookupByName(pValue, g_pFilters));
                 if (!dwFilter)
                 {
-                    wprintf(L"Invalid value specified with -if (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -if (%ls)\n", pValue);
                     return 1;
                 }
                 break;
@@ -1102,7 +1102,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     default:
                         if (fileType != CODEC_DDS)
                         {
-                            wprintf(L"Assembled output file must be a dds\n");
+                            RaiseError(L"Assembled output file must be a dds\n");
                             return 1;
                         }
                     }
@@ -1112,7 +1112,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             case OPT_TA_WRAP:
                 if (dwFilterOpts & TEX_FILTER_MIRROR)
                 {
-                    wprintf(L"Can't use -wrap and -mirror at same time\n\n");
+                    RaiseError(L"Can't use -wrap and -mirror at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1122,7 +1122,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             case OPT_TA_MIRROR:
                 if (dwFilterOpts & TEX_FILTER_WRAP)
                 {
-                    wprintf(L"Can't use -wrap and -mirror at same time\n\n");
+                    RaiseError(L"Can't use -wrap and -mirror at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1135,7 +1135,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     std::wifstream inFile(path.make_preferred().c_str());
                     if (!inFile)
                     {
-                        wprintf(L"Error opening -flist file %ls\n", pValue);
+                        RaiseError(L"Error opening -flist file %ls\n", pValue);
                         return 1;
                     }
 
@@ -1152,7 +1152,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 maxVolume = LookupByName(pValue, g_pFeatureLevelsVolume);
                 if (!maxSize || !maxCube || !maxArray || !maxVolume)
                 {
-                    wprintf(L"Invalid value specified with -fl (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -fl (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1161,7 +1161,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             case OPT_GIF_BGCOLOR:
                 if (dwCommand != CMD_GIF)
                 {
-                    wprintf(L"-bgcolor only applies to gif command\n");
+                    RaiseError(L"-bgcolor only applies to gif command\n");
                     return 1;
                 }
                 break;
@@ -1169,18 +1169,18 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             case OPT_SWIZZLE:
                 if (dwCommand != CMD_MERGE)
                 {
-                    wprintf(L"-swizzle only applies to merge command\n");
+                    RaiseError(L"-swizzle only applies to merge command\n");
                     return 1;
                 }
                 if (!*pValue || wcslen(pValue) > 4)
                 {
-                    wprintf(L"Invalid value specified with -swizzle (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -swizzle (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (!ParseSwizzleMask(pValue, permuteElements, zeroElements, oneElements))
                 {
-                    wprintf(L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1.\n    Lowercase letters are from the first image, upper-case letters are from the second image.\n");
+                    RaiseError(L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1.\n    Lowercase letters are from the first image, upper-case letters are from the second image.\n");
                     return 1;
                 }
                 break;
@@ -1196,7 +1196,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     break;
 
                 default:
-                    wprintf(L"-stripmips only applies to cube, volume, array, cubearray, or merge commands\n");
+                    RaiseError(L"-stripmips only applies to cube, volume, array, cubearray, or merge commands\n");
                     return 1;
                 }
                 break;
@@ -1213,11 +1213,11 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             SearchForFiles(path.make_preferred(), conversion, (dwOptions & (UINT32_C(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
-                wprintf(L"No matching files found for %ls\n", pArg);
+                RaiseError(L"No matching files found for %ls\n", pArg);
                 return 1;
             }
         #else
-            wprintf(L"WARNING: Wildcard is not supported. (%ls)", pArg);
+            wprintf(L"Wildcard is not supported. (%ls)", pArg);
             return 1;
         #endif
         }
@@ -1259,7 +1259,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     case CMD_CUBE_FROM_VS:
         if (conversion.size() > 1)
         {
-            wprintf(L"ERROR: cross/strip/gif/cube-from-* output only accepts 1 input file\n");
+            RaiseError(L"ERROR: cross/strip/gif/cube-from-* output only accepts 1 input file\n");
             return 1;
         }
         break;
@@ -1267,7 +1267,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     case CMD_MERGE:
         if (conversion.size() > 2)
         {
-            wprintf(L"ERROR: merge output only accepts 2 input files\n");
+            RaiseError(L"ERROR: merge output only accepts 2 input files\n");
             return 1;
         }
         break;
@@ -1285,7 +1285,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     {
         std::filesystem::path curpath(conversion.front().szSrc);
 
-        wprintf(L"reading %ls", curpath.wstring().c_str());
+        PrintVerbose(L"reading %ls", curpath.wstring().c_str());
         fflush(stdout);
 
         if (outputFile.empty())
@@ -1300,7 +1300,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     #endif
         if (FAILED(hr))
         {
-            wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+            RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
             return 1;
         }
     }
@@ -1314,7 +1314,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             // Load source image
             if (pConv != conversion.begin())
-                wprintf(L"\n");
+                PrintVerbose(L"\n");
             else if (outputFile.empty())
             {
                 switch (dwCommand)
@@ -1332,7 +1332,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 default:
                     if (_wcsicmp(curpath.extension().wstring().c_str(), L".dds") == 0)
                     {
-                        wprintf(L"ERROR: Need to specify output file via -o\n");
+                        RaiseError(L"ERROR: Need to specify output file via -o\n");
                         return 1;
                     }
 
@@ -1341,14 +1341,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 }
             }
 
-            wprintf(L"reading %ls", curpath.wstring().c_str());
+            PrintVerbose(L"reading %ls", curpath.wstring().c_str());
             fflush(stdout);
 
             TexMetadata info;
             std::unique_ptr<ScratchImage> image(new (std::nothrow) ScratchImage);
             if (!image)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -1365,13 +1365,13 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromDDSFile(curpath.wstring().c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
 
                     if (!info.IsCubemap())
                     {
-                        wprintf(L"\nERROR: Input must be a cubemap\n");
+                        RaiseError(L"\nERROR: Input must be a cubemap\n");
                         return 1;
                     }
                     else if (info.arraySize != 6)
@@ -1381,7 +1381,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 }
                 else
                 {
-                    wprintf(L"\nERROR: Input must be a dds of a cubemap\n");
+                    RaiseError(L"\nERROR: Input must be a dds of a cubemap\n");
                     return 1;
                 }
                 break;
@@ -1392,19 +1392,19 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromDDSFile(curpath.wstring().c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
 
                     if (info.dimension == TEX_DIMENSION_TEXTURE3D || info.arraySize < 2 || info.IsCubemap())
                     {
-                        wprintf(L"\nERROR: Input must be a 1D/2D array\n");
+                        RaiseError(L"\nERROR: Input must be a 1D/2D array\n");
                         return 1;
                     }
                 }
                 else
                 {
-                    wprintf(L"\nERROR: Input must be a dds of a 1D/2D array\n");
+                    RaiseError(L"\nERROR: Input must be a dds of a 1D/2D array\n");
                     return 1;
                 }
                 break;
@@ -1415,13 +1415,13 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromDDSFile(curpath.wstring().c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
 
                     if (info.IsVolumemap() || info.IsCubemap())
                     {
-                        wprintf(L"\nERROR: Can't assemble complex surfaces\n");
+                        RaiseError(L"\nERROR: Can't assemble complex surfaces\n");
                         return 1;
                     }
                     else if ((info.mipLevels > 1) && ((dwOptions & (UINT32_C(1) << OPT_STRIP_MIPS)) == 0))
@@ -1433,7 +1433,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                         case CMD_ARRAY:
                         case CMD_CUBEARRAY:
                         case CMD_MERGE:
-                            wprintf(L"\nERROR: Can't assemble using input mips. To ignore mips, try again with -stripmips\n");
+                            RaiseError(L"\nERROR: Can't assemble using input mips. To ignore mips, try again with -stripmips\n");
                             return 1;
 
                         default:
@@ -1448,7 +1448,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromTGAFile(curpath.wstring().c_str(), tgaFlags, &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -1457,7 +1457,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromHDRFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -1467,7 +1467,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromEXRFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -1478,7 +1478,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromJPEGFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -1489,7 +1489,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = LoadFromPNGFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -1512,7 +1512,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 #endif
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     #if USE_WIC
                         if (hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */)
                         {
@@ -1532,7 +1532,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 break;
             }
 
-            PrintInfo(info);
+            PrintInfoVerbose(info);
 
             // Convert texture
             fflush(stdout);
@@ -1547,14 +1547,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
                 hr = ConvertToSinglePlane(img, nimg, info, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [converttosingleplane] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [converttosingleplane] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -1583,14 +1583,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
                 hr = Decompress(img, nimg, info, DXGI_FORMAT_UNKNOWN /* picks good default */, *timage.get());
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [decompress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [decompress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -1615,7 +1615,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
@@ -1624,7 +1624,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 hr = timage->Initialize(mdata);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -1636,7 +1636,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                             *timage->GetImage(0, 0, d), TEX_FILTER_DEFAULT, 0, 0);
                         if (FAILED(hr))
                         {
-                            wprintf(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                            RaiseError(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                             return 1;
                         }
                     }
@@ -1649,7 +1649,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                             *timage->GetImage(0, i, 0), TEX_FILTER_DEFAULT, 0, 0);
                         if (FAILED(hr))
                         {
-                            wprintf(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                            RaiseError(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                             return 1;
                         }
                     }
@@ -1681,14 +1681,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                     if (!timage)
                     {
-                        wprintf(L"\nERROR: Memory allocation failed\n");
+                        RaiseError(L"\nERROR: Memory allocation failed\n");
                         return 1;
                     }
 
                     hr = PremultiplyAlpha(img, nimg, info, TEX_PMALPHA_REVERSE | dwSRGB, *timage);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [demultiply alpha] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [demultiply alpha] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
 
@@ -1730,7 +1730,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 targetHeight /= mipdiv;
                 if (targetWidth == 0 || targetHeight == 0)
                 {
-                    wprintf(L"\nERROR: Too many input mips provided. For the dimensions of the first mip provided, only %zu input mips can be used.\n", conversionIndex);
+                    RaiseError(L"\nERROR: Too many input mips provided. For the dimensions of the first mip provided, only %zu input mips can be used.\n", conversionIndex);
                     return 1;
                 }
             }
@@ -1739,14 +1739,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
                 hr = Resize(image->GetImages(), image->GetImageCount(), image->GetMetadata(), targetWidth, targetHeight, dwFilter | dwFilterOpts, *timage.get());
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [resize] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [resize] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -1772,7 +1772,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
@@ -1796,7 +1796,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     });
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [tonemap maxlum] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [tonemap maxlum] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -1825,7 +1825,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     }, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [tonemap apply] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [tonemap apply] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -1855,7 +1855,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
@@ -1863,7 +1863,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     dwFilter | dwFilterOpts | dwSRGB, TEX_THRESHOLD_DEFAULT, *timage.get());
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -1894,7 +1894,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     case CMD_CUBE:
         if (images != 6)
         {
-            wprintf(L"\nERROR: cube requires six images to form the faces of the cubemap\n");
+            RaiseError(L"\nERROR: cube requires six images to form the faces of the cubemap\n");
             return 1;
         }
         break;
@@ -1902,7 +1902,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     case CMD_CUBEARRAY:
         if ((images < 6) || (images % 6) != 0)
         {
-            wprintf(L"cubearray requires a multiple of 6 images to form the faces of the cubemaps\n");
+            RaiseError(L"cubearray requires a multiple of 6 images to form the faces of the cubemaps\n");
             return 1;
         }
         break;
@@ -1925,7 +1925,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     default:
         if (images < 2)
         {
-            wprintf(L"\nERROR: Need at least 2 images to assemble\n\n");
+            RaiseError(L"\nERROR: Need at least 2 images to assemble\n\n");
             return 1;
         }
         break;
@@ -1976,7 +1976,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             hr = result.Initialize2D(format, twidth, theight, 1, 1);
             if (FAILED(hr))
             {
-                wprintf(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -1988,7 +1988,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 auto img = (*src)->GetImage(0, index, 0);
                 if (!img)
                 {
-                    wprintf(L"FAILED: Unexpected error\n");
+                    RaiseError(L"FAILED: Unexpected error\n");
                     return 1;
                 }
 
@@ -2090,7 +2090,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                         hr = CopyRectangle(*tmp.GetImage(0, 0, 0), rect, *dest, dwFilter | dwFilterOpts, offsetx, offsety);
                     }
                 #else
-                    wprintf(L"FlipRotate() requires WIC\n");
+                    RaiseError(L"FlipRotate() requires WIC\n");
                     return 1;
                 #endif
                 }
@@ -2101,15 +2101,15 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
                 if (FAILED(hr))
                 {
-                    wprintf(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
             }
 
             // Write cross/strip
-            wprintf(L"\nWriting %ls ", outputFile.c_str());
-            PrintInfo(result.GetMetadata());
-            wprintf(L"\n");
+            PrintVerbose(L"\nWriting %ls ", outputFile.c_str());
+            PrintInfoVerbose(result.GetMetadata());
+            PrintVerbose(L"\n");
             fflush(stdout);
 
             if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
@@ -2121,7 +2121,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             {
                 if (std::filesystem::exists(outputFile))
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
+                    RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
                 }
             }
@@ -2129,7 +2129,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             hr = SaveImageFile(*dest, fileType, outputFile.c_str());
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
             break;
@@ -2143,7 +2143,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 dwFilter | dwFilterOpts | dwSRGB, TEX_THRESHOLD_DEFAULT, tempImage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [convert second input] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [convert second input] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2170,14 +2170,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 }, result);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [merge image] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [merge image] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
             // Write merged texture
-            wprintf(L"\nWriting %ls ", outputFile.c_str());
-            PrintInfo(result.GetMetadata());
-            wprintf(L"\n");
+            PrintVerbose(L"\nWriting %ls ", outputFile.c_str());
+            PrintInfoVerbose(result.GetMetadata());
+            PrintVerbose(L"\n");
             fflush(stdout);
 
             if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
@@ -2189,7 +2189,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             {
                 if (std::filesystem::exists(outputFile))
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
+                    RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
                 }
             }
@@ -2197,7 +2197,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             hr = SaveImageFile(*result.GetImage(0, 0, 0), fileType, outputFile.c_str());
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
             break;
@@ -2212,7 +2212,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             hr = result.Initialize2D(format, twidth, theight, 1, 1);
             if (FAILED(hr))
             {
-                wprintf(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2224,7 +2224,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 auto img = (*src)->GetImage(0, index, 0);
                 if (!img)
                 {
-                    wprintf(L"FAILED: Unexpected error\n");
+                    RaiseError(L"FAILED: Unexpected error\n");
                     return 1;
                 }
 
@@ -2238,15 +2238,15 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 hr = CopyRectangle(*img, rect, *dest, dwFilter | dwFilterOpts, offsetx, offsety);
                 if (FAILED(hr))
                 {
-                    wprintf(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
             }
 
             // Write array strip
-            wprintf(L"\nWriting %ls ", outputFile.c_str());
-            PrintInfo(result.GetMetadata());
-            wprintf(L"\n");
+            PrintVerbose(L"\nWriting %ls ", outputFile.c_str());
+            PrintInfoVerbose(result.GetMetadata());
+            PrintVerbose(L"\n");
             fflush(stdout);
 
             if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
@@ -2258,7 +2258,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             {
                 if (std::filesystem::exists(outputFile))
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
+                    RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
                 }
             }
@@ -2266,7 +2266,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             hr = SaveImageFile(*dest, fileType, outputFile.c_str());
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
             break;
@@ -2327,7 +2327,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             hr = result.InitializeCube(format, twidth, theight, 1, 1);
             if (FAILED(hr))
             {
-                wprintf(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2427,7 +2427,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
                 if (FAILED(hr))
                 {
-                    wprintf(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -2441,16 +2441,16 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                         hr = CopyRectangle(*tmp.GetImage(0, 0, 0), Rect(0, 0, twidth, theight), *dest, dwFilter | dwFilterOpts, 0, 0);
                     }
                 #else
-                    wprintf(L"FlipRotate() requires WIC\n");
+                    RaiseError(L"FlipRotate() requires WIC\n");
                     return 1;
                 #endif
                 }
             }
 
             // Write texture
-            wprintf(L"\nWriting %ls ", outputFile.c_str());
-            PrintInfo(result.GetMetadata());
-            wprintf(L"\n");
+            PrintVerbose(L"\nWriting %ls ", outputFile.c_str());
+            PrintInfoVerbose(result.GetMetadata());
+            PrintVerbose(L"\n");
             fflush(stdout);
 
             if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
@@ -2462,7 +2462,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             {
                 if (std::filesystem::exists(outputFile))
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
+                    RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
                 }
             }
@@ -2472,7 +2472,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 outputFile.c_str());
             if (FAILED(hr))
             {
-                wprintf(L"\nFAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"\nFAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
             break;
@@ -2484,7 +2484,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             hr = result.Initialize2D(format, width, height, 1, images);
             if (FAILED(hr))
             {
-                wprintf(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"FAILED setting up result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
             size_t mipdiv = 1;
@@ -2499,16 +2499,16 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 hr = CopyRectangle(*img, Rect(0, 0, width / mipdiv, height / mipdiv), *dest, dwFilter | dwFilterOpts, 0, 0);
                 if (FAILED(hr))
                 {
-                    wprintf(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
                 index++;
                 mipdiv *= 2;
             }
             // Write texture2D
-            wprintf(L"\nWriting %ls ", outputFile.c_str());
-            PrintInfo(result.GetMetadata());
-            wprintf(L"\n");
+            PrintVerbose(L"\nWriting %ls ", outputFile.c_str());
+            PrintInfoVerbose(result.GetMetadata());
+            PrintVerbose(L"\n");
             fflush(stdout);
 
             if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
@@ -2520,7 +2520,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             {
                 if (std::filesystem::exists(outputFile))
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
+                    RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
                 }
             }
@@ -2530,7 +2530,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 outputFile.c_str());
             if (FAILED(hr))
             {
-                wprintf(L"\nFAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"\nFAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
             break;
@@ -2614,14 +2614,14 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             if (FAILED(hr))
             {
-                wprintf(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"FAILED building result image (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
             // Write texture
-            wprintf(L"\nWriting %ls ", outputFile.c_str());
-            PrintInfo(result.GetMetadata());
-            wprintf(L"\n");
+            PrintVerbose(L"\nWriting %ls ", outputFile.c_str());
+            PrintInfoVerbose(result.GetMetadata());
+            PrintVerbose(L"\n");
             fflush(stdout);
 
             if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
@@ -2633,7 +2633,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             {
                 if (std::filesystem::exists(outputFile))
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite\n");
+                    RaiseError(L"\nERROR: Output file already exists, use -y to overwrite\n");
                     return 1;
                 }
             }
@@ -2643,7 +2643,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 outputFile.c_str());
             if (FAILED(hr))
             {
-                wprintf(L"\nFAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L"\nFAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
             break;

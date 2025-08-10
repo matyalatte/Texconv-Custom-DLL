@@ -1380,7 +1380,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 {
                     if (LookupByName(pArg, g_pOptionsLong))
                     {
-                        wprintf(L"ERROR: did you mean `--%ls` (with two dashes)?\n", pArg);
+                        RaiseError(L"ERROR: did you mean `--%ls` (with two dashes)?\n", pArg);
                         return 1;
                     }
                 }
@@ -1389,7 +1389,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             switch (dwOption)
             {
             case 0:
-                wprintf(L"ERROR: Unknown option: `%ls`\n\nUse %ls --help\n", pArg, g_ToolName);
+                RaiseError(L"ERROR: Unknown option: `%ls`\n\nUse %ls --help\n", pArg, g_ToolName);
                 return 1;
 
             case OPT_FILELIST:
@@ -1428,7 +1428,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             default:
                 if (dwOptions & (UINT64_C(1) << dwOption))
                 {
-                    wprintf(L"ERROR: Duplicate option: `%ls`\n\n", pArg);
+                    RaiseError(L"ERROR: Duplicate option: `%ls`\n\n", pArg);
                     return 1;
                 }
 
@@ -1485,7 +1485,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_WIDTH:
                 if (swscanf_s(pValue, L"%zu", &width) != 1)
                 {
-                    wprintf(L"Invalid value specified with -w (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -w (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1494,7 +1494,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_HEIGHT:
                 if (swscanf_s(pValue, L"%zu", &height) != 1)
                 {
-                    wprintf(L"Invalid value specified with -h (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -h (%ls)\n", pValue);
                     printf("\n");
                     PrintUsage();
                     return 1;
@@ -1504,7 +1504,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_MIPLEVELS:
                 if (swscanf_s(pValue, L"%zu", &mipLevels) != 1)
                 {
-                    wprintf(L"Invalid value specified with -m (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -m (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1530,7 +1530,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             break;
 
                         default:
-                            wprintf(L"Invalid value specified with -f (%ls)\n\n", pValue);
+                            RaiseError(L"Invalid value specified with -f (%ls)\n\n", pValue);
                             PrintUsage();
                             return 1;
                         }
@@ -1542,7 +1542,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 dwFilter = static_cast<TEX_FILTER_FLAGS>(LookupByName(pValue, g_pFilters));
                 if (!dwFilter)
                 {
-                    wprintf(L"Invalid value specified with -if (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -if (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1552,7 +1552,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 dwRotateColor = LookupByName(pValue, g_pRotateColor);
                 if (!dwRotateColor)
                 {
-                    wprintf(L"Invalid value specified with -rotatecolor (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -rotatecolor (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1597,7 +1597,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 FileType = LookupByName(pValue, g_pSaveFileTypes);
                 if (!FileType)
                 {
-                    wprintf(L"Invalid value specified with -ft (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -ft (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1606,7 +1606,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_PREMUL_ALPHA:
                 if (dwOptions & (UINT64_C(1) << OPT_DEMUL_ALPHA))
                 {
-                    wprintf(L"Can't use -pmalpha and -alpha at same time\n\n");
+                    RaiseError(L"Can't use -pmalpha and -alpha at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1615,7 +1615,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_DEMUL_ALPHA:
                 if (dwOptions & (UINT64_C(1) << OPT_PREMUL_ALPHA))
                 {
-                    wprintf(L"Can't use -pmalpha and -alpha at same time\n\n");
+                    RaiseError(L"Can't use -pmalpha and -alpha at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1624,7 +1624,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_TA_WRAP:
                 if (dwFilterOpts & TEX_FILTER_MIRROR)
                 {
-                    wprintf(L"Can't use -wrap and -mirror at same time\n\n");
+                    RaiseError(L"Can't use -wrap and -mirror at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1634,7 +1634,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_TA_MIRROR:
                 if (dwFilterOpts & TEX_FILTER_WRAP)
                 {
-                    wprintf(L"Can't use -wrap and -mirror at same time\n\n");
+                    RaiseError(L"Can't use -wrap and -mirror at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1667,7 +1667,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     }
                     else
                     {
-                        wprintf(L"Invalid value specified for -nmap (%ls), missing l, r, g, b, or a\n\n", pValue);
+                        RaiseError(L"Invalid value specified for -nmap (%ls), missing l, r, g, b, or a\n\n", pValue);
                         return 1;
                     }
 
@@ -1702,19 +1702,19 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_NORMAL_MAP_AMPLITUDE:
                 if (!dwNormalMap)
                 {
-                    wprintf(L"-nmapamp requires -nmap\n\n");
+                    RaiseError(L"-nmapamp requires -nmap\n\n");
                     PrintUsage();
                     return 1;
                 }
                 else if (swscanf_s(pValue, L"%f", &nmapAmplitude) != 1)
                 {
-                    wprintf(L"Invalid value specified with -nmapamp (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -nmapamp (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (nmapAmplitude < 0.f)
                 {
-                    wprintf(L"Normal map amplitude must be positive (%ls)\n\n", pValue);
+                    RaiseError(L"Normal map amplitude must be positive (%ls)\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1722,13 +1722,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_GPU:
                 if (swscanf_s(pValue, L"%d", &adapter) != 1)
                 {
-                    wprintf(L"Invalid value specified with -gpu (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -gpu (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (adapter < 0)
                 {
-                    wprintf(L"Invalid adapter index (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid adapter index (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1738,7 +1738,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 maxSize = LookupByName(pValue, g_pFeatureLevels);
                 if (!maxSize)
                 {
-                    wprintf(L"Invalid value specified with -fl (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -fl (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1747,13 +1747,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_ALPHA_THRESHOLD:
                 if (swscanf_s(pValue, L"%f", &alphaThreshold) != 1)
                 {
-                    wprintf(L"Invalid value specified with -at (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -at (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (alphaThreshold < 0.f)
                 {
-                    wprintf(L"-at (%ls) parameter must be positive\n\n", pValue);
+                    RaiseError(L"-at (%ls) parameter must be positive\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1761,13 +1761,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_ALPHA_WEIGHT:
                 if (swscanf_s(pValue, L"%f", &alphaWeight) != 1)
                 {
-                    wprintf(L"Invalid value specified with -aw (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -aw (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (alphaWeight < 0.f)
                 {
-                    wprintf(L"-aw (%ls) parameter must be positive\n\n", pValue);
+                    RaiseError(L"-aw (%ls) parameter must be positive\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1803,14 +1803,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
                     if ((dwCompress & (TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_BC7_USE_3SUBSETS)) == (TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_BC7_USE_3SUBSETS))
                     {
-                        wprintf(L"Can't use -bc x (max) and -bc q (quick) at same time\n\n");
+                        RaiseError(L"Can't use -bc x (max) and -bc q (quick) at same time\n\n");
                         PrintUsage();
                         return 1;
                     }
 
                     if (!found)
                     {
-                        wprintf(L"Invalid value specified for -bc (%ls), missing d, u, q, or x\n\n", pValue);
+                        RaiseError(L"Invalid value specified for -bc (%ls), missing d, u, q, or x\n\n", pValue);
                         return 1;
                     }
                 }
@@ -1821,7 +1821,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     || (wicQuality < 0.f)
                     || (wicQuality > 1.f))
                 {
-                    wprintf(L"Invalid value specified with -wicq (%ls)\n", pValue);
+                    RaiseError(L"Invalid value specified with -wicq (%ls)\n", pValue);
                     printf("\n");
                     PrintUsage();
                     return 1;
@@ -1846,7 +1846,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_USE_DX10:
                 if (dwOptions & (UINT64_C(1) << OPT_USE_DX9))
                 {
-                    wprintf(L"Can't use -dx9 and -dx10 at same time\n\n");
+                    RaiseError(L"Can't use -dx9 and -dx10 at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1855,7 +1855,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_USE_DX9:
                 if (dwOptions & (UINT64_C(1) << OPT_USE_DX10))
                 {
-                    wprintf(L"Can't use -dx9 and -dx10 at same time\n\n");
+                    RaiseError(L"Can't use -dx9 and -dx10 at same time\n\n");
                     PrintUsage();
                     return 1;
                 }
@@ -1871,7 +1871,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     }
                     else if (_wcsicmp(pValue, L"flatten") != 0)
                     {
-                        wprintf(L"For recursive use -r, -r:flatten, or -r:keep\n\n");
+                        RaiseError(L"For recursive use -r, -r:flatten, or -r:keep\n\n");
                         PrintUsage();
                         return 1;
                     }
@@ -1884,7 +1884,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     std::wifstream inFile(path.make_preferred().c_str());
                     if (!inFile)
                     {
-                        wprintf(L"Error opening -flist file %ls\n", pValue);
+                        RaiseError(L"Error opening -flist file %ls\n", pValue);
                         return 1;
                     }
 
@@ -1897,13 +1897,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_PAPER_WHITE_NITS:
                 if (swscanf_s(pValue, L"%f", &paperWhiteNits) != 1)
                 {
-                    wprintf(L"Invalid value specified with -nits (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -nits (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (paperWhiteNits > 10000.f || paperWhiteNits <= 0.f)
                 {
-                    wprintf(L"-nits (%ls) parameter must be between 0 and 10000\n\n", pValue);
+                    RaiseError(L"-nits (%ls) parameter must be between 0 and 10000\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1911,13 +1911,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_PRESERVE_ALPHA_COVERAGE:
                 if (swscanf_s(pValue, L"%f", &preserveAlphaCoverageRef) != 1)
                 {
-                    wprintf(L"Invalid value specified with -keepcoverage (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -keepcoverage (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (preserveAlphaCoverageRef < 0.0f || preserveAlphaCoverageRef > 1.0f)
                 {
-                    wprintf(L"-keepcoverage (%ls) parameter must be between 0.0 and 1.0\n\n", pValue);
+                    RaiseError(L"-keepcoverage (%ls) parameter must be between 0.0 and 1.0\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1925,13 +1925,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             case OPT_SWIZZLE:
                 if (!*pValue || wcslen(pValue) > 4)
                 {
-                    wprintf(L"Invalid value specified with -swizzle (%ls)\n\n", pValue);
+                    RaiseError(L"Invalid value specified with -swizzle (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (!ParseSwizzleMask(pValue, swizzleElements, zeroElements, oneElements))
                 {
-                    wprintf(L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1\n");
+                    RaiseError(L"-swizzle requires a 1 to 4 character mask composed of these letters: r, g, b, a, x, y, w, z, 0, 1\n");
                     return 1;
                 }
                 break;
@@ -1959,7 +1959,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     const uint32_t mode = LookupByName(pValue, s_pXGModes);
                     if (!mode)
                     {
-                        printf("Invalid value specified with -xgmode (%ls)\n", pValue);
+                        RaiseError("Invalid value specified with -xgmode (%ls)\n", pValue);
                         wprintf(L"\n   <mode>: ");
                         PrintList(14, s_pXGModes);
                         return 1;
@@ -1979,11 +1979,11 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             SearchForFiles(path.make_preferred(), conversion, (dwOptions & (UINT64_C(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
-                wprintf(L"No matching files found for %ls\n", pArg);
+                RaiseError(L"No matching files found for %ls\n", pArg);
                 return 1;
             }
         #else
-            wprintf(L"WARNING: Wildcard is not supported. (%ls)", pArg);
+            RaiseError(L"Wildcard is not supported. (%ls)", pArg);
             return 1;
         #endif
         }
@@ -2047,10 +2047,10 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     for (auto pConv = conversion.begin(); pConv != conversion.end(); ++pConv)
     {
         if (pConv != conversion.begin())
-            wprintf(L"\n");
+            PrintVerbose(L"\n");
 
         // --- Load source image -------------------------------------------------------
-        wprintf(L"reading %ls", pConv->szSrc.c_str());
+        PrintVerbose(L"reading %ls", pConv->szSrc.c_str());
         fflush(stdout);
 
         TexMetadata info;
@@ -2058,7 +2058,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
         if (!image)
         {
-            wprintf(L"\nERROR: Memory allocation failed\n");
+            RaiseError(L"\nERROR: Memory allocation failed\n");
             return 1;
         }
 
@@ -2075,7 +2075,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = Xbox::GetMetadataFromDDSFile(curpath.wstring().c_str(), info, isXbox);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2109,7 +2109,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             }
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2127,7 +2127,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
                 if (IsTypeless(info.format))
                 {
-                    wprintf(L" FAILED due to Typeless format %d\n", info.format);
+                    RaiseError(L" FAILED due to Typeless format %d\n", info.format);
                     retVal = 1;
                     continue;
                 }
@@ -2141,7 +2141,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromBMPEx(curpath.wstring().c_str(), WIC_FLAGS_NONE | dwFilter, &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2162,7 +2162,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromTGAFile(curpath.wstring().c_str(), tgaFlags, &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2172,7 +2172,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromHDRFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2183,7 +2183,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromPortablePixMap(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2193,7 +2193,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromPortablePixMapHDR(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2205,7 +2205,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromEXRFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2217,7 +2217,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromJPEGFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2229,7 +2229,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromPNGFile(curpath.wstring().c_str(), &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2259,7 +2259,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = LoadFromWICFile(curpath.wstring().c_str(), wicFlags, &info, *image);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 if (hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */)
                 {
@@ -2275,18 +2275,18 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 continue;
             }
         #else
-            wprintf(L"ERROR: This format requires WIC\n");
+            RaiseError(L"ERROR: This format requires WIC\n");
             retVal = 1;
             continue;
         #endif
         }
 
-        PrintInfo(info, isXbox);
+        PrintInfoVerbose(info, isXbox);
 
         size_t tMips = (!mipLevels && info.mipLevels > 1) ? info.mipLevels : mipLevels;
 
         // Convert texture
-        wprintf(L" as");
+        PrintVerbose(L" as");
         fflush(stdout);
 
         // --- Planar ------------------------------------------------------------------
@@ -2299,14 +2299,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
             hr = ConvertToSinglePlane(img, nimg, info, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [converttosingleplane] (%08X%ls)\n",
+                RaiseError(L" FAILED [converttosingleplane] (%08X%ls)\n",
                     static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
@@ -2341,7 +2341,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                     if (!timage)
                     {
-                        wprintf(L"\nERROR: Memory allocation failed\n");
+                        RaiseError(L"\nERROR: Memory allocation failed\n");
                         return 1;
                     }
 
@@ -2359,7 +2359,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     hr = timage->Initialize(mdata);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [BC non-multiple-of-4 fixup] (%08X%ls)\n",
+                        RaiseError(L" FAILED [BC non-multiple-of-4 fixup] (%08X%ls)\n",
                             static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
@@ -2403,14 +2403,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
             hr = Decompress(img, nimg, info, DXGI_FORMAT_UNKNOWN /* picks good default */, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [decompress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [decompress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
                 continue;
             }
@@ -2461,14 +2461,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
                 hr = PremultiplyAlpha(img, nimg, info, TEX_PMALPHA_REVERSE | dwSRGB, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [demultiply alpha] (%08X%ls)\n",
+                    RaiseError(L" FAILED [demultiply alpha] (%08X%ls)\n",
                         static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     retVal = 1;
                     continue;
@@ -2496,7 +2496,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -2513,12 +2513,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         #if USE_WIC
             hr = FlipRotate(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwFlags, *timage);
         #else
-            wprintf(L"ERROR: FlipRotate() requires WIC.\n");
+            RaiseError(L"ERROR: FlipRotate() requires WIC.\n");
             return 1;
         #endif
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [fliprotate] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [fliprotate] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2567,14 +2567,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
             hr = Resize(image->GetImages(), image->GetImageCount(), image->GetMetadata(), twidth, theight, dwFilter | dwFilterOpts, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [resize] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [resize] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2615,7 +2615,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -2637,7 +2637,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [swizzle] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [swizzle] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2666,7 +2666,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
@@ -2674,7 +2674,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     dwFilter | dwFilterOpts | dwSRGB | dwConvert, alphaThreshold, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -2700,7 +2700,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -2906,7 +2906,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             }
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [rotate color apply] (%08X%ls)\n",
+                RaiseError(L" FAILED [rotate color apply] (%08X%ls)\n",
                     static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
@@ -2934,7 +2934,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -2958,7 +2958,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 });
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [tonemap maxlum] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [tonemap maxlum] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -2987,7 +2987,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [tonemap apply] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [tonemap apply] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3014,7 +3014,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -3042,7 +3042,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = ComputeNormalMap(image->GetImages(), image->GetImageCount(), image->GetMetadata(), dwNormalMap, nmapAmplitude, nmfmt, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [normalmap] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [normalmap] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3067,7 +3067,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -3075,7 +3075,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 dwFilter | dwFilterOpts | dwSRGB | dwConvert, alphaThreshold, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [convert] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3103,7 +3103,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -3134,7 +3134,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [colorkey] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [colorkey] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3161,7 +3161,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -3183,7 +3183,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [inverty] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [inverty] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3210,7 +3210,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -3244,7 +3244,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 }, *timage);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [reconstructz] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [reconstructz] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3295,7 +3295,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -3304,7 +3304,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             hr = timage->Initialize(mdata);
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [copy to single level] (%08X%ls)\n",
+                RaiseError(L" FAILED [copy to single level] (%08X%ls)\n",
                     static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
@@ -3317,7 +3317,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         *timage->GetImage(0, 0, d), TEX_FILTER_DEFAULT, 0, 0);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [copy to single level] (%08X%ls)\n",
+                        RaiseError(L" FAILED [copy to single level] (%08X%ls)\n",
                             static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
@@ -3331,7 +3331,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         *timage->GetImage(0, i, 0), TEX_FILTER_DEFAULT, 0, 0);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [copy to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -3348,7 +3348,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 hr = timage->Initialize(mdata);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [copy compressed to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [copy compressed to single level] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
 
@@ -3386,7 +3386,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
@@ -3400,7 +3400,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             }
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [mipmaps] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [mipmaps] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3425,14 +3425,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
             {
-                wprintf(L"\nERROR: Memory allocation failed\n");
+                RaiseError(L"\nERROR: Memory allocation failed\n");
                 return 1;
             }
 
             hr = timage->Initialize(image->GetMetadata());
             if (FAILED(hr))
             {
-                wprintf(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 return 1;
             }
 
@@ -3445,7 +3445,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 hr = ScaleMipMapsAlphaForCoverage(img, info.mipLevels, info, item, preserveAlphaCoverageRef, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [keepcoverage] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     return 1;
                 }
             }
@@ -3484,14 +3484,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
                 hr = PremultiplyAlpha(img, nimg, info, TEX_PMALPHA_DEFAULT | dwSRGB, *timage);
                 if (FAILED(hr))
                 {
-                    wprintf(L" FAILED [premultiply alpha] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                    RaiseError(L" FAILED [premultiply alpha] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                     retVal = 1;
                     continue;
                 }
@@ -3523,7 +3523,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
                 {
-                    wprintf(L"\nERROR: Memory allocation failed\n");
+                    RaiseError(L"\nERROR: Memory allocation failed\n");
                     return 1;
                 }
 
@@ -3541,7 +3541,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         }, *timage);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [DXT5nm] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [DXT5nm] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -3559,7 +3559,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         }, *timage);
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [DXT5 RXGB] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [DXT5 RXGB] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
@@ -3615,7 +3615,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                     if (!timage)
                     {
-                        wprintf(L"\nERROR: Memory allocation failed\n");
+                        RaiseError(L"\nERROR: Memory allocation failed\n");
                         return 1;
                     }
 
@@ -3676,7 +3676,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             if (allow_slow_codec) {
                                 wprintf(L"\nWARNING: Using CPU codec for BC6 or BC7. It'll take a long time for conversion.\n");
                             } else {
-                                wprintf(L"\n");
+                                PrintVerbose(L"\n");
                                 RaiseError(L"Error: Can NOT use CPU codec for BC6 and BC7. Or enable the allow_slow_codec option.\n");
                                 retVal = 1;
                                 continue;
@@ -3691,7 +3691,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                     }
                     if (FAILED(hr))
                     {
-                        wprintf(L" FAILED [compress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                        RaiseError(L" FAILED [compress] (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         retVal = 1;
                         continue;
                     }
@@ -3755,8 +3755,8 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
         #else
             constexpr bool isXboxOut = false;
         #endif
-            PrintInfo(info, isXboxOut);
-            wprintf(L"\n");
+            PrintInfoVerbose(info, isXboxOut);
+            PrintVerbose(L"\n");
 
             // Figure out dest filename
             std::filesystem::path dest(outputDir);
@@ -3770,7 +3770,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
                 if (ec)
                 {
-                    wprintf(L" get full path FAILED (%hs)\n", ec.message().c_str());
+                    RaiseError(L" get full path FAILED (%hs)\n", ec.message().c_str());
                     retVal = 1;
                     continue;
                 }
@@ -3778,7 +3778,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 std::filesystem::create_directories(apath, ec);
                 if (ec)
                 {
-                    wprintf(L" directory creation FAILED (%hs)\n", ec.message().c_str());
+                    RaiseError(L" directory creation FAILED (%hs)\n", ec.message().c_str());
                     retVal = 1;
                     continue;
                 }
@@ -3803,14 +3803,14 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             }
 
             // Write texture
-            wprintf(L"writing %ls", destName.c_str());
+            PrintVerbose(L"writing %ls", destName.c_str());
             fflush(stdout);
 
             if (~dwOptions & (UINT64_C(1) << OPT_OVERWRITE))
             {
                 if (std::filesystem::exists(destName))
                 {
-                    wprintf(L"\nERROR: Output file already exists, use -y to overwrite:\n");
+                    RaiseError(L"\nERROR: Output file already exists, use -y to overwrite:\n");
                     retVal = 1;
                     continue;
                 }
@@ -3979,7 +3979,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                             }
                         });
                 #else
-                    wprintf(L"ERROR: This format requires WIC\n");
+                    RaiseError(L"ERROR: This format requires WIC\n");
                     retVal = 1;
                     continue;
                 #endif
@@ -3989,7 +3989,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 
             if (FAILED(hr))
             {
-                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                 retVal = 1;
             #if USE_WIC
                 if ((hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */) && (FileType == WIC_CODEC_HEIF))
@@ -3999,7 +3999,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             #endif
                 continue;
             }
-            wprintf(L"\n");
+            PrintVerbose(L"\n");
         }
     }
 

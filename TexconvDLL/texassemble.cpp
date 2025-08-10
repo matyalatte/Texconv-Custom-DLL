@@ -1063,9 +1063,9 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_OUTPUTFILE:
                 {
                     std::filesystem::path path(pValue);
-                    outputFile = path.make_preferred().native();
+                    outputFile = path.make_preferred().wstring();
 
-                    fileType = LookupByName(path.extension().c_str(), g_pExtFileTypes);
+                    fileType = LookupByName(path.extension().wstring().c_str(), g_pExtFileTypes);
 
                     switch (dwCommand)
                     {
@@ -1206,7 +1206,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         {
             SConversion conv = {};
             std::filesystem::path path(pArg);
-            conv.szSrc = path.make_preferred().native();
+            conv.szSrc = path.make_preferred().wstring();
             conversion.push_back(conv);
         }
     }
@@ -1264,16 +1264,16 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     {
         std::filesystem::path curpath(conversion.front().szSrc);
 
-        wprintf(L"reading %ls", curpath.c_str());
+        wprintf(L"reading %ls", curpath.wstring().c_str());
         fflush(stdout);
 
         if (outputFile.empty())
         {
-            outputFile = curpath.stem().concat(L".dds").native();
+            outputFile = curpath.stem().concat(L".dds").wstring();
         }
 
     #if USE_WIC
-        hr = LoadAnimatedGif(curpath.c_str(), loadedImages, (dwOptions & (UINT32_C(1) << OPT_GIF_BGCOLOR)) != 0);
+        hr = LoadAnimatedGif(curpath.wstring().c_str(), loadedImages, (dwOptions & (UINT32_C(1) << OPT_GIF_BGCOLOR)) != 0);
     #else
         hr = E_FAIL;
     #endif
@@ -1305,22 +1305,22 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 case CMD_H_STRIP:
                 case CMD_V_STRIP:
                 case CMD_ARRAY_STRIP:
-                    outputFile = curpath.stem().concat(L".bmp").native();
+                    outputFile = curpath.stem().concat(L".bmp").wstring();
                     break;
 
                 default:
-                    if (_wcsicmp(curpath.extension().c_str(), L".dds") == 0)
+                    if (_wcsicmp(curpath.extension().wstring().c_str(), L".dds") == 0)
                     {
                         wprintf(L"ERROR: Need to specify output file via -o\n");
                         return 1;
                     }
 
-                    outputFile = curpath.stem().concat(L".dds").native();
+                    outputFile = curpath.stem().concat(L".dds").wstring();
                     break;
                 }
             }
 
-            wprintf(L"reading %ls", curpath.c_str());
+            wprintf(L"reading %ls", curpath.wstring().c_str());
             fflush(stdout);
 
             TexMetadata info;
@@ -1339,9 +1339,9 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case CMD_H_TEE:
             case CMD_H_STRIP:
             case CMD_V_STRIP:
-                if (_wcsicmp(ext.c_str(), L".dds") == 0)
+                if (_wcsicmp(ext.wstring().c_str(), L".dds") == 0)
                 {
-                    hr = LoadFromDDSFile(curpath.c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
+                    hr = LoadFromDDSFile(curpath.wstring().c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1366,9 +1366,9 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 break;
 
             case CMD_ARRAY_STRIP:
-                if (_wcsicmp(ext.c_str(), L".dds") == 0)
+                if (_wcsicmp(ext.wstring().c_str(), L".dds") == 0)
                 {
-                    hr = LoadFromDDSFile(curpath.c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
+                    hr = LoadFromDDSFile(curpath.wstring().c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1389,9 +1389,9 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 break;
 
             default:
-                if (_wcsicmp(ext.c_str(), L".dds") == 0)
+                if (_wcsicmp(ext.wstring().c_str(), L".dds") == 0)
                 {
-                    hr = LoadFromDDSFile(curpath.c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
+                    hr = LoadFromDDSFile(curpath.wstring().c_str(), DDS_FLAGS_ALLOW_LARGE_FILES, &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1420,20 +1420,20 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                         }
                     }
                 }
-                else if (_wcsicmp(ext.c_str(), L".tga") == 0)
+                else if (_wcsicmp(ext.wstring().c_str(), L".tga") == 0)
                 {
                     TGA_FLAGS tgaFlags = (IsBGR(format)) ? TGA_FLAGS_BGR : TGA_FLAGS_NONE;
 
-                    hr = LoadFromTGAFile(curpath.c_str(), tgaFlags, &info, *image);
+                    hr = LoadFromTGAFile(curpath.wstring().c_str(), tgaFlags, &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
                         return 1;
                     }
                 }
-                else if (_wcsicmp(ext.c_str(), L".hdr") == 0)
+                else if (_wcsicmp(ext.wstring().c_str(), L".hdr") == 0)
                 {
-                    hr = LoadFromHDRFile(curpath.c_str(), &info, *image);
+                    hr = LoadFromHDRFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1441,9 +1441,9 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     }
                 }
             #ifdef USE_OPENEXR
-                else if (_wcsicmp(ext.c_str(), L".exr") == 0)
+                else if (_wcsicmp(ext.wstring().c_str(), L".exr") == 0)
                 {
-                    hr = LoadFromEXRFile(curpath.c_str(), &info, *image);
+                    hr = LoadFromEXRFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1452,9 +1452,9 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }
             #endif
             #ifdef USE_LIBJPEG
-                else if (_wcsicmp(ext.c_str(), L".jpg") == 0 || _wcsicmp(ext.c_str(), L".jpeg") == 0)
+                else if (_wcsicmp(ext.wstring().c_str(), L".jpg") == 0 || _wcsicmp(ext.wstring().c_str(), L".jpeg") == 0)
                 {
-                    hr = LoadFromJPEGFile(curpath.c_str(), &info, *image);
+                    hr = LoadFromJPEGFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1463,9 +1463,9 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 }
             #endif
             #ifdef USE_LIBPNG
-                else if (_wcsicmp(ext.c_str(), L".png") == 0)
+                else if (_wcsicmp(ext.wstring().c_str(), L".png") == 0)
                 {
-                    hr = LoadFromPNGFile(curpath.c_str(), &info, *image);
+                    hr = LoadFromPNGFile(curpath.wstring().c_str(), &info, *image);
                     if (FAILED(hr))
                     {
                         wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -1485,7 +1485,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     static_assert(static_cast<int>(WIC_FLAGS_FILTER_CUBIC) == static_cast<int>(TEX_FILTER_CUBIC), "WIC_FLAGS_* & TEX_FILTER_* should match");
                     static_assert(static_cast<int>(WIC_FLAGS_FILTER_FANT) == static_cast<int>(TEX_FILTER_FANT), "WIC_FLAGS_* & TEX_FILTER_* should match");
 
-                    hr = LoadFromWICFile(curpath.c_str(), WIC_FLAGS_ALL_FRAMES | dwFilter, &info, *image);
+                    hr = LoadFromWICFile(curpath.wstring().c_str(), WIC_FLAGS_ALL_FRAMES | dwFilter, &info, *image);
                 #else
                     hr = E_FAIL;
                 #endif
@@ -1495,11 +1495,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     #if USE_WIC
                         if (hr == static_cast<HRESULT>(0xc00d5212) /* MF_E_TOPO_CODEC_NOT_FOUND */)
                         {
-                            if (_wcsicmp(ext.c_str(), L".heic") == 0 || _wcsicmp(ext.c_str(), L".heif") == 0)
+                            if (_wcsicmp(ext.wstring().c_str(), L".heic") == 0 || _wcsicmp(ext.wstring().c_str(), L".heif") == 0)
                             {
                                 wprintf(L"INFO: This format requires installing the HEIF Image Extensions - https://aka.ms/heif\n");
                             }
-                            else if (_wcsicmp(ext.c_str(), L".webp") == 0)
+                            else if (_wcsicmp(ext.wstring().c_str(), L".webp") == 0)
                             {
                                 wprintf(L"INFO: This format requires installing the WEBP Image Extensions - https://www.microsoft.com/p/webp-image-extensions/9pg2dk419drg\n");
                             }

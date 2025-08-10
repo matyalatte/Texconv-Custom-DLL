@@ -51,10 +51,14 @@
 
 #include <wrl/client.h>
 
+#ifdef _WIN32
 #include <dxgiformat.h>
+#include <wincodec.h>
+#else //_WIN32
+#include <directx/dxgiformat.h>
+#endif //_WIN32
 
 #include <DirectXPackedVector.h>
-#include <wincodec.h>
 
 #ifdef  _MSC_VER
 #pragma warning(disable : 4619 4616 26812)

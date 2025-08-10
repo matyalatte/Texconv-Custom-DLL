@@ -48,13 +48,18 @@
 #include <string>
 #include <tuple>
 
-#include <wrl\client.h>
+#include <wrl/client.h>
 
+#ifdef _WIN32
 #include <d3d11.h>
 #include <dxgi.h>
 #include <dxgiformat.h>
 
 #include <wincodec.h>
+#else //!_WIN32
+#include <directx/d3d12.h>
+#include <directx/dxgiformat.h>
+#endif //_WIN32
 
 #ifdef  _MSC_VER
 #pragma warning(disable : 4619 4616 26812)

@@ -23,6 +23,9 @@
 #include <set>
 #include <string>
 
+// Header for Texconv-Custom-DLL
+#include "tool_util.h"
+
 #ifndef TOOL_VERSION
 #error Define TOOL_VERSION before including this header
 #endif

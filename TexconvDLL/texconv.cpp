@@ -3672,6 +3672,11 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                 #if !NO_GPU_CODEC
                     if (bc6hbc7 && pDevice)
                     {
+                        hr = Compress(pDevice.Get(), img, nimg, info, tformat, dwCompress | dwSRGB, alphaWeight, *timage);
+                    }
+                    else
+                #endif
+                    {
                         if (bc6hbc7) {
                             if (allow_slow_codec) {
                                 wprintf(L"\nWARNING: Using CPU codec for BC6 or BC7. It'll take a long time for conversion.\n");
@@ -3682,11 +3687,6 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                                 continue;
                             }
                         }
-                        hr = Compress(pDevice.Get(), img, nimg, info, tformat, dwCompress | dwSRGB, alphaWeight, *timage);
-                    }
-                    else
-                #endif
-                    {
                         hr = Compress(img, nimg, info, tformat, cflags | dwSRGB, alphaThreshold, *timage);
                     }
                     if (FAILED(hr))

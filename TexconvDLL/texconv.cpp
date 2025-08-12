@@ -2043,6 +2043,8 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
 #endif
 
     int retVal = 0;
+    // This will be true after calling CreateDevice()
+    bool createDeviceTryonce = false;
 
     for (auto pConv = conversion.begin(); pConv != conversion.end(); ++pConv)
     {
@@ -3631,12 +3633,9 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         bc6hbc7 = true;
 
                         {
-                            static bool s_tryonce = false;
-
-                            if (!s_tryonce)
+                            if (!createDeviceTryonce)
                             {
-                                s_tryonce = true;
-
+                                createDeviceTryonce = true;
                             #if !NO_GPU_CODEC
                                 if (!(dwOptions & (UINT64_C(1) << OPT_NOGPU)))
                                 {

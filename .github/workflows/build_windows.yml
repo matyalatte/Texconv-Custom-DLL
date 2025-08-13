@@ -9,7 +9,14 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - run: git submodule update --init --recursive DirectXTex
@@ -34,7 +41,7 @@ jobs:
         with:
           directory: 'release'
           type: 'zip'
-          filename: '${{ env.ZIP_NAME }}-${{ runner.os }}-x64.zip'
+          filename: '${{ env.ZIP_NAME }}-${{ runner.os }}-${{ matrix.arch }}.zip'
           exclusions: '*.git* .gitignore'
 
       - name: Create Release Draft
@@ -53,4 +60,4 @@ jobs:
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref }} release/${{ env.ZIP_NAME }}-${{ runner.os }}-x64.zip
+        run: gh release upload ${{ github.ref }} release/${{ env.ZIP_NAME }}-${{ runner.os }}-${{ matrix.arch }}.zip

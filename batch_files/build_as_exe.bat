@@ -11,7 +11,6 @@ mkdir %~dp0\..\build_exe
 @pushd %~dp0\..\build_exe
 
 cmake -G "%VS_VERSION%"^
- -A x64^
  -D CMAKE_CONFIGURATION_TYPES=Release^
  -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded^
  -D TEXCONV_BUILD_AS_EXE=ON^

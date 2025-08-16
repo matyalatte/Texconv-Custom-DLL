@@ -2450,7 +2450,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             {
                 printf("\nWARNING: Image is already using straight alpha\n");
             }
-            else if (!info.IsPMAlpha())
+            else if (!info.IsPMAlpha() && info.GetAlphaMode() != TEX_ALPHA_MODE_UNKNOWN)
             {
                 printf("\nWARNING: Image is not using premultipled alpha\n");
             }

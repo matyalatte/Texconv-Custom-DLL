@@ -1,3 +1,8 @@
+v0.5.0
+- Fixed a bug where GPU was used only for the first call. (e3268a6)
+- Added support for Windows on ARM64. (7311da7)
+- Updated DirectXTex to July2025 release. (c6e2bce)
+
 v0.4.2
 - Fixed a bug that DLL functions change locale settings.
 

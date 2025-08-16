@@ -10,7 +10,7 @@ And you can see [the document of texconv](https://github.com/microsoft/DirectXTe
 
 ### Example
 
-These commands will convert `test.dds` to `outdir/test.tga`.
+The following commands convert `test.dds` to `outdir/test.tga`.
 
 #### for Windows
 
@@ -79,7 +79,7 @@ int init_com()
 
 On Windows, you should initialize [COM](https://learn.microsoft.com/en-us/windows/win32/com/the-component-object-model) once in a process.  
 This function provides a way to do.  
-It will do nothing on Unix/Linux systems.  
+It does nothing on Unix/Linux systems.  
 
 The return value is the same as [CoInitializeEx](https://learn.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-coinitializeex)'s one.  
 0 means "Initialized."  
@@ -93,7 +93,7 @@ void uninit_com()
 ```
 
 If `init_com()` returns 0 or 1, you should uninitialize COM with this function after executing your program.  
-It will do nothing on Unix/Linux systems.  
+It does nothing on Unix/Linux systems.  
 
 ### Example for Python
 

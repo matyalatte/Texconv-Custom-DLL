@@ -2450,7 +2450,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             {
                 printf("\nWARNING: Image is already using straight alpha\n");
             }
-            else if (!info.IsPMAlpha())
+            else if (!info.IsPMAlpha() && info.GetAlphaMode() != TEX_ALPHA_MODE_UNKNOWN)
             {
                 printf("\nWARNING: Image is not using premultipled alpha\n");
             }
@@ -3735,7 +3735,10 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             }
             else if (info.GetAlphaMode() == TEX_ALPHA_MODE_UNKNOWN)
             {
-                info.SetAlphaMode(TEX_ALPHA_MODE_STRAIGHT);
+                if (dwOptions & (UINT64_C(1) << OPT_DEMUL_ALPHA))
+                    info.SetAlphaMode(TEX_ALPHA_MODE_PREMULTIPLIED);
+                else
+                    info.SetAlphaMode(TEX_ALPHA_MODE_STRAIGHT);
             }
         }
         else

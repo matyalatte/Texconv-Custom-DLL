@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -43,7 +44,6 @@
 #include <locale>
 #include <memory>
 #include <new>
-#include <set>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -53,14 +53,10 @@
 
 #ifdef _WIN32
 #include <dxgiformat.h>
-#if USE_WIC
 #include <wincodec.h>
-#endif //USE_WIC
 #else //_WIN32
 #include <directx/dxgiformat.h>
 #endif //_WIN32
-
-#include "tool_util.h"
 
 #include <DirectXPackedVector.h>
 
@@ -83,11 +79,18 @@
 #include "DirectXTexPNG.h"
 #endif
 
+#define TOOL_VERSION DIRECTX_TEX_VERSION
+#include "CmdLineHelpers.h"
+
+using namespace Helpers;
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 namespace
 {
+    const wchar_t* g_ToolName = L"texassemble";
+    const wchar_t* g_Description = L"Microsoft (R) DirectX Texture Assembler [DirectXTex]";
+
     enum COMMANDS : uint32_t
     {
         CMD_CUBE = 1,
@@ -116,15 +119,6 @@ namespace
     enum OPTIONS : uint32_t
     {
         OPT_RECURSIVE = 1,
-        OPT_FILELIST,
-        OPT_WIDTH,
-        OPT_HEIGHT,
-        OPT_FORMAT,
-        OPT_FILTER,
-        OPT_SRGBI,
-        OPT_SRGBO,
-        OPT_SRGB,
-        OPT_OUTPUTFILE,
         OPT_TOLOWER,
         OPT_OVERWRITE,
         OPT_USE_DX10,
@@ -134,32 +128,32 @@ namespace
         OPT_DEMUL_ALPHA,
         OPT_TA_WRAP,
         OPT_TA_MIRROR,
-        OPT_FEATURE_LEVEL,
         OPT_TONEMAP,
         OPT_GIF_BGCOLOR,
-        OPT_SWIZZLE,
         OPT_STRIP_MIPS,
-        OPT_MAX
+        OPT_FLAGS_MAX,
+        OPT_FILELIST,
+        OPT_WIDTH,
+        OPT_HEIGHT,
+        OPT_FORMAT,
+        OPT_FILTER,
+        OPT_SRGBI,
+        OPT_SRGBO,
+        OPT_SRGB,
+        OPT_OUTPUTFILE,
+        OPT_FEATURE_LEVEL,
+        OPT_SWIZZLE,
+        OPT_VERSION,
+        OPT_HELP,
     };
 
-    static_assert(OPT_MAX <= 32, "dwOptions is a unsigned int bitfield");
-
-    struct SConversion
-    {
-        std::wstring szSrc;
-    };
-
-    struct SValue
-    {
-        const wchar_t*  name;
-        uint32_t        value;
-    };
+    static_assert(OPT_FLAGS_MAX <= 32, "dwOptions is a unsigned int bitfield");
 
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
 
-    const SValue g_pCommands[] =
+    const SValue<uint32_t> g_pCommands[] =
     {
         { L"cube",              CMD_CUBE },
         { L"volume",            CMD_VOLUME },
@@ -184,7 +178,7 @@ namespace
         { nullptr,          0 }
     };
 
-    const SValue g_pOptions[] =
+    const SValue<uint32_t> g_pOptions[] =
     {
         { L"r",         OPT_RECURSIVE },
         { L"flist",     OPT_FILELIST },
@@ -206,16 +200,41 @@ namespace
         { L"wrap",      OPT_TA_WRAP },
         { L"mirror",    OPT_TA_MIRROR },
         { L"fl",        OPT_FEATURE_LEVEL },
+
+        // Deprecated options (recommend using new -- alternatives)
         { L"tonemap",   OPT_TONEMAP },
         { L"bgcolor",   OPT_GIF_BGCOLOR },
         { L"swizzle",   OPT_SWIZZLE },
         { L"stripmips", OPT_STRIP_MIPS },
+
         { nullptr,      0 }
+    };
+
+    const SValue<uint32_t> g_pOptionsLong[] =
+    {
+        { L"feature-level",         OPT_FEATURE_LEVEL },
+        { L"file-list",             OPT_FILELIST },
+        { L"format",                OPT_FORMAT },
+        { L"gif-bg-color",          OPT_GIF_BGCOLOR },
+        { L"height",                OPT_HEIGHT },
+        { L"help",                  OPT_HELP },
+        { L"image-filter",          OPT_FILTER },
+        { L"overwrite",             OPT_OVERWRITE },
+        { L"separate-alpha",        OPT_SEPALPHA },
+        { L"srgb-in",               OPT_SRGBI },
+        { L"srgb-out",              OPT_SRGBO },
+        { L"strip-mips",            OPT_STRIP_MIPS },
+        { L"swizzle",               OPT_SWIZZLE },
+        { L"to-lowercase",          OPT_TOLOWER },
+        { L"tonemap",               OPT_TONEMAP },
+        { L"version",               OPT_VERSION },
+        { L"width",                 OPT_WIDTH },
+        { nullptr,                  0 }
     };
 
 #define DEFFMT(fmt) { L## #fmt, DXGI_FORMAT_ ## fmt }
 
-    const SValue g_pFormats[] =
+    const SValue<DXGI_FORMAT> g_pFormats[] =
     {
         // List does not include _TYPELESS or depth/stencil formats
         DEFFMT(R32G32B32A32_FLOAT),
@@ -292,7 +311,9 @@ namespace
         { nullptr, DXGI_FORMAT_UNKNOWN }
     };
 
-    const SValue g_pFormatAliases[] =
+#undef DEFFMT
+
+    const SValue<DXGI_FORMAT> g_pFormatAliases[] =
     {
         { L"RGBA", DXGI_FORMAT_R8G8B8A8_UNORM },
         { L"BGRA", DXGI_FORMAT_B8G8R8A8_UNORM },
@@ -304,7 +325,7 @@ namespace
         { nullptr, DXGI_FORMAT_UNKNOWN }
     };
 
-    const SValue g_pFilters[] =
+    const SValue<uint32_t> g_pFilters[] =
     {
         { L"POINT",                     TEX_FILTER_POINT },
         { L"LINEAR",                    TEX_FILTER_LINEAR },
@@ -327,21 +348,21 @@ namespace
         { nullptr,                      TEX_FILTER_DEFAULT                              }
     };
 
-#define CODEC_DDS 0xFFFF0001
-#define CODEC_TGA 0xFFFF0002
-#define CODEC_HDR 0xFFFF0005
+    constexpr uint32_t CODEC_DDS = 0xFFFF0001;
+    constexpr uint32_t CODEC_TGA = 0xFFFF0002;
+    constexpr uint32_t CODEC_HDR = 0xFFFF0005;
 
 #ifdef USE_OPENEXR
-#define CODEC_EXR 0xFFFF0006
+    constexpr uint32_t CODEC_EXR = 0xFFFF0008;
 #endif
 #ifdef USE_LIBJPEG
-#define CODEC_JPEG 0xFFFF0007
+    constexpr uint32_t CODEC_JPEG = 0xFFFF0009;
 #endif
 #ifdef USE_LIBPNG
-#define CODEC_PNG 0xFFFF0008
+    constexpr uint32_t CODEC_PNG = 0xFFFF000A;
 #endif
 
-    const SValue g_pExtFileTypes[] =
+    const SValue<uint32_t> g_pExtFileTypes[] =
     {
     #if USE_WIC
         { L".BMP",  WIC_CODEC_BMP  },
@@ -371,14 +392,14 @@ namespace
         { L".WDP",  WIC_CODEC_WMP  },
         { L".HDP",  WIC_CODEC_WMP  },
         { L".JXR",  WIC_CODEC_WMP  },
+    #endif
     #ifdef USE_OPENEXR
         { L".EXR",  CODEC_EXR      },
-    #endif
     #endif
         { nullptr,  CODEC_DDS      }
     };
 
-    const SValue g_pFeatureLevels[] =   // valid feature levels for -fl for maximimum size
+    const SValue<uint32_t> g_pFeatureLevels[] =   // valid feature levels for -fl for maximimum size
     {
         { L"9.1",  2048 },
         { L"9.2",  2048 },
@@ -393,7 +414,7 @@ namespace
         { nullptr, 0 },
     };
 
-    const SValue g_pFeatureLevelsCube[] = // valid feature levels for -fl for maximum cubemap size
+    const SValue<uint32_t> g_pFeatureLevelsCube[] = // valid feature levels for -fl for maximum cubemap size
     {
         { L"9.1",  512 },
         { L"9.2",  512 },
@@ -408,7 +429,7 @@ namespace
         { nullptr, 0 },
     };
 
-    const SValue g_pFeatureLevelsArray[] = // valid feature levels for -fl for maximum array size
+    const SValue<uint32_t> g_pFeatureLevelsArray[] = // valid feature levels for -fl for maximum array size
     {
         { L"9.1",  1 },
         { L"9.2",  1 },
@@ -423,7 +444,7 @@ namespace
         { nullptr, 0 },
     };
 
-    const SValue g_pFeatureLevelsVolume[] = // valid feature levels for -fl for maximum depth size
+    const SValue<uint32_t> g_pFeatureLevelsVolume[] = // valid feature levels for -fl for maximum depth size
     {
         { L"9.1",  256 },
         { L"9.2",  256 },
@@ -455,195 +476,6 @@ HRESULT LoadAnimatedGif(const wchar_t* szFile,
 
 namespace
 {
-#if USE_WILDCARD
-    inline HANDLE safe_handle(HANDLE h) noexcept { return (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
-
-    struct find_closer { void operator()(HANDLE h) noexcept { assert(h != INVALID_HANDLE_VALUE); if (h) FindClose(h); } };
-
-    using ScopedFindHandle = std::unique_ptr<void, find_closer>;
-#endif
-
-#ifdef _PREFAST_
-#pragma prefast(disable : 26018, "Only used with static internal arrays")
-#endif
-
-    uint32_t LookupByName(const wchar_t *pName, const SValue *pArray)
-    {
-        while (pArray->name)
-        {
-            if (!_wcsicmp(pName, pArray->name))
-                return pArray->value;
-
-            pArray++;
-        }
-
-        return 0;
-    }
-
-#if USE_WILDCARD
-    void SearchForFiles(const std::filesystem::path& path, std::list<SConversion>& files, bool recursive)
-    {
-        // Process files
-        WIN32_FIND_DATAW findData = {};
-        ScopedFindHandle hFile(safe_handle(FindFirstFileExW(path.c_str(),
-            FindExInfoBasic, &findData,
-            FindExSearchNameMatch, nullptr,
-            FIND_FIRST_EX_LARGE_FETCH)));
-        if (hFile)
-        {
-            for (;;)
-            {
-                if (!(findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY)))
-                {
-                    SConversion conv = {};
-                    conv.szSrc = path.parent_path().append(findData.cFileName).wstring();
-                    files.push_back(conv);
-                }
-
-                if (!FindNextFileW(hFile.get(), &findData))
-                    break;
-            }
-        }
-
-        // Process directories
-        if (recursive)
-        {
-            auto searchDir = path.parent_path().append(L"*");
-
-            hFile.reset(safe_handle(FindFirstFileExW(searchDir.c_str(),
-                FindExInfoBasic, &findData,
-                FindExSearchLimitToDirectories, nullptr,
-                FIND_FIRST_EX_LARGE_FETCH)));
-            if (!hFile)
-                return;
-
-            for (;;)
-            {
-                if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    if (findData.cFileName[0] != L'.')
-                    {
-                        auto subdir = path.parent_path().append(findData.cFileName).append(path.filename().c_str());
-
-                        SearchForFiles(subdir, files, recursive);
-                    }
-                }
-
-                if (!FindNextFileW(hFile.get(), &findData))
-                    break;
-            }
-        }
-    }
-#endif
-
-    void ProcessFileList(std::wifstream& inFile, std::list<SConversion>& files)
-    {
-        std::list<SConversion> flist;
-        std::set<std::wstring> excludes;
-
-        for (;;)
-        {
-            std::wstring fname;
-            std::getline(inFile, fname);
-            if (!inFile)
-                break;
-
-            if (fname[0] == L'#')
-            {
-                // Comment
-            }
-            else if (fname[0] == L'-')
-            {
-                if (flist.empty())
-                {
-                    wprintf(L"WARNING: Ignoring the line '%ls' in -flist\n", fname.c_str());
-                }
-                else
-                {
-                    std::filesystem::path path(fname.c_str() + 1);
-                    auto& npath = path.make_preferred();
-                    if (wcspbrk(fname.c_str(), L"?*") != nullptr)
-                    {
-                    #if USE_WILDCARD
-                        std::list<SConversion> removeFiles;
-                        SearchForFiles(npath, removeFiles, false);
-
-                        for (auto& it : removeFiles)
-                        {
-                            std::wstring name = it.szSrc;
-                            std::transform(name.begin(), name.end(), name.begin(), towlower);
-                            excludes.insert(name);
-                        }
-                    #else
-                        wprintf(L"WARNING: Wildcard is not supported. (%ls)", fname.c_str());
-                    #endif
-                    }
-                    else
-                    {
-                        std::wstring name = npath.wstring().c_str();
-                        std::transform(name.begin(), name.end(), name.begin(), towlower);
-                        excludes.insert(name);
-                    }
-                }
-            }
-            else if (wcspbrk(fname.c_str(), L"?*") != nullptr)
-            {
-            #if USE_WILDCARD
-                std::filesystem::path path(fname.c_str());
-                SearchForFiles(path.make_preferred(), flist, false);
-            #else
-                wprintf(L"WARNING: Wildcard is not supported. (%ls)", fname.c_str());
-            #endif
-            }
-            else
-            {
-                SConversion conv = {};
-                std::filesystem::path path(fname.c_str());
-                conv.szSrc = path.make_preferred().wstring();
-                flist.push_back(conv);
-            }
-        }
-
-        inFile.close();
-
-        if (!excludes.empty())
-        {
-            // Remove any excluded files
-            for (auto it = flist.begin(); it != flist.end();)
-            {
-                std::wstring name = it->szSrc;
-                std::transform(name.begin(), name.end(), name.begin(), towlower);
-                auto item = it;
-                ++it;
-                if (excludes.find(name) != excludes.end())
-                {
-                    flist.erase(item);
-                }
-            }
-        }
-
-        if (flist.empty())
-        {
-            wprintf(L"WARNING: No file names found in -flist\n");
-        }
-        else
-        {
-            files.splice(files.end(), flist);
-        }
-    }
-
-    void PrintFormat(DXGI_FORMAT Format)
-    {
-        for (auto pFormat = g_pFormats; pFormat->name; pFormat++)
-        {
-            if (static_cast<DXGI_FORMAT>(pFormat->value) == Format)
-            {
-                wprintf(L"%ls", pFormat->name);
-                break;
-            }
-        }
-    }
-
     void PrintInfo(const TexMetadata& info)
     {
         wprintf(L" (%zux%zu", info.width, info.height);
@@ -658,7 +490,7 @@ namespace
             wprintf(L",%zu", info.arraySize);
 
         wprintf(L" ");
-        PrintFormat(info.format);
+        PrintFormat(info.format, g_pFormats);
 
         switch (info.dimension)
         {
@@ -703,119 +535,13 @@ namespace
         wprintf(L")");
     }
 
-    void PrintList(size_t cch, const SValue *pValue)
-    {
-        while (pValue->name)
-        {
-            const size_t cchName = wcslen(pValue->name);
-
-            if (cch + cchName + 2 >= 80)
-            {
-                wprintf(L"\n      ");
-                cch = 6;
-            }
-
-            wprintf(L"%ls ", pValue->name);
-            cch += cchName + 2;
-            pValue++;
-        }
-
-        wprintf(L"\n");
-    }
-
-    void PrintLogo(bool versionOnly)
-    {
-        wchar_t version[32] = {};
-
-    #ifdef _WIN32
-        wchar_t appName[_MAX_PATH] = {};
-        if (GetModuleFileNameW(nullptr, appName, _MAX_PATH))
-        {
-            const DWORD size = GetFileVersionInfoSizeW(appName, nullptr);
-            if (size > 0)
-            {
-                auto verInfo = std::make_unique<uint8_t[]>(size);
-                if (GetFileVersionInfoW(appName, 0, size, verInfo.get()))
-                {
-                    LPVOID lpstr = nullptr;
-                    UINT strLen = 0;
-                    if (VerQueryValueW(verInfo.get(), L"\\StringFileInfo\\040904B0\\ProductVersion", &lpstr, &strLen))
-                    {
-                        wcsncpy_s(version, reinterpret_cast<const wchar_t*>(lpstr), strLen);
-                    }
-                }
-            }
-        }
-    #endif
-
-        if (!*version || wcscmp(version, L"1.0.0.0") == 0)
-        {
-            swprintf_s(version, 31, L"%03d (library)", DIRECTX_TEX_VERSION);
-        }
-
-        if (versionOnly)
-        {
-            wprintf(L"texassemble version %ls\n", version);
-        }
-        else
-        {
-            wprintf(L"Microsoft (R) DirectX Texture Assembler [DirectXTex] Version %ls\n", version);
-            wprintf(L"Copyright (C) Microsoft Corp.\n");
-        #ifdef _DEBUG
-            wprintf(L"*** Debug build ***\n");
-        #endif
-            wprintf(L"\n");
-        }
-    }
-
-    const wchar_t* GetErrorDesc(HRESULT hr)
-    {
-    #ifdef _WIN32
-        static wchar_t desc[1024] = {};
-
-        LPWSTR errorText = nullptr;
-
-        const DWORD result = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-            nullptr, static_cast<DWORD>(hr),
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPWSTR>(&errorText), 0, nullptr);
-
-        *desc = 0;
-
-        if (result > 0 && errorText)
-        {
-            swprintf_s(desc, L": %ls", errorText);
-
-            size_t len = wcslen(desc);
-            if (len >= 1)
-            {
-                desc[len - 1] = 0;
-            }
-
-            if (errorText)
-                LocalFree(errorText);
-
-            for (wchar_t* ptr = desc; *ptr != 0; ++ptr)
-            {
-                if (*ptr == L'\r' || *ptr == L'\n')
-                {
-                    *ptr = L' ';
-                }
-            }
-        }
-
-        return desc;
-    #else
-        return L"";
-    #endif
-    }
-
     void PrintUsage()
     {
-        PrintLogo(false);
+        PrintLogo(false, g_ToolName, g_Description);
 
         static const wchar_t* const s_usage =
             L"Usage: texassemble <command> <options> [--] <files>\n"
-            L"\n"
+            L"\nCOMMANDS\n"
             L"   cube                create cubemap\n"
             L"   volume              create volume map\n"
             L"   array               create texture array\n"
@@ -833,34 +559,43 @@ namespace
             L"   cube-from-ht        create cubemap from a h-tee image\n"
             L"   cube-from-hs        create cubemap from a h-strip image\n"
             L"   cube-from-vs        create cubemap from a v-strip image\n"
-            L"\n"
+            L"\nOPTIONS\n"
             L"   -r                  wildcard filename search is recursive\n"
-            L"   -flist <filename>   use text file with a list of input files (one per line)\n"
-            L"   -w <n>              width\n"
-            L"   -h <n>              height\n"
-            L"   -f <format>         format\n"
-            L"   -if <filter>        image filtering\n"
-            L"   -srgb{i|o}          sRGB {input, output}\n"
-            L"   -o <filename>       output filename\n"
-            L"   -l                  force output filename to lower case\n"
-            L"   -y                  overwrite existing output file (if any)\n"
-            L"   -sepalpha           resize alpha channel separately from color channels\n"
+            L"   -flist <filename>, --file-list <filename>\n"
+            L"                       use text file with a list of input files (one per line)\n"
+            L"\n"
+            L"   -w <n>, --width <n>                     width for output\n"
+            L"   -h <n>, --height <n>                    height for output\n"
+            L"   -f <format>, --format <format>          pixel format for output\n"
+            L"\n"
+            L"   -if <filter>, --image-filter <filter>   image filtering\n"
+            L"   -srgb{i|o}, --srgb-in, --srgb-out       sRGB {input, output}\n"
+            L"\n"
+            L"   -o <filename>                           output filename\n"
+            L"   -l, --to-lowercase                      force output filename to lower case\n"
+            L"   -y, --overwrite                         overwrite existing output file (if any)\n"
+            L"\n"
+            L"   -sepalpha, --separate-alpha   resize/generate mips alpha channel separately from color channels\n"
+            L"\n"
             L"   -nowic              Force non-WIC filtering\n"
             L"   -wrap, -mirror      texture addressing mode (wrap, mirror, or clamp)\n"
             L"   -alpha              convert premultiplied alpha to straight alpha\n"
             L"   -dx10               Force use of 'DX10' extended header\n"
             L"   -nologo             suppress copyright message\n"
-            L"   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n"
+            L"\n"
+            L"   -fl <feature-level>, --feature-level <feature-level>\n"
+            L"                       Set maximum feature level target (defaults to 11.0)\n"
+            L"\n"
             L"   -tonemap            Apply a tonemap operator based on maximum luminance\n"
             L"\n"
             L"                       (gif only)\n"
-            L"   -bgcolor            Use background color instead of transparency\n"
+            L"   --gif-bg-color      Use background color instead of transparency\n"
             L"\n"
             L"                       (merge only)\n"
-            L"   -swizzle <rgba>     Select channels for merge (defaults to rgbB)\n"
+            L"   --swizzle <rgba>    Select channels for merge (defaults to rgbB)\n"
             L"\n"
             L"                       (cube, volume, array, cubearray, merge only)\n"
-            L"   -stripmips          Use only base image from input dds files\n"
+            L"   --strip-mips        Use only base image from input dds files\n"
             L"\n"
             L"   '-- ' is needed if any input filepath starts with the '-' or '/' character\n";
 
@@ -891,18 +626,18 @@ namespace
         case CODEC_HDR:
             return SaveToHDRFile(img, szOutputFile);
 
-    #ifdef USE_OPENEXR
+        #ifdef USE_OPENEXR
         case CODEC_EXR:
             return SaveToEXRFile(img, szOutputFile);
-    #endif
-    #ifdef USE_LIBJPEG
+        #endif
+        #ifdef USE_LIBJPEG
         case CODEC_JPEG:
             return SaveToJPEGFile(img, szOutputFile);
-    #endif
-    #ifdef USE_LIBPNG
+        #endif
+        #ifdef USE_LIBPNG
         case CODEC_PNG:
             return SaveToPNGFile(img, szOutputFile);
-    #endif
+        #endif
 
         default:
             {
@@ -1107,6 +842,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
     std::wstring outputFile;
 
+    // Initialize COM (needed for WIC)
     HRESULT hr = S_OK;
 
     // Process command line
@@ -1116,11 +852,12 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         return 0;
     }
 
+    // check for these before the command
     if (('-' == argv[0][0]) && ('-' == argv[0][1]))
     {
         if (!_wcsicmp(argv[0], L"--version"))
         {
-            PrintLogo(true);
+            PrintLogo(true, g_ToolName, g_Description);
             return 0;
         }
         else if (!_wcsicmp(argv[0], L"--help"))
@@ -1165,54 +902,94 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     std::list<SConversion> conversion;
     bool allowOpts = true;
 
-    for (int iArg = 1; iArg < argc; iArg++)
+    for (int iArg = 1; iArg < argc; ++iArg)
     {
         PWSTR pArg = argv[iArg];
 
-        if (allowOpts
-            && ('-' == pArg[0]) && ('-' == pArg[1]))
+        if (allowOpts && (('-' == pArg[0]) || ('/' == pArg[0])))
         {
-            if (pArg[2] == 0)
+            uint32_t dwOption = 0;
+            PWSTR pValue = nullptr;
+
+            if (('-' == pArg[0]) && ('-' == pArg[1]))
             {
-                // "-- " is the POSIX standard for "end of options" marking to escape the '-' and '/' characters at the start of filepaths.
-                allowOpts = false;
-            }
-            else if (!_wcsicmp(pArg, L"--version"))
-            {
-                PrintLogo(true);
-                return 0;
-            }
-            else if (!_wcsicmp(pArg, L"--help"))
-            {
-                PrintUsage();
-                return 0;
+                if (pArg[2] == 0)
+                {
+                    // "-- " is the POSIX standard for "end of options" marking to escape the '-' and '/' characters at the start of filepaths.
+                    allowOpts = false;
+                    continue;
+                }
+                else
+                {
+                    pArg += 2;
+
+                    for (pValue = pArg; *pValue && (':' != *pValue) && ('=' != *pValue); ++pValue);
+
+                    if (*pValue)
+                        *pValue++ = 0;
+
+                    dwOption = LookupByName(pArg, g_pOptionsLong);
+                }
             }
             else
             {
-                RaiseError(L"Unknown option: %ls\n", pArg);
-                return 1;
+                pArg++;
+
+                for (pValue = pArg; *pValue && (':' != *pValue) && ('=' != *pValue); ++pValue);
+
+                if (*pValue)
+                    *pValue++ = 0;
+
+                dwOption = LookupByName(pArg, g_pOptions);
+
+                if (!dwOption)
+                {
+                    if (LookupByName(pArg, g_pOptionsLong))
+                    {
+                        RaiseError(L"ERROR: did you mean `--%ls` (with two dashes)?\n", pArg);
+                        return 1;
+                    }
+                }
             }
-        }
-        else if (allowOpts
-            && (('-' == pArg[0]) || ('/' == pArg[0])))
-        {
-            pArg++;
-            PWSTR pValue;
 
-            for (pValue = pArg; *pValue && (':' != *pValue); pValue++);
-
-            if (*pValue)
-                *pValue++ = 0;
-
-            const uint32_t dwOption = LookupByName(pArg, g_pOptions);
-
-            if (!dwOption || (dwOptions & (1 << dwOption)))
+            switch (dwOption)
             {
-                PrintUsage();
+            case 0:
+                RaiseError(L"ERROR: Unknown option: `%ls`\n\nUse %ls --help\n", pArg, g_ToolName);
                 return 1;
-            }
 
-            dwOptions |= 1 << dwOption;
+            case OPT_FILELIST:
+            case OPT_WIDTH:
+            case OPT_HEIGHT:
+            case OPT_FORMAT:
+            case OPT_FILTER:
+            case OPT_SRGBI:
+            case OPT_SRGBO:
+            case OPT_SRGB:
+            case OPT_OUTPUTFILE:
+            case OPT_FEATURE_LEVEL:
+            case OPT_SWIZZLE:
+                // These don't use flag bits
+                break;
+
+            case OPT_VERSION:
+                PrintLogo(true, g_ToolName, g_Description);
+                return 0;
+
+            case OPT_HELP:
+                PrintUsage();
+                return 0;
+
+            default:
+                if (dwOptions & (UINT32_C(1) << dwOption))
+                {
+                    RaiseError(L"ERROR: Duplicate option: `%ls`\n\n", pArg);
+                    return 1;
+                }
+
+                dwOptions |= (UINT32_C(1) << dwOption);
+                break;
+            }
 
             // Handle options with additional value parameter
             switch (dwOption)
@@ -1375,8 +1152,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 maxVolume = LookupByName(pValue, g_pFeatureLevelsVolume);
                 if (!maxSize || !maxCube || !maxArray || !maxVolume)
                 {
-                    RaiseError(L"Invalid value specified with -fl (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    RaiseError(L"Invalid value specified with -fl (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1434,14 +1210,15 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         #if USE_WILDCARD
             const size_t count = conversion.size();
             std::filesystem::path path(pArg);
-            SearchForFiles(path.make_preferred(), conversion, (dwOptions & (1 << OPT_RECURSIVE)) != 0);
+            SearchForFiles(path.make_preferred(), conversion, (dwOptions & (UINT32_C(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
                 RaiseError(L"No matching files found for %ls\n", pArg);
                 return 1;
             }
         #else
-            wprintf(L"WARNING: Wildcard is not supported. (%ls)", pArg);
+            wprintf(L"Wildcard is not supported. (%ls)", pArg);
+            return 1;
         #endif
         }
         else
@@ -1460,8 +1237,8 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
     }
 
 #if BUILD_AS_EXE
-    if (~dwOptions & (1 << OPT_NOLOGO))
-        PrintLogo(false);
+    if (~dwOptions & (UINT32_C(1) << OPT_NOLOGO))
+        PrintLogo(false, g_ToolName, g_Description);
 #endif
 
     switch (dwCommand)
@@ -1517,7 +1294,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         }
 
     #if USE_WIC
-        hr = LoadAnimatedGif(curpath.wstring().c_str(), loadedImages, (dwOptions & (1 << OPT_GIF_BGCOLOR)) != 0);
+        hr = LoadAnimatedGif(curpath.wstring().c_str(), loadedImages, (dwOptions & (UINT32_C(1) << OPT_GIF_BGCOLOR)) != 0);
     #else
         hr = E_FAIL;
     #endif
@@ -1533,7 +1310,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
         for (auto pConv = conversion.begin(); pConv != conversion.end(); ++pConv)
         {
             std::filesystem::path curpath(pConv->szSrc);
-            auto const ext = curpath.extension();
+            const auto ext = curpath.extension();
 
             // Load source image
             if (pConv != conversion.begin())
@@ -1647,7 +1424,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                         RaiseError(L"\nERROR: Can't assemble complex surfaces\n");
                         return 1;
                     }
-                    else if ((info.mipLevels > 1) && ((dwOptions & (1 << OPT_STRIP_MIPS)) == 0))
+                    else if ((info.mipLevels > 1) && ((dwOptions & (UINT32_C(1) << OPT_STRIP_MIPS)) == 0))
                     {
                         switch (dwCommand)
                         {
@@ -1661,7 +1438,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
                         default:
                             break;
-                       }
+                        }
                     }
                 }
                 else if (_wcsicmp(ext.wstring().c_str(), L".tga") == 0)
@@ -1833,7 +1610,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             }
 
             // --- Strip Mips (if requested) -----------------------------------------------
-            if ((info.mipLevels > 1) && (dwOptions & (1 << OPT_STRIP_MIPS)))
+            if ((info.mipLevels > 1) && (dwOptions & (UINT32_C(1) << OPT_STRIP_MIPS)))
             {
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
@@ -1883,7 +1660,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             }
 
             // --- Undo Premultiplied Alpha (if requested) ---------------------------------
-            if ((dwOptions & (1 << OPT_DEMUL_ALPHA))
+            if ((dwOptions & (UINT32_C(1) << OPT_DEMUL_ALPHA))
                 && HasAlpha(info.format)
                 && info.format != DXGI_FORMAT_A8_UNORM)
             {
@@ -1891,7 +1668,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 {
                     printf("\nWARNING: Image is already using straight alpha\n");
                 }
-                else if (!info.IsPMAlpha())
+                else if (!info.IsPMAlpha() && info.GetAlphaMode() != TEX_ALPHA_MODE_UNKNOWN)
                 {
                     printf("\nWARNING: Image is not using premultipled alpha\n");
                 }
@@ -1990,7 +1767,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             }
 
             // --- Tonemap (if requested) --------------------------------------------------
-            if (dwOptions & (1 << OPT_TONEMAP))
+            if (dwOptions & (UINT32_C(1) << OPT_TONEMAP))
             {
                 std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                 if (!timage)
@@ -2310,7 +2087,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = FlipRotate(*img, flipRotate, tmp);
                     if (SUCCEEDED(hr))
                     {
-                        hr = CopyRectangle(*tmp.GetImage(0,0,0), rect, *dest, dwFilter | dwFilterOpts, offsetx, offsety);
+                        hr = CopyRectangle(*tmp.GetImage(0, 0, 0), rect, *dest, dwFilter | dwFilterOpts, offsetx, offsety);
                     }
                 #else
                     RaiseError(L"FlipRotate() requires WIC\n");
@@ -2335,12 +2112,12 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             PrintVerbose(L"\n");
             fflush(stdout);
 
-            if (dwOptions & (1 << OPT_TOLOWER))
+            if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
             {
                 std::transform(outputFile.begin(), outputFile.end(), outputFile.begin(), towlower);
             }
 
-            if (~dwOptions & (1 << OPT_OVERWRITE))
+            if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
                 if (std::filesystem::exists(outputFile))
                 {
@@ -2403,12 +2180,12 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             PrintVerbose(L"\n");
             fflush(stdout);
 
-            if (dwOptions & (1 << OPT_TOLOWER))
+            if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
             {
                 std::transform(outputFile.begin(), outputFile.end(), outputFile.begin(), towlower);
             }
 
-            if (~dwOptions & (1 << OPT_OVERWRITE))
+            if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
                 if (std::filesystem::exists(outputFile))
                 {
@@ -2472,12 +2249,12 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             PrintVerbose(L"\n");
             fflush(stdout);
 
-            if (dwOptions & (1 << OPT_TOLOWER))
+            if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
             {
                 std::transform(outputFile.begin(), outputFile.end(), outputFile.begin(), towlower);
             }
 
-            if (~dwOptions & (1 << OPT_OVERWRITE))
+            if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
                 if (std::filesystem::exists(outputFile))
                 {
@@ -2661,7 +2438,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                     hr = FlipRotate(*dest, flipRotate, tmp);
                     if (SUCCEEDED(hr))
                     {
-                        hr = CopyRectangle(*tmp.GetImage(0,0,0), Rect(0, 0, twidth, theight), *dest, dwFilter | dwFilterOpts, 0, 0);
+                        hr = CopyRectangle(*tmp.GetImage(0, 0, 0), Rect(0, 0, twidth, theight), *dest, dwFilter | dwFilterOpts, 0, 0);
                     }
                 #else
                     RaiseError(L"FlipRotate() requires WIC\n");
@@ -2676,12 +2453,12 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             PrintVerbose(L"\n");
             fflush(stdout);
 
-            if (dwOptions & (1 << OPT_TOLOWER))
+            if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
             {
                 std::transform(outputFile.begin(), outputFile.end(), outputFile.begin(), towlower);
             }
 
-            if (~dwOptions & (1 << OPT_OVERWRITE))
+            if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
                 if (std::filesystem::exists(outputFile))
                 {
@@ -2691,7 +2468,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             }
 
             hr = SaveToDDSFile(result.GetImages(), result.GetImageCount(), result.GetMetadata(),
-                (dwOptions & (1 << OPT_USE_DX10)) ? (DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2) : DDS_FLAGS_NONE,
+                (dwOptions & (UINT32_C(1) << OPT_USE_DX10)) ? (DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2) : DDS_FLAGS_NONE,
                 outputFile.c_str());
             if (FAILED(hr))
             {
@@ -2734,12 +2511,12 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             PrintVerbose(L"\n");
             fflush(stdout);
 
-            if (dwOptions & (1 << OPT_TOLOWER))
+            if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
             {
                 std::transform(outputFile.begin(), outputFile.end(), outputFile.begin(), towlower);
             }
 
-            if (~dwOptions & (1 << OPT_OVERWRITE))
+            if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
                 if (std::filesystem::exists(outputFile))
                 {
@@ -2749,7 +2526,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             }
 
             hr = SaveToDDSFile(result.GetImages(), result.GetImageCount(), result.GetMetadata(),
-                (dwOptions & (1 << OPT_USE_DX10)) ? (DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2) : DDS_FLAGS_NONE,
+                (dwOptions & (UINT32_C(1) << OPT_USE_DX10)) ? (DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2) : DDS_FLAGS_NONE,
                 outputFile.c_str());
             if (FAILED(hr))
             {
@@ -2823,7 +2600,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
 
             case CMD_ARRAY:
             case CMD_GIF:
-                hr = result.InitializeArrayFromImages(&imageArray[0], imageArray.size(), (dwOptions & (1 << OPT_USE_DX10)) != 0);
+                hr = result.InitializeArrayFromImages(&imageArray[0], imageArray.size(), (dwOptions & (UINT32_C(1) << OPT_USE_DX10)) != 0);
                 break;
 
             case CMD_CUBE:
@@ -2847,12 +2624,12 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             PrintVerbose(L"\n");
             fflush(stdout);
 
-            if (dwOptions & (1 << OPT_TOLOWER))
+            if (dwOptions & (UINT32_C(1) << OPT_TOLOWER))
             {
                 std::transform(outputFile.begin(), outputFile.end(), outputFile.begin(), towlower);
             }
 
-            if (~dwOptions & (1 << OPT_OVERWRITE))
+            if (~dwOptions & (UINT32_C(1) << OPT_OVERWRITE))
             {
                 if (std::filesystem::exists(outputFile))
                 {
@@ -2862,7 +2639,7 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
             }
 
             hr = SaveToDDSFile(result.GetImages(), result.GetImageCount(), result.GetMetadata(),
-                (dwOptions & (1 << OPT_USE_DX10)) ? (DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2) : DDS_FLAGS_NONE,
+                (dwOptions & (UINT32_C(1) << OPT_USE_DX10)) ? (DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2) : DDS_FLAGS_NONE,
                 outputFile.c_str());
             if (FAILED(hr))
             {

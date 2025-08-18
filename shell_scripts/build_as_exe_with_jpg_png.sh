@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Builds executables with cmake.
 # texconv and texassemble will be generated in ./Texconv-Custom-DLL/
 

@@ -25,7 +25,7 @@ ARG JPGPNG=false
 
 # Install packages
 RUN apk update && \
-    apk add --no-cache musl-dev gcc make g++ file alpine-sdk cmake wget bash && \
+    apk add --no-cache musl-dev gcc make g++ file alpine-sdk wget bash && \
     if [ "$JPGPNG" = "true" ]; then \
         apk add --no-cache libjpeg-turbo-dev libpng-dev; \
     fi
@@ -38,9 +38,9 @@ RUN git submodule update --init --recursive --recommend-shallow --depth 1
 # Build
 WORKDIR /Texconv-Custom-DLL/shell_scripts
 RUN if [ "$JPGPNG" = "true" ]; then \
-        bash build_with_jpg_png.sh && \
-        bash build_as_exe_with_jpg_png.sh; \
+        ./build_with_jpg_png.sh && \
+        ./build_as_exe_with_jpg_png.sh; \
     else \
-        bash build.sh && \
-        bash build_as_exe.sh; \
+        ./build.sh && \
+        ./build_as_exe.sh; \
     fi

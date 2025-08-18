@@ -27,8 +27,8 @@ It downloads DirectX related files on the repository.
 ## 2. Build the binary with a shell script
 
 You can build `libtexconv.so` (or `libtexconv.dylib`) with a shell script.  
-Run `bash shell_scripts/build.sh` on the terminal.  
-(Or run `bash shell_scripts/build_with_jpg_png.sh` to support `.jpg` and `.png`.)  
+Run `./shell_scripts/build.sh` on the terminal.  
+(Or run `./shell_scripts/build_with_jpg_png.sh` to support `.jpg` and `.png`.)  
 It generates `libtexconv.so` (or `libtexconv.dylib`) in `./Texconv-Custom-DLL/`.  
 
 ## 3. Build executables (optional)

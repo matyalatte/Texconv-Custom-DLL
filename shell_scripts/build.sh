@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Builds texconv with cmake.
 # libtexconv.so or libtexconv.dylib will be generated in ./Texconv-Custom-DLL/
 

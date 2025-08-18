@@ -98,14 +98,14 @@ jobs:
       - name: build texconv
         if: matrix.use_libs == false
         run: |
-          bash shell_scripts/build.sh
-          bash shell_scripts/build_as_exe.sh
+          ./shell_scripts/build.sh
+          ./shell_scripts/build_as_exe.sh
 
       - name: build texconv with libjpeg and libpng
         if: matrix.use_libs == true
         run: |
-          bash shell_scripts/build_with_jpg_png.sh
-          bash shell_scripts/build_as_exe_with_jpg_png.sh
+          ./shell_scripts/build_with_jpg_png.sh
+          ./shell_scripts/build_as_exe_with_jpg_png.sh
 
       - name: Copy files
         run: |

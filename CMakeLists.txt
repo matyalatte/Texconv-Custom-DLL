@@ -74,7 +74,7 @@ endif()
 
 # setup for mac
 if(APPLE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "" FORCE)
 endif()
 
 include(GNUInstallDirs)

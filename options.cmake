@@ -31,8 +31,9 @@ if(NOT WIN32)
 endif()
 
 if(APPLE)
-  # support macOS 10.15 or later
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
+  # support macOS 11.0 or later
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "" FORCE)
+  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
   # Avoid to link to png.h for Mono
   # https://stackoverflow.com/questions/36523911/osx-homebrew-cmake-libpng-version-mismatch-issue
   set(CMAKE_FIND_FRAMEWORK LAST)

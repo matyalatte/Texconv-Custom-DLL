@@ -295,13 +295,85 @@ elseif(BUILD_XBOX_EXTS_XBOXONE AND WIN32)
 endif()
 
 if(ENABLE_LIBJPEG_SUPPORT)
-  find_package(JPEG REQUIRED)
-  target_link_libraries(${PROJECT_NAME} PUBLIC JPEG::JPEG)
+    if(TEXCONV_USE_STATIC_LINK)
+        # Build static binary as PIC
+        include(ExternalProject)
+
+        set(JPEG_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libjpeg-turbo-install)
+        set(JPEG_LIB_DIR ${JPEG_INSTALL_PREFIX}/lib)
+        set(JPEG_INCLUDE_DIR ${JPEG_INSTALL_PREFIX}/include)
+
+        # Note: libjpeg-turbo does not support FetchContent_Declare().
+        ExternalProject_Add(
+            libjpeg-turbo
+            GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
+            GIT_TAG 3.1.3
+            CMAKE_ARGS
+                -DCMAKE_INSTALL_PREFIX=${JPEG_INSTALL_PREFIX}
+                -DENABLE_SHARED=OFF
+                -DENABLE_STATIC=ON
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+                -DCMAKE_C_VISIBILITY_PRESET=hidden
+                -DWITH_TURBOJPEG=OFF
+                -DWITH_TOOLS=OFF
+                -DWITH_TESTS=OFF
+            BUILD_BYPRODUCTS
+                ${JPEG_LIB_DIR}/libjpeg.a
+        )
+        ExternalProject_Get_Property(libjpeg-turbo BINARY_DIR SOURCE_DIR)
+        add_library(libjpeg_turbo_static STATIC IMPORTED)
+        file(MAKE_DIRECTORY ${JPEG_INCLUDE_DIR})
+        target_include_directories(libjpeg_turbo_static INTERFACE ${JPEG_INCLUDE_DIR})
+        set_target_properties(libjpeg_turbo_static PROPERTIES IMPORTED_LOCATION ${JPEG_LIB_DIR}/libjpeg.a)
+        add_dependencies(libjpeg_turbo_static libjpeg-turbo)
+        add_library(JPEG::JPEG ALIAS libjpeg_turbo_static)
+    else()
+        find_package(JPEG REQUIRED)
+    endif()
+    target_link_libraries(${PROJECT_NAME} PUBLIC JPEG::JPEG)
 endif()
 
 if(ENABLE_LIBPNG_SUPPORT)
-  find_package(PNG REQUIRED)
-  target_link_libraries(${PROJECT_NAME} PUBLIC PNG::PNG)
+    if(TEXCONV_USE_STATIC_LINK)
+        include(FetchContent)
+
+        # Note: zlib is pre-installed on macOS.
+        if(NOT APPLE)
+            set(ZLIB_BUILD_SHARED   OFF CACHE BOOL "" FORCE)
+            set(ZLIB_BUILD_STATIC   ON  CACHE BOOL "" FORCE)
+            set(ZLIB_BUILD_TESTING  OFF CACHE BOOL "" FORCE)
+
+            FetchContent_Declare(
+                zlib
+                GIT_REPOSITORY https://github.com/madler/zlib.git
+                GIT_TAG v1.3.1.2
+            )
+            FetchContent_MakeAvailable(zlib)
+            add_library(ZLIB::ZLIB ALIAS zlibstatic)
+            set(ZLIB_FOUND TRUE)
+            set(ZLIB_INCLUDE_DIR  "${zlib_SOURCE_DIR}")
+            set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR}")
+            set(ZLIB_LIBRARY  zlibstatic)
+            set(ZLIB_LIBRARIES zlibstatic)
+            set(PNG_USE_SYSTEM_ZLIB OFF CACHE BOOL "" FORCE)
+        endif()
+
+        set(PNG_SHARED OFF CACHE BOOL "" FORCE)
+        set(PNG_TESTS  OFF CACHE BOOL "" FORCE)
+        set(PNG_TOOLS  OFF CACHE BOOL "" FORCE)
+
+        FetchContent_Declare(
+            libpng
+            GIT_REPOSITORY https://github.com/pnggroup/libpng.git
+            GIT_TAG v1.6.54
+        )
+
+        FetchContent_MakeAvailable(libpng)
+        add_library(PNG::PNG ALIAS png_static)
+    else()
+        find_package(PNG REQUIRED)
+    endif()
+    target_link_libraries(${PROJECT_NAME} PUBLIC PNG::PNG)
 endif()
 
 if(NOT MINGW)

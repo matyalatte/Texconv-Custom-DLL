@@ -27,7 +27,7 @@ ARG JPGPNG=false
 RUN apk update && \
     apk add --no-cache musl-dev gcc make g++ file alpine-sdk wget bash && \
     if [ "$JPGPNG" = "true" ]; then \
-        apk add --no-cache libjpeg-turbo-dev libpng-dev; \
+        apk add --no-cache libjpeg-turbo-dev libpng-dev nasm; \
     fi
 
 # Clone repo

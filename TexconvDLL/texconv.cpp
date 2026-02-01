@@ -196,6 +196,7 @@ namespace
     {
         FORMAT_DXT5_NM = 1,
         FORMAT_DXT5_RXGB,
+        FORMAT_24BPP_LEGACY,
     };
 
     static_assert(OPT_FLAGS_MAX <= 64, "dwOptions is a unsigned int bitfield");
@@ -457,6 +458,7 @@ namespace
         { L"BC3n", FORMAT_DXT5_NM },
         { L"DXT5nm", FORMAT_DXT5_NM },
         { L"RXGB", FORMAT_DXT5_RXGB },
+        { L"RGB24", FORMAT_24BPP_LEGACY },
 
         { nullptr, 0 }
     };
@@ -1321,6 +1323,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     bool keepRecursiveDirs = false;
     bool dxt5nm = false;
     bool dxt5rxgb = false;
+    bool use24bpp = false;
     uint32_t swizzleElements[4] = { 0, 1, 2, 3 };
     uint32_t zeroElements[4] = {};
     uint32_t oneElements[4] = {};
@@ -1527,6 +1530,11 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         case FORMAT_DXT5_RXGB:
                             format = DXGI_FORMAT_BC3_UNORM;
                             dxt5rxgb = true;
+                            break;
+
+                        case FORMAT_24BPP_LEGACY:
+                            format = DXGI_FORMAT_B8G8R8X8_UNORM;
+                            use24bpp = true;
                             break;
 
                         default:
@@ -2216,7 +2224,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     #ifdef USE_LIBJPEG
         else if (_wcsicmp(ext.wstring().c_str(), L".jpg") == 0 || _wcsicmp(ext.wstring().c_str(), L".jpeg") == 0)
         {
-            hr = LoadFromJPEGFile(curpath.wstring().c_str(), &info, *image);
+            JPEG_FLAGS jpegFlags = JPEG_FLAGS_NONE;
+            if (dwOptions & (UINT64_C(1) << OPT_IGNORE_SRGB_METADATA))
+            {
+                jpegFlags |= JPEG_FLAGS_DEFAULT_LINEAR;
+            }
+
+            hr = LoadFromJPEGFile(curpath.wstring().c_str(), jpegFlags, &info, *image);
             if (FAILED(hr))
             {
                 RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -2228,7 +2242,13 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
     #ifdef USE_LIBPNG
         else if (_wcsicmp(ext.wstring().c_str(), L".png") == 0)
         {
-            hr = LoadFromPNGFile(curpath.wstring().c_str(), &info, *image);
+            PNG_FLAGS pngFlags = (IsBGR(format)) ? PNG_FLAGS_BGR : PNG_FLAGS_NONE;
+            if (dwOptions & (UINT64_C(1) << OPT_IGNORE_SRGB_METADATA))
+            {
+                pngFlags |= PNG_FLAGS_IGNORE_SRGB;
+            }
+
+            hr = LoadFromPNGFile(curpath.wstring().c_str(), pngFlags, &info, *image);
             if (FAILED(hr))
             {
                 RaiseError(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -3843,6 +3863,10 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                         {
                             ddsFlags |= DDS_FLAGS_FORCE_DXT5_RXGB;
                         }
+                        else if (use24bpp)
+                        {
+                            ddsFlags |= DDS_FLAGS_FORCE_24BPP_RGB;
+                        }
 
                         ddsFlags |= DDS_FLAGS_FORCE_DX9_LEGACY;
                     }
@@ -3875,12 +3899,12 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
             #endif
             #ifdef USE_LIBJPEG
             case CODEC_JPEG:
-                hr = SaveToJPEGFile(img[0], destName.c_str());
+                hr = SaveToJPEGFile(img[0], JPEG_FLAGS_NONE, destName.c_str());
                 break;
             #endif
             #ifdef USE_LIBPNG
             case CODEC_PNG:
-                hr = SaveToPNGFile(img[0], destName.c_str());
+                hr = SaveToPNGFile(img[0], PNG_FLAGS_NONE, destName.c_str());
                 break;
             #endif
 

@@ -21,15 +21,15 @@ jobs:
       - name: build texconv
         if: matrix.use_libs == false
         run: |
-          ./shell_scripts/build.sh
-          ./shell_scripts/build_as_exe.sh
+          ./shell_scripts/build_universal.sh
+          ./shell_scripts/build_universal.sh --build-as-exe
 
       - name: build texconv with libjpeg and libpng
         if: matrix.use_libs == true
         run: |
           brew install nasm
-          ./shell_scripts/build_with_jpg_png.sh
-          ./shell_scripts/build_as_exe_with_jpg_png.sh
+          ./shell_scripts/build_universal.sh --use-optional-formats
+          ./shell_scripts/build_universal.sh --use-optional-formats --build-as-exe
 
       - name: Copy files
         run: |
@@ -41,7 +41,7 @@ jobs:
           cp LICENSE release/${{ env.ZIP_NAME }}
           cp THIRD_PARTY_LICENSES.txt release/${{ env.ZIP_NAME }}
           cd release
-          tar -Jcvf ${{ env.ZIP_NAME }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.xz ${{ env.ZIP_NAME }}
+          tar -Jcvf ${{ env.ZIP_NAME }}-${{ runner.os }}-universal${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.xz ${{ env.ZIP_NAME }}
 
       - name: Create Release Draft
         id: create-release
@@ -59,4 +59,4 @@ jobs:
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref }} release/${{ env.ZIP_NAME }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.xz
+        run: gh release upload ${{ github.ref }} release/${{ env.ZIP_NAME }}-${{ runner.os }}-universal${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.xz

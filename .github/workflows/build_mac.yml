@@ -21,15 +21,15 @@ jobs:
       - name: build texconv
         if: matrix.use_libs == false
         run: |
-          ./shell_scripts/build_universal.sh
-          ./shell_scripts/build_universal.sh --build-as-exe
+          ./shell_scripts/build.sh --universal
+          ./shell_scripts/build.sh --universal --build-as-exe
 
       - name: build texconv with libjpeg and libpng
         if: matrix.use_libs == true
         run: |
           brew install nasm
-          ./shell_scripts/build_universal.sh --use-optional-formats
-          ./shell_scripts/build_universal.sh --use-optional-formats --build-as-exe
+          ./shell_scripts/build.sh --universal --use-optional-formats
+          ./shell_scripts/build.sh --universal --use-optional-formats --build-as-exe
 
       - name: Copy files
         run: |

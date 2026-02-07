@@ -1,15 +1,142 @@
 #!/usr/bin/env bash
-# Builds texconv with cmake.
-# libtexconv.so or libtexconv.dylib will be generated in ./Texconv-Custom-DLL/
+# Builds texconv with cmake
+# and copy it to the project root (Texconv-Custom-DLL/)
 
-pushd $(dirname "$0")/../
-mkdir build
-cd build
-cmake \
-  -D CMAKE_BUILD_TYPE=Release\
-  -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
-  -D TEXCONV_USE_ALL=ON\
-  ../
-cmake --build .
-cp lib/libtexconv.* ../
-popd
+function usage() {
+cat <<EOF
+Usage: build.sh <options>
+  --build-as-exe          build texconv and texassemble as executables
+  --use-optional-formats  use 3rd party libraries to support non-DDS formats
+  --use-dynamic-link      use dynamic linked 3rd party libraries
+  --debug                 enable debug build
+  --universal             build universal binary for macOS
+  --no-texassemble        do not build texassemble
+
+  Examples:
+    build.sh
+      -> generates libtexconv.so in the project root (Texconv-Custom-DLL/)
+    build.sh --build-as-exe
+      -> generates texconv and texassemble in the project root.
+    build.sh --use-optional-formats
+      -> generates libtexconv.so with JPEG and PNG support.
+    build.sh --use-optional-formats --build-as-exe
+      -> generates texconv and texassemble with JPEG and PNG support.
+EOF
+}
+
+cmake_options=(
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+)
+debug=false
+build_universal=false
+use_dynamic_link=false
+use_optional_formats=false
+build_as_exe=false
+use_texassemble=true
+build_dir=build
+
+for arg in "$@"; do
+  case "$arg" in
+    --debug)
+      debug=true
+      ;;
+    --universal)
+      if [[ "$(uname -s)" == "Darwin" ]]; then
+        build_universal=true
+      fi
+      ;;
+    --use-dynamic-link)
+      use_dynamic_link=true
+      ;;
+    --use-optional-formats)
+      use_optional_formats=true
+      cmake_options+=(
+        -DENABLE_LIBJPEG_SUPPORT=ON
+        -DENABLE_LIBPNG_SUPPORT=ON
+      )
+      ;;
+    --build-as-exe)
+      build_as_exe=true
+      cmake_options+=(-DTEXCONV_BUILD_AS_EXE=ON)
+      build_dir=build_exe
+      ;;
+    --no-texassemble)
+      use_texassemble=false
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Error: unexpected argument: ${arg}"
+      usage
+      exit 1
+      ;;
+  esac
+done
+if $debug; then
+  cmake_options+=(-DCMAKE_BUILD_TYPE=Debug)
+else
+  cmake_options+=(-DCMAKE_BUILD_TYPE=Release)
+fi
+if $use_dynamic_link; then
+  cmake_options+=(-DTEXCONV_USE_STATIC_LINK=OFF)
+else
+  if $use_optional_formats; then
+    if ! command -v nasm >/dev/null 2>&1; then
+        echo "Error: libjpeg requires nasm to build SIMD extension."
+        exit 1
+    fi
+  fi
+  cmake_options+=(-DTEXCONV_USE_STATIC_LINK=ON)
+fi
+if $use_texassemble; then
+  cmake_options+=(-DTEXCONV_USE_TEXASSEMBLE=ON)
+else
+  cmake_options+=(-DTEXCONV_USE_TEXASSEMBLE=OFF)
+fi
+
+cross_build() {
+  # cross compile for macOS
+  local arch=$1
+  mkdir -p "${build_dir}_${arch}"
+  cd "${build_dir}_${arch}"
+  cmake "${cmake_options[@]}" \
+    -DCMAKE_SYSTEM_PROCESSOR="$arch" \
+    -DCMAKE_OSX_ARCHITECTURES="$arch" \
+    ..
+  cmake --build .
+  cd ..
+}
+
+pushd $(dirname "$0")/../ > /dev/null
+  if $build_universal; then
+    cross_build x86_64
+    cross_build arm64
+
+    if $build_as_exe; then
+      lipo -create -output texconv "${build_dir}_x86_64/bin/texconv" "${build_dir}_arm64/bin/texconv"
+      if $use_texassemble; then
+        lipo -create -output texassemble "${build_dir}_x86_64/bin/texassemble" "${build_dir}_arm64/bin/texassemble"
+      fi
+    else
+      lipo -create -output libtexconv.dylib "${build_dir}_x86_64/lib/libtexconv.dylib" "${build_dir}_arm64/lib/libtexconv.dylib"
+    fi
+  else
+    # standard build
+    mkdir -p "${build_dir}"
+    cd "${build_dir}"
+    cmake "${cmake_options[@]}" ../
+    cmake --build .
+
+    # copy binaries
+    if $build_as_exe; then
+      cp bin/texconv ../
+      if $use_texassemble; then
+        cp bin/texassemble ../
+      fi
+    else
+      cp lib/libtexconv.* ../
+    fi
+  fi
+popd > /dev/null

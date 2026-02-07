@@ -45,20 +45,21 @@ Each zip file has a DLL and executables. The executables don't refer the DLL.
 See here if you want to know how to use texconv.  
 [Usage](./Usage.md)  
 
-## How to Build
+## Building
 
 ### Windows
 
 There is a document for Windows users.  
 [Building Workflow for Windows](./Build-on-Windows.md)  
 
-It only supports Visual Studio 2022, but you can see [the batch files](../batch_files/) to find a way to build it with your environment.  
+> [!warning]
+> Currently, we only supports Visual Studio 2022 and MSVC.
+> Other toolchains may require additional effort to resolve issues.
 
 ### Linux and Mac
 
 There is a document for Linux and Mac users.  
 [Building Workflow for Linux and MacOS](./Build-on-Unix.md)  
-And you can see [the shell scripts](../shell_scripts/) to understand the workflow.  
 
 ### Docker
 

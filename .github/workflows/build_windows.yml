@@ -24,7 +24,7 @@ jobs:
       - name: build exe
         run: |
           batch_files/build.bat
-          batch_files/build_as_exe.bat
+          batch_files/build.bat --build-as-exe
 
       - name: Copy files
         run: |

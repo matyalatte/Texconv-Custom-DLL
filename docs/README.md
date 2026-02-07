@@ -37,10 +37,6 @@ Each zip file has a DLL and executables. The executables don't refer the DLL.
 -   `TexconvCustomDLL*-Linux.tar.bz2` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
 
 > [!Note]
-> Linux and macOS builds requrie libjpeg and libpng.  
-> Or use `*-no-deps.tar.bz2` versions that don't support jpg and png.
-
-> [!Note]
 > The linux build only supports distributions using GLIBC.  
 > Build the executable by yourself if you want to use it on unsupported distros.
 

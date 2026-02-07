@@ -4,8 +4,7 @@ You can build texconv on Linux and macOS.
 However, please note that there are some limitations.  
 
 -   Unable to use GPU for conversion.
--   Unable to use WIC supported formats (`.bmp`, `.jpg`, `.png`, etc.)
-    (Or requires libjpeg and libpng to support `.jpg` and `.png`.)
+-   Unable to use WIC supported formats (e.g. `.bmp`) except for `.jpg` and `.png`.
 
 Also, the offical Texconv only supports Windows. I made sure I could build it with the following platforms and compilers but it might not work on your environment.  
 
@@ -18,6 +17,7 @@ Also, the offical Texconv only supports Windows. I made sure I could build it wi
 - cmake
 - git
 - bash
+- nasm (for jpeg support)
 
 ## 1. Get submodules
 
@@ -37,10 +37,3 @@ If you want an executable, use `build_as_exe.sh` instead of `build.sh`.
 (Or use `build_as_exe_with_jpg_png.sh` to support `.jpg` and `.png`.)  
 It generates `texconv` and `texassemble` in `./Texconv-Custom-DLL/`.  
 You can use them on the terminal. (e.g. `./texconv -ft tga -y -o outdir test.dds`)  
-
-## 4. Build universal binary on macOS (optional)
-
-`build_universal.sh` can build universal binary.  
-The built shared library works on both of x64 and arm64 chips.  
-Also, you might be able to add `ENABLE_LIBJPEG_SUPPORT=ON` and `ENABLE_LIBPNG_SUPPORT=ON` to cmake options to support jpeg and png.  
-But they should require universal binaries of libjpeg and libpng.

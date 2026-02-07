@@ -85,9 +85,6 @@ jobs:
         run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-${{ matrix.arch }}.zip
 
   build_macos:
-    strategy:
-      matrix:
-        use_libs: [false, true]
     runs-on: macos-latest
     needs: setup
     steps:
@@ -95,15 +92,9 @@ jobs:
       - run: |
           git submodule update --init --recursive --recommend-shallow --depth 1
 
-      - name: build texconv
-        if: matrix.use_libs == false
-        run: |
-          ./shell_scripts/build.sh
-          ./shell_scripts/build_as_exe.sh
-
       - name: build texconv with libjpeg and libpng
-        if: matrix.use_libs == true
         run: |
+          brew install nasm
           ./shell_scripts/build_with_jpg_png.sh
           ./shell_scripts/build_as_exe_with_jpg_png.sh
 
@@ -116,17 +107,14 @@ jobs:
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
           cd release
-          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
+          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64.tar.bz2 ${{ env.ZIP_NAME }}
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64.tar.bz2
 
   build_linux:
-    strategy:
-      matrix:
-        use_libs: [false, true]
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -136,7 +124,7 @@ jobs:
 
       - name: build texconv
         run: |
-          docker build --build-arg JPGPNG=${{ matrix.use_libs }} -t texconv -f Dockerfile_Ubuntu ./
+          docker build --build-arg JPGPNG=true -t texconv -f Dockerfile_Ubuntu ./
 
       - name: Copy files
         run: |
@@ -148,9 +136,9 @@ jobs:
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
           cd release
-          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
+          tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64.tar.bz2 ${{ env.ZIP_NAME }}
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2
+        run: gh release upload ${{ needs.setup.outputs.tag }} release/${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64.tar.bz2

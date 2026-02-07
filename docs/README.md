@@ -68,5 +68,27 @@ See the files for the details.
 - [Dockerfile_Ubuntu](../Dockerfile_Ubuntu): Build texconv with GCC and glibc on Ubuntu
 - [Dockerfile_Alpine](../Dockerfile_Alpine): Build texconv with GCC and musl on Alpine Linux
 
-## License
-Files in this repository (including all submodules) are licensed under [MIT license](../LICENSE).
+## Licenses
+
+The original source code of this repository is licensed
+under the MIT License (see [LICENSE](../LICENSE)).
+
+This project includes third-party software, which is licensed under its own
+respective licenses. When redistributing binaries, you must retain
+[THIRD_PARTY_LICENSES.txt](./THIRD_PARTY_LICENSES.txt) to comply with those
+licenses.
+
+See [THIRD_PARTY_LICENSES.txt](./THIRD_PARTY_LICENSES.txt) for full license texts
+and copyright notices.
+
+### Third-party components
+
+| Project | License | Included in |
+|--------|--------|-------------|
+| [DirectXTex](https://github.com/microsoft/DirectXTex) | MIT License | All platforms |
+| [DirectX-Headers](https://github.com/microsoft/DirectX-Headers) | MIT License | All platforms |
+| [DirectXMath](https://github.com/microsoft/DirectXMath) | MIT License | All platforms |
+| [safestringlib](https://github.com/intel/safestringlib) | MIT License | Linux / macOS |
+| [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo) | zlib/libpng License, IJG License | Linux / macOS |
+| [libpng](https://github.com/pnggroup/libpng) | zlib/libpng License | Linux / macOS |
+| [zlib](https://github.com/madler/zlib.git) | zlib/libpng License | Linux |

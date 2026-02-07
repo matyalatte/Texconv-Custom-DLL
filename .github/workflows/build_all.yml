@@ -69,6 +69,7 @@ jobs:
           cp texassemble.exe release/
           cp changelog.txt release/
           cp LICENSE release/
+          cp THIRD_PARTY_LICENSES.txt release/
         shell: bash
 
       - name: Archive Release
@@ -106,6 +107,7 @@ jobs:
           cp texassemble release/${{ env.ZIP_NAME }}
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
+          cp THIRD_PARTY_LICENSES.txt release/${{ env.ZIP_NAME }}
           cd release
           tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-arm64.tar.bz2 ${{ env.ZIP_NAME }}
 
@@ -135,6 +137,7 @@ jobs:
           docker cp texconv:/Texconv-Custom-DLL/texassemble ./release/${{ env.ZIP_NAME }}
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
+          cp THIRD_PARTY_LICENSES.txt release/${{ env.ZIP_NAME }}
           cd release
           tar -jcvf ${{ env.ZIP_NAME }}-${{ needs.setup.outputs.tag }}-${{ runner.os }}-x64.tar.bz2 ${{ env.ZIP_NAME }}
 

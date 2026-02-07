@@ -21,6 +21,7 @@ out
 *.dds
 *.tga
 *.png
+*.jpg
 
 # script
 *.bat

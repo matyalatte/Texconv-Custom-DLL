@@ -31,6 +31,7 @@ jobs:
           docker cp texconv:/Texconv-Custom-DLL/texassemble ./release/${{ env.ZIP_NAME }}
           cp changelog.txt release/${{ env.ZIP_NAME }}
           cp LICENSE release/${{ env.ZIP_NAME }}
+          cp THIRD_PARTY_LICENSES.txt release/${{ env.ZIP_NAME }}
           cd release
           tar -jcvf ${{ env.ZIP_NAME }}-${{ runner.os }}-x64${{ ((matrix.use_libs == false) && '-no-deps') || '' }}.tar.bz2 ${{ env.ZIP_NAME }}
 

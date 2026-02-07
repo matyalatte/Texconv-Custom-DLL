@@ -34,6 +34,7 @@ jobs:
           cp texassemble.exe release/
           cp changelog.txt release/
           cp LICENSE release/
+          cp THIRD_PARTY_LICENSES.txt release/
         shell: bash
 
       - name: Archive Release

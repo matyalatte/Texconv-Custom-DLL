@@ -114,8 +114,8 @@ cross_build() {
   cmake "${cmake_options[@]}" \
     -DCMAKE_SYSTEM_PROCESSOR="$arch" \
     -DCMAKE_OSX_ARCHITECTURES="$arch" \
-    ..
-  cmake --build .
+    .. || exit 1
+  cmake --build . || exit 1
   cd ..
 }
 
@@ -136,10 +136,10 @@ pushd $(dirname "$0")/../ > /dev/null
     # standard build
     mkdir -p "${build_dir}"
     cd "${build_dir}"
-    cmake "${cmake_options[@]}" ../
-    cmake --build .
+    cmake "${cmake_options[@]}" ../ || exit 1
+    cmake --build . || exit 1
     if $test; then
-      ctest --verbose
+      ctest --verbose || exit 1
     fi
 
     # copy binaries

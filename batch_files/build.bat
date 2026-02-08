@@ -13,6 +13,7 @@ set CONFIG_TYPE=Release
 set BUILD_AS_EXE=OFF
 set VCRUNTIME=MultiThreaded
 set USE_WIC=ON
+set USE_EXR=OFF
 set USE_TEXASSEMBLE=ON
 set TEST=OFF
 
@@ -39,6 +40,10 @@ if "%~1"=="--debug" (
     set USE_WIC=OFF
 ) else if "%~1"=="--no-texassemble" (
     set USE_TEXASSEMBLE=OFF
+) else if "%~1"=="--use-exr" (
+    set USE_EXR=ON
+) else if "%~1"=="--use-optional-formats" (
+    set USE_EXR=ON
 ) else if "%~1"=="--help" (
     goto usage
 ) else (
@@ -54,7 +59,9 @@ set CMAKE_OPTIONS=-G "%GENERATOR%"^
  -DTEXCONV_BUILD_AS_EXE=%BUILD_AS_EXE%^
  -DTEXCONV_BUILD_TESTS=%TEST%^
  -DTEXCONV_USE_WIC=%USE_WIC%^
- -DTEXCONV_USE_TEXASSEMBLE=%USE_TEXASSEMBLE%
+ -DTEXCONV_USE_TEXASSEMBLE=%USE_TEXASSEMBLE%^
+ -DTEXCONV_USE_STATIC_LINK=ON^
+ -DENABLE_OPENEXR_SUPPORT=%USE_EXR%
 
 mkdir %SCRIPT_DIR%\..\%BUILD_DIR%
 @pushd %SCRIPT_DIR%\..\%BUILD_DIR%
@@ -88,6 +95,8 @@ echo   --debug           enable debug build
 echo   --test            build and run tests
 echo   --no-wic          disable WIC supported formats (JPEG, PNG, etc.)
 echo   --no-texassemble  do not build texassemble
+echo   --use-exr         support EXR format
+echo   --use-optional-formats  same as --use-exr
 echo.
 echo   Examples:
 echo     build.bat

@@ -54,13 +54,14 @@ You can use the built binaries on the terminal. (e.g. `./texconv -ft tga -y -o o
 
 There are more options for `build.sh`.
 
-```shell
+```console
 > ./shell_scripts/build.sh --help
 Usage: build.sh <options>
   --build-as-exe          build texconv and texassemble as executables
   --use-optional-formats  use 3rd party libraries to support non-DDS formats
   --use-dynamic-link      use dynamic linked 3rd party libraries
   --debug                 enable debug build
+  --test                  build and run tests
   --universal             build universal binary for macOS
   --no-texassemble        do not build texassemble
 
@@ -70,7 +71,7 @@ Usage: build.sh <options>
     build.sh --build-as-exe
       -> generates texconv and texassemble in the project root.
     build.sh --use-optional-formats
-      -> generates libtexconv.so with JPEG and PNG support.
+      -> generates libtexconv.so with JPEG, PNG, and EXR support.
     build.sh --use-optional-formats --build-as-exe
-      -> generates texconv and texassemble with JPEG and PNG support.
+      -> generates texconv and texassemble with JPEG, PNG, EXR support.
 ```

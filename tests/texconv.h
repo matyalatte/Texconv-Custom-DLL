@@ -1,4 +1,5 @@
 #include "DirectXTex.h"
+#include "DirectXPackedVector.h"
 using namespace DirectX;
 
 #ifdef _WIN32

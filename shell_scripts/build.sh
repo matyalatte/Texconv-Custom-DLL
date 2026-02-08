@@ -9,6 +9,7 @@ Usage: build.sh <options>
   --use-optional-formats  use 3rd party libraries to support non-DDS formats
   --use-dynamic-link      use dynamic linked 3rd party libraries
   --debug                 enable debug build
+  --test                  build and run tests
   --universal             build universal binary for macOS
   --no-texassemble        do not build texassemble
 
@@ -34,11 +35,15 @@ use_optional_formats=false
 build_as_exe=false
 use_texassemble=true
 build_dir=build
+test=false
 
 for arg in "$@"; do
   case "$arg" in
     --debug)
       debug=true
+      ;;
+    --test)
+      test=true
       ;;
     --universal)
       if [[ "$(uname -s)" == "Darwin" ]]; then
@@ -79,21 +84,26 @@ if $debug; then
 else
   cmake_options+=(-DCMAKE_BUILD_TYPE=Release)
 fi
+if $test; then
+  if $build_universal; then
+    echo "Error: You can NOT build tests for universal binaries."
+    exit 1
+  fi
+  cmake_options+=(-DTEXCONV_BUILD_TESTS=ON)
+else
 if $use_dynamic_link; then
   cmake_options+=(-DTEXCONV_USE_STATIC_LINK=OFF)
 else
   if $use_optional_formats; then
     if ! command -v nasm >/dev/null 2>&1; then
-        echo "Error: libjpeg requires nasm to build SIMD extension."
-        exit 1
+      echo "Error: libjpeg requires nasm to build SIMD extension."
+      exit 1
     fi
   fi
   cmake_options+=(-DTEXCONV_USE_STATIC_LINK=ON)
 fi
 if $use_texassemble; then
   cmake_options+=(-DTEXCONV_USE_TEXASSEMBLE=ON)
-else
-  cmake_options+=(-DTEXCONV_USE_TEXASSEMBLE=OFF)
 fi
 
 cross_build() {
@@ -128,6 +138,9 @@ pushd $(dirname "$0")/../ > /dev/null
     cd "${build_dir}"
     cmake "${cmake_options[@]}" ../
     cmake --build .
+    if $test; then
+      ctest --verbose
+    fi
 
     # copy binaries
     if $build_as_exe; then

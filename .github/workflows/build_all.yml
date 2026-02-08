@@ -9,7 +9,6 @@ on:
 
 env:
   ZIP_NAME: TexconvCustomDLL
-  CACHE_NAME: main
 
 jobs:
   setup:

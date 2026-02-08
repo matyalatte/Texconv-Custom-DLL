@@ -5,6 +5,7 @@
 TEST(test_non_dds, png_to_dds) {
     wchar_t* argv[] = {
         L"-f", L"BGRA", L"-y",
+        L"-srgb",
         L"--", L"test.png",
     };
     int argc = sizeof(argv) / sizeof(char*);
@@ -46,6 +47,7 @@ TEST(test_non_dds, png_to_jpg) {
     wchar_t* argv[] = {
         L"-ft", L"jpg",
         L"-o", L"jpg",
+        L"-srgb",
         L"-y",
         L"--", L"test.png",
     };
@@ -58,6 +60,7 @@ TEST(test_non_dds, png_to_jpg) {
     wchar_t* argv2[] = {
         L"-f", L"BGRA",
         L"-o", L"jpg",
+        L"-srgb",
         L"-y",
         L"--", L"jpg/test.jpg",
     };

@@ -15,6 +15,11 @@ option(TEXCONV_USE_WIC "Use WIC for non-DDS formats" ON)
 option(TEXCONV_NO_GPU_CODEC "Disable GPU codec for BC6 and BC7" OFF)
 option(TEXCONV_USE_TEXASSEMBLE "Use texassemble as a dll function" OFF)
 option(TEXCONV_USE_STATIC_LINK "Use static linked libjpeg and libpng" ON)
+option(TEXCONV_BUILD_TESTS "Build tests" OFF)
+
+if(TEXCONV_BUILD_TESTS AND TEXCONV_BUILD_AS_EXE)
+  message(FATAL_ERROR "You can NOT build both tests and executables at the same time.")
+endif()
 
 # enable all options
 if(TEXCONV_USE_ALL)

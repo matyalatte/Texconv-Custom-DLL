@@ -23,12 +23,15 @@ FROM matyalatte/ubuntu20.04-cmake3.25:latest
 # Add JPEG and PNG support when true
 ARG JPGPNG=false
 
+# Build and run tests
+ARG TEST=false
+
 # Install packages
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         wget ca-certificates build-essential git && \
-    if [ "$JPGPNG" = "true" ]; then \
+    if [ "$JPGPNG" = "true" ] || [ "$TEST" = "true" ]; then \
         apt-get install -y --no-install-recommends libjpeg-dev libpng-dev nasm; \
     fi && \
     apt-get clean && \
@@ -41,10 +44,11 @@ RUN git submodule update --init --recursive --recommend-shallow --depth 1
 
 # Build
 WORKDIR /Texconv-Custom-DLL/shell_scripts
-RUN if [ "$JPGPNG" = "true" ]; then \
-        ./build.sh --use-optional-formats && \
+RUN if [ "$TEST" = "true" ]; then \
+        ./test.sh && \
         ./build.sh --use-optional-formats --build-as-exe; \
     else \
-        ./build.sh && \
-        ./build.sh --build-as-exe; \
+        OPT=$([ "$JPGPNG" = "true" ] && echo "--use-optional-formats") && \
+        ./build.sh $OPT && \
+        ./build.sh $OPT --build-as-exe; \
     fi

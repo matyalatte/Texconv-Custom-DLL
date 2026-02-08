@@ -3,5 +3,5 @@
 # It generates texconv and texassemble in the project root (Texconv-Custom-DLL/)
 
 pushd $(dirname "$0") > /dev/null
-./build.sh --build-as-exe "$@"
+./build.sh --build-as-exe "$@" || exit 1
 popd > /dev/null

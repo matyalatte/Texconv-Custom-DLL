@@ -1,0 +1,48 @@
+name: test
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+jobs:
+  test_windows:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init --recursive DirectXTex
+
+      - name: build and run tests
+        run: batch_files/test.bat
+
+  test_macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git submodule update --init --recursive --recommend-shallow --depth 1
+
+      - name: build texconv
+        run: |
+          brew install nasm
+          ./shell_scripts/test.sh
+
+  test_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git submodule update --init --recursive --recommend-shallow --depth 1
+
+      - name: build texconv
+        run: |
+          docker build --build-arg TEST=true -t texconv -f Dockerfile_Ubuntu ./

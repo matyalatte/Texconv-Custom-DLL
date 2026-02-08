@@ -14,12 +14,15 @@ set BUILD_AS_EXE=OFF
 set VCRUNTIME=MultiThreaded
 set USE_WIC=ON
 set USE_TEXASSEMBLE=ON
+set TEST=OFF
 
 :parse_args
 if "%~1"=="" goto end_parse
 
 if "%~1"=="--debug" (
     set CONFIG_TYPE=Debug
+) else if "%~1"=="--test" (
+    set TEST=ON
 ) else if "%~1"=="--build-as-exe" (
     set BUILD_AS_EXE=ON
     set BUILD_DIR=build_exe
@@ -49,6 +52,7 @@ set CMAKE_OPTIONS=-G "%GENERATOR%"^
  -DCMAKE_CONFIGURATION_TYPES=%CONFIG_TYPE%^
  -DCMAKE_MSVC_RUNTIME_LIBRARY=%VCRUNTIME%^
  -DTEXCONV_BUILD_AS_EXE=%BUILD_AS_EXE%^
+ -DTEXCONV_BUILD_TESTS=%TEST%^
  -DTEXCONV_USE_WIC=%USE_WIC%^
  -DTEXCONV_USE_TEXASSEMBLE=%USE_TEXASSEMBLE%
 
@@ -60,6 +64,10 @@ cmake %CMAKE_OPTIONS% ../
 if errorlevel 1 exit /b 1
 cmake --build . --config %CONFIG_TYPE%
 if errorlevel 1 exit /b 1
+if "%TEST%"=="ON" (
+    ctest --verbose -C %CONFIG_TYPE%
+    if errorlevel 1 exit /b 1
+)
 if "%BUILD_AS_EXE%"=="ON" (
     copy bin\%CONFIG_TYPE%\texconv.exe ..\
     if "%USE_TEXASSEMBLE%"=="ON" (
@@ -77,6 +85,7 @@ echo Usage: build.bat ^<options^>
 echo   --build-as-exe    build texconv and texassemble as executables
 echo   --runtime-dll     use dynamic linked vcruntime
 echo   --debug           enable debug build
+echo   --test            build and run tests
 echo   --no-wic          disable WIC supported formats (JPEG, PNG, etc.)
 echo   --no-texassemble  do not build texassemble
 echo.

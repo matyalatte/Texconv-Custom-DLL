@@ -23,10 +23,13 @@ FROM matyalatte/alpine3.16-cmake3.25:latest
 # Add JPEG and PNG support when true
 ARG JPGPNG=false
 
+# Build and run tests
+ARG TEST=false
+
 # Install packages
 RUN apk update && \
     apk add --no-cache musl-dev gcc make g++ file alpine-sdk wget bash && \
-    if [ "$JPGPNG" = "true" ]; then \
+    if [ "$JPGPNG" = "true" ] || [ "$TEST" = "true" ]; then \
         apk add --no-cache libjpeg-turbo-dev libpng-dev nasm; \
     fi
 
@@ -37,10 +40,11 @@ RUN git submodule update --init --recursive --recommend-shallow --depth 1
 
 # Build
 WORKDIR /Texconv-Custom-DLL/shell_scripts
-RUN if [ "$JPGPNG" = "true" ]; then \
-        ./build.sh --use-optional-formats && \
+RUN if [ "$TEST" = "true" ]; then \
+        ./test.sh && \
         ./build.sh --use-optional-formats --build-as-exe; \
     else \
-        ./build.sh && \
-        ./build.sh --build-as-exe; \
+        OPT=$([ "$JPGPNG" = "true" ] && echo "--use-optional-formats") && \
+        ./build.sh $OPT && \
+        ./build.sh $OPT --build-as-exe; \
     fi

@@ -45,7 +45,7 @@ RUN git submodule update --init --recursive --recommend-shallow --depth 1
 # Build
 WORKDIR /Texconv-Custom-DLL/shell_scripts
 RUN if [ "$TEST" = "true" ]; then \
-        ./test.sh \
+        ./test.sh && \
         ./build.sh --use-optional-formats --build-as-exe; \
     else \
         OPT=$([ "$JPGPNG" = "true" ] && echo "--use-optional-formats") && \

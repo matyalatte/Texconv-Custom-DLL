@@ -90,7 +90,7 @@ if $test; then
     exit 1
   fi
   cmake_options+=(-DTEXCONV_BUILD_TESTS=ON)
-else
+fi
 if $use_dynamic_link; then
   cmake_options+=(-DTEXCONV_USE_STATIC_LINK=OFF)
 else

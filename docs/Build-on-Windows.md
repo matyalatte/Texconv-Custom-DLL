@@ -7,29 +7,53 @@
 -   git
 
 ## 1. Get DirectXTex
-Move to `./Texconv-Custom-DLL` and type `git submodule update --init --recursive DirectXTex`.  
+Move to `.\Texconv-Custom-DLL` and run `git submodule update --init --recursive DirectXTex`.
+
+```
+git submodule update --init --recursive DirectXTex
+```
+
 It downloads DirectXTex to the repository.  
 (`git submodule update --init --recursive` works as well, but it downloads unnecessary repositories for Windows.)  
 
-## 2-a. Build .dll with batch files
+## 2. Build DLL
 
-You can build texconv.dll with batch files.  
-Move to `./Texconv-Custom-DLL/batch_files` and type `build.bat` on the command prompt.  
-It generates `texconv.dll` in `Texconv-Custom-DLL/`.  
+You can build `texconv.dll` with `.\batch_files\build.bat`.
 
-## 2-b. Build .dll with Visual Studio
+```
+.\batch_files\build.bat
+```
 
-Of course, you can build the dll with Visual Studio.  
-Open `./Texconv-Custom-DLL` with Visual Studio and load CMakeLists.txt.  
-Then, you can build texconv.dll.  
+It generates `texconv.dll` in `Texconv-Custom-DLL\`.  
 
 ## 3. Build executables (optional)
 
-If you want executables, use `build_as_exe.bat` instead of `build.bat`.  
-It generates `texconv.exe` and `texassemble.exe` in `./Texconv-Custom-DLL/`.  
-You can use them on the command prompt. (e.g. `texconv.exe -ft tga -y -o outdir test.dds`)  
+If you want executables, add `--build-as-exe` to options.
 
-## 4. Build .dll with dynamic linked runtime (optional)
+```
+.\batch_files\build.bat --build-as-exe
+```
 
-If your app can access to `vcruntime140.dll`, you can use `build_without_vcruntime.bat` to link the dynamic vcruntime to `texconv.dll`.  
-The binary size is about 500KB smaller than the static linked dll.
+It generates `texconv.exe` and `texassemble.exe` in `.\Texconv-Custom-DLL\`.  
+You can use the built binaries on the command prompt. (e.g. `.\texconv.exe -ft tga -y -o outdir -- test.dds`)  
+
+## 4. More options
+
+There are more options for `build.sh`.
+
+```shell
+Usage: build.bat <options>
+  --build-as-exe    build texconv and texassemble as executables
+  --runtime-dll     use dynamic linked vcruntime
+  --debug           enable debug build
+  --no-wic          disable WIC supported formats (JPEG, PNG, etc.)
+  --no-texassemble  do not build texassemble
+
+  Examples:
+    build.bat
+      generates texconv.dll in the project root (Texconv-Custom-DLL/)
+    build.bat --build-as-exe
+      generates texconv.exe and texassemble.exe in the project root.
+    build.bat --build-as-exe --no-texassemble --no-wic
+      generates texconv.exe without WIC support.
+```

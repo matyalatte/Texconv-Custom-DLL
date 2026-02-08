@@ -1,17 +1,7 @@
 #!/usr/bin/env bash
-# Builds executables with cmake.
-# texconv and texassemble will be generated in ./Texconv-Custom-DLL/
+# Builds texconv and texassemble without 3rd party libraries.
+# It generates texconv and texassemble in the project root (Texconv-Custom-DLL/)
 
-pushd $(dirname "$0")/../
-mkdir build_exe
-cd build_exe
-cmake \
-  -D CMAKE_BUILD_TYPE=Release\
-  -D CMAKE_POSITION_INDEPENDENT_CODE=ON\
-  -D TEXCONV_BUILD_AS_EXE=ON\
-  -D TEXCONV_USE_ALL=ON\
-  ../
-cmake --build .
-cp bin/texconv ../
-cp bin/texassemble ../
-popd
+pushd $(dirname "$0") > /dev/null
+./build.sh --build-as-exe "$@"
+popd > /dev/null

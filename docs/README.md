@@ -76,20 +76,24 @@ under the MIT License (see [LICENSE](../LICENSE)).
 
 This project includes third-party software, which is licensed under its own
 respective licenses. When redistributing binaries, you must retain
-[THIRD_PARTY_LICENSES.txt](./THIRD_PARTY_LICENSES.txt) to comply with those
+[THIRD_PARTY_LICENSES.txt](../THIRD_PARTY_LICENSES.txt) to comply with those
 licenses.
 
-See [THIRD_PARTY_LICENSES.txt](./THIRD_PARTY_LICENSES.txt) for full license texts
+See [THIRD_PARTY_LICENSES.txt](../THIRD_PARTY_LICENSES.txt) for full license texts
 and copyright notices.
 
 ### Third-party components
 
-| Project | License | Included in |
-|--------|--------|-------------|
-| [DirectXTex](https://github.com/microsoft/DirectXTex) | MIT License | All platforms |
-| [DirectX-Headers](https://github.com/microsoft/DirectX-Headers) | MIT License | All platforms |
-| [DirectXMath](https://github.com/microsoft/DirectXMath) | MIT License | All platforms |
-| [safestringlib](https://github.com/intel/safestringlib) | MIT License | Linux / macOS |
-| [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo) | zlib/libpng License, IJG License | Linux / macOS |
-| [libpng](https://github.com/pnggroup/libpng) | zlib/libpng License | Linux / macOS |
-| [zlib](https://github.com/madler/zlib.git) | zlib/libpng License | Linux |
+| Project | License | Included in | Purpose |
+|---------|---------|-------------| ------- |
+| [DirectXTex](https://github.com/microsoft/DirectXTex) | MIT | All platforms ||
+| [DirectX-Headers](https://github.com/microsoft/DirectX-Headers) | MIT | All platforms ||
+| [DirectXMath](https://github.com/microsoft/DirectXMath) | MIT | All platforms ||
+| [safestringlib](https://github.com/intel/safestringlib) | MIT | Linux / macOS ||
+| [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo) | zlib/libpng, IJG | Linux / macOS | JPEG support |
+| [libpng](https://github.com/pnggroup/libpng) | zlib/libpng | Linux / macOS | PNG support |
+| [zlib](https://github.com/madler/zlib.git) | zlib/libpng | Linux | PNG support |
+| [OpenEXR](https://github.com/AcademySoftwareFoundation/openexr) | BSD-3 | All platforms | EXR support |
+| [Imath](https://github.com/AcademySoftwareFoundation/Imath) | BSD-3 | All platforms | EXR support |
+| [libdeflate](https://github.com/ebiggers/libdeflate) | MIT | All platforms | EXR support |
+| [OpenJPH](https://github.com/aous72/OpenJPH) | BSD-2 | All platforms | EXR support |

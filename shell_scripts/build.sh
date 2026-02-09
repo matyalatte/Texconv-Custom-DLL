@@ -19,9 +19,9 @@ Usage: build.sh <options>
     build.sh --build-as-exe
       -> generates texconv and texassemble in the project root.
     build.sh --use-optional-formats
-      -> generates libtexconv.so with JPEG and PNG support.
+      -> generates libtexconv.so with JPEG, PNG, and EXR support.
     build.sh --use-optional-formats --build-as-exe
-      -> generates texconv and texassemble with JPEG and PNG support.
+      -> generates texconv and texassemble with JPEG, PNG, EXR support.
 EOF
 }
 
@@ -58,6 +58,7 @@ for arg in "$@"; do
       cmake_options+=(
         -DENABLE_LIBJPEG_SUPPORT=ON
         -DENABLE_LIBPNG_SUPPORT=ON
+        -DENABLE_OPENEXR_SUPPORT=ON
       )
       ;;
     --build-as-exe)

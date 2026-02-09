@@ -21,7 +21,7 @@ It downloads DirectXTex to the repository.
 You can build `texconv.dll` with `.\batch_files\build.bat`.
 
 ```
-.\batch_files\build.bat
+.\batch_files\build.bat --use-optional-formats
 ```
 
 It generates `texconv.dll` in `Texconv-Custom-DLL\`.  
@@ -31,7 +31,7 @@ It generates `texconv.dll` in `Texconv-Custom-DLL\`.
 If you want executables, add `--build-as-exe` to options.
 
 ```
-.\batch_files\build.bat --build-as-exe
+.\batch_files\build.bat --use-optional-formats --build-as-exe
 ```
 
 It generates `texconv.exe` and `texassemble.exe` in `.\Texconv-Custom-DLL\`.  
@@ -41,13 +41,16 @@ You can use the built binaries on the command prompt. (e.g. `.\texconv.exe -ft t
 
 There are more options for `build.sh`.
 
-```shell
+```console
 Usage: build.bat <options>
   --build-as-exe    build texconv and texassemble as executables
   --runtime-dll     use dynamic linked vcruntime
   --debug           enable debug build
+  --test            build and run tests
   --no-wic          disable WIC supported formats (JPEG, PNG, etc.)
   --no-texassemble  do not build texassemble
+  --use-exr         support EXR format
+  --use-optional-formats  same as --use-exr
 
   Examples:
     build.bat

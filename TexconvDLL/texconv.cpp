@@ -3962,7 +3962,7 @@ extern "C" __attribute__((visibility("default"))) int texconv(int argc, wchar_t*
                                     {
                                         options.pstrName = const_cast<wchar_t*>(L"HeifCompressionMethod");
                                         varValues.vt = VT_UI1;
-                                    #if defined(NTDDI_WIN10_CU)
+                                    #if defined(NTDDI_WIN10_CU) && !defined(__MINGW32__)
                                         varValues.bVal = WICHeifCompressionNone;
                                     #else
                                         varValues.bVal = 0x1 /* WICHeifCompressionNone */;

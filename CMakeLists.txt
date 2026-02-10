@@ -45,15 +45,6 @@ option(NO_WCHAR_T "Use legacy wide-character as unsigned short" OFF)
 
 option(BUILD_FUZZING "Build for fuzz testing" OFF)
 
-# Includes the functions for loading/saving OpenEXR files at runtime
-option(ENABLE_OPENEXR_SUPPORT "Build with OpenEXR support" OFF)
-
-# See https://www.ijg.org/
-option(ENABLE_LIBJPEG_SUPPORT "Build with libjpeg support" OFF)
-
-# See http://www.libpng.org/pub/png/libpng.html
-option(ENABLE_LIBPNG_SUPPORT "Build with libpng support" OFF)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -189,6 +180,31 @@ if(ENABLE_LIBPNG_SUPPORT)
     list(APPEND LIBRARY_SOURCES DirectXTex/Auxiliary/DirectXTexPNG.cpp)
 endif()
 
+if(ENABLE_OPENEXR_SUPPORT)
+  if(TEXCONV_USE_STATIC_LINK)
+    include(FetchContent)
+    set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)
+    set(OPENEXR_INSTALL        OFF CACHE BOOL "" FORCE)
+    set(OPENEXR_BUILD_TOOLS    OFF CACHE BOOL "" FORCE)
+    set(OPENEXR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(OPENEXR_TEST_LIBRARIES OFF CACHE BOOL "" FORCE)
+    set(OPENEXR_FORCE_INTERNAL_DEFLATE ON CACHE BOOL "" FORCE)
+    set(OPENEXR_FORCE_INTERNAL_OPENJPH ON CACHE BOOL "" FORCE)
+    set(OPENEXR_FORCE_INTERNAL_IMATH   ON CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        openexr
+        GIT_REPOSITORY https://github.com/AcademySoftwareFoundation/openexr.git
+        GIT_TAG v3.4.4
+    )
+    FetchContent_MakeAvailable(openexr)
+  else()
+    find_package(OpenEXR REQUIRED)
+  endif()
+endif()
+
+# Note: CompilerAndLinker.cmake should be called after getting OpenEXR::OpenEXR
+include(DirectXTex/build/CompilerAndLinker.cmake)
+
 if(BUILD_DX11 AND WIN32)
     if(NOT COMPILED_SHADERS)
         if(USE_PREBUILT_SHADERS)
@@ -203,12 +219,16 @@ if(BUILD_DX11 AND WIN32)
     list(APPEND LIBRARY_SOURCES ${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc)
 
     if(NOT USE_PREBUILT_SHADERS)
+        find_program(DIRECTX_FXC_TOOL FXC.EXE
+          HINTS "C:/Program Files (x86)/Windows Kits/10/bin/${CMAKE_SYSTEM_VERSION}.0/${DIRECTX_HOST_ARCH}"
+                "C:/Program Files (x86)/Windows Kits/10/bin/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/${DIRECTX_HOST_ARCH}")
+        message(STATUS "Using LegacyShaderCompiler found in ${DIRECTX_FXC_TOOL}")
         add_custom_command(
             OUTPUT "${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc"
             MAIN_DEPENDENCY "${PROJECT_SOURCE_DIR}/DirectXTex/DirectXTex/Shaders/CompileShaders.cmd"
             DEPENDS ${SHADER_SOURCES}
             COMMENT "Generating HLSL shaders..."
-            COMMAND ${CMAKE_COMMAND} -E env CompileShadersOutput="${COMPILED_SHADERS}" CompileShaders.cmd > "${COMPILED_SHADERS}/compileshaders.log"
+            COMMAND ${CMAKE_COMMAND} -E env CompileShadersOutput="${COMPILED_SHADERS}" $<$<BOOL:${DIRECTX_FXC_TOOL}>:LegacyShaderCompiler=${DIRECTX_FXC_TOOL}> CompileShaders.cmd > "${COMPILED_SHADERS}/compileshaders.log"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/DirectXTex/DirectXTex/Shaders"
             USES_TERMINAL)
     endif()
@@ -235,29 +255,6 @@ if(BC_USE_OPENMP)
   else()
     set(BC_USE_OPENMP OFF)
   endif()
-endif()
-
-if(ENABLE_OPENEXR_SUPPORT)
-  if(TEXCONV_USE_STATIC_LINK)
-    include(FetchContent)
-    set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_INSTALL        OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_BUILD_TOOLS    OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_TEST_LIBRARIES OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_FORCE_INTERNAL_DEFLATE ON CACHE BOOL "" FORCE)
-    set(OPENEXR_FORCE_INTERNAL_OPENJPH ON CACHE BOOL "" FORCE)
-    set(OPENEXR_FORCE_INTERNAL_IMATH   ON CACHE BOOL "" FORCE)
-    FetchContent_Declare(
-        openexr
-        GIT_REPOSITORY https://github.com/AcademySoftwareFoundation/openexr.git
-        GIT_TAG v3.4.4
-    )
-    FetchContent_MakeAvailable(openexr)
-  else()
-    find_package(OpenEXR REQUIRED)
-  endif()
-  target_link_libraries(${PROJECT_NAME} PUBLIC OpenEXR::OpenEXR)
 endif()
 
 if(BUILD_XBOX_EXTS_SCARLETT AND WIN32)
@@ -310,6 +307,10 @@ elseif(BUILD_XBOX_EXTS_XBOXONE AND WIN32)
     else()
         message(FATAL_ERROR "Building Xbox extensions requires GameDKLatest or XboxOneXDKLatest")
     endif()
+endif()
+
+if(ENABLE_OPENEXR_SUPPORT)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenEXR::OpenEXR)
 endif()
 
 if(ENABLE_LIBJPEG_SUPPORT)
@@ -400,17 +401,24 @@ if(NOT MINGW)
     target_precompile_headers(${PROJECT_NAME} PRIVATE DirectXTex/DirectXTex/DirectXTexP.h)
 endif()
 
-if(MINGW OR (NOT WIN32))
-    if (WIN32)
-      find_package(directxmath CONFIG REQUIRED)
-      find_package(directx-headers CONFIG REQUIRED)
-    else()
-      message("INFO: Using a subdirectory 'unix_external' for DirectX-Headers, DirectXMath, and safestringlib.")
-      add_subdirectory(unix_external)
-    endif()
-else()
+if(WIN32)
     find_package(directxmath CONFIG QUIET)
     find_package(directx-headers CONFIG QUIET)
+    if(MINGW)
+        if(NOT directxmath_FOUND)
+            add_subdirectory(unix_external/DirectXMath)
+            add_library(Microsoft::DirectXMath ALIAS DirectXMath)
+            set(directxmath_FOUND ON)
+        endif()
+        if(NOT directx-headers_FOUND)
+            find_package(directx-headers CONFIG QUIET)
+            add_subdirectory(unix_external/DirectX-Headers)
+            set(directx-headers_FOUND ON)
+        endif()
+    endif()
+else()
+    message("INFO: Using a subdirectory 'unix_external' for DirectX-Headers, DirectXMath, and safestringlib.")
+    add_subdirectory(unix_external)
 endif()
 
 if(directxmath_FOUND OR (NOT WIN32))
@@ -494,6 +502,10 @@ if(BUILD_TOOLS)
     add_executable(texconv ${TEXCONV_FILES})
   else()
     add_library(texconv SHARED ${TEXCONV_FILES})
+    if (WIN32)
+        # output name should be texconv.dll, not libtexconv.dll
+        set(CMAKE_SHARED_LIBRARY_PREFIX "")
+    endif()
   endif()
   target_compile_features(texconv PRIVATE cxx_std_17)
   if (WIN32)
@@ -611,8 +623,6 @@ if(MSVC)
       endforeach()
     endif()
 endif()
-
-include(DirectXTex/build/CompilerAndLinker.cmake)
 
 foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
   target_compile_definitions(${t} PRIVATE ${COMPILER_DEFINES})

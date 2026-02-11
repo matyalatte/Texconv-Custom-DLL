@@ -25,6 +25,7 @@ Usage: build.sh <options>
 EOF
 }
 
+os="$(uname -s)"
 cmake_options=(
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 )
@@ -46,7 +47,7 @@ for arg in "$@"; do
       test=true
       ;;
     --universal)
-      if [[ "$(uname -s)" == "Darwin" ]]; then
+      if [[ "$os" == "Darwin" ]]; then
         build_universal=true
       fi
       ;;
@@ -107,6 +108,28 @@ if $use_texassemble; then
   cmake_options+=(-DTEXCONV_USE_TEXASSEMBLE=ON)
 fi
 
+strip_symbols() {
+  local obj=$1
+  if [[ "$debug" == "false" ]]; then
+    if [[ "$os" == "Linux" ]]; then
+      strip --strip-all $obj
+    elif [[ "$os" == "Darwin" ]]; then
+      strip $obj
+    fi
+  fi
+}
+
+strip_texconv() {
+  if $build_as_exe; then
+    strip_symbols bin/texconv
+    if $use_texassemble; then
+      strip_symbols bin/texassemble
+    fi
+  else
+    strip_symbols lib/libtexconv.*
+  fi
+}
+
 cross_build() {
   # cross compile for macOS
   local arch=$1
@@ -117,6 +140,7 @@ cross_build() {
     -DCMAKE_OSX_ARCHITECTURES="$arch" \
     .. || exit 1
   cmake --build . || exit 1
+  strip_texconv
   cd ..
 }
 
@@ -142,6 +166,7 @@ pushd $(dirname "$0")/../ > /dev/null
     if $test; then
       ctest --verbose || exit 1
     fi
+    strip_texconv
 
     # copy binaries
     if $build_as_exe; then

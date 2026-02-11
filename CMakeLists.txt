@@ -48,6 +48,10 @@ if(ENABLE_OPENEXR_SUPPORT)
     set(OPENEXR_FORCE_INTERNAL_DEFLATE ON)
     set(OPENEXR_FORCE_INTERNAL_OPENJPH ON)
     set(OPENEXR_FORCE_INTERNAL_IMATH ON)
+    # Remove symbols from OpenEXR
+    set(OPENEXR_USE_DEFAULT_VISIBILITY ON)
+    # Remove symbols from Imath
+    set(IMATH_USE_DEFAULT_VISIBILITY ON)
     FetchContent_Declare(
         openexr
         GIT_REPOSITORY https://github.com/AcademySoftwareFoundation/openexr.git

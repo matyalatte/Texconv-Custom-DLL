@@ -2,19 +2,20 @@
 
 ## 0. Requirements
 
--   Visual Studio 2022
--   CMake
+-   c++17 compiler
+-   cmake
 -   git
+-   fxc (included in [Windows SDK](https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads))
+
+> [!note]
+> It is recommended to use Visual Studio as a build system because it can install Windows SDK and find fxc without editing environment variables. Also, MinGW's fxc ([mingw-w64-fxc2](https://packages.msys2.org/base/mingw-w64-fxc2)) does not work in this project.
 
 ## 1. Get DirectXTex
-Move to `.\Texconv-Custom-DLL` and run `git submodule update --init --recursive DirectXTex`.
+Move to `.\Texconv-Custom-DLL` and run `git submodule update --init --recursive`.
 
 ```
-git submodule update --init --recursive DirectXTex
+git submodule update --init --recursive
 ```
-
-It downloads DirectXTex to the repository.  
-(`git submodule update --init --recursive` works as well, but it downloads unnecessary repositories for Windows.)  
 
 ## 2. Build DLL
 
@@ -39,7 +40,7 @@ You can use the built binaries on the command prompt. (e.g. `.\texconv.exe -ft t
 
 ## 4. More options
 
-There are more options for `build.sh`.
+There are more options for `build.bat`.
 
 ```console
 Usage: build.bat <options>
@@ -51,12 +52,13 @@ Usage: build.bat <options>
   --no-texassemble  do not build texassemble
   --use-exr         support EXR format
   --use-optional-formats  same as --use-exr
+  --generator       one of CMake Generators e.g. Visual Studio 17 2022
 
   Examples:
     build.bat
       generates texconv.dll in the project root (Texconv-Custom-DLL/)
     build.bat --build-as-exe
       generates texconv.exe and texassemble.exe in the project root.
-    build.bat --build-as-exe --no-texassemble --no-wic
-      generates texconv.exe without WIC support.
+    build.bat --build-as-exe --generator "MinGW Makefiles"
+      builds texconv.exe with MinGW's make
 ```

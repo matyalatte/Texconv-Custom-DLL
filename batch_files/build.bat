@@ -5,7 +5,26 @@ REM Builds texconv with cmake
 REM and copies it to the project root (Texconv-Custom-DLL/)
 REM The built binaries do NOT require vcruntime140.dll
 
-set GENERATOR=Visual Studio 17 2022
+REM get default generator
+for /f "tokens=1,* delims=*=" %%A in ('
+    cmake --help ^| findstr /B "*"
+') do (
+    set "GEN=%%A"
+    :trim
+    if "!GEN:~0,1!"==" " (
+        set "GEN=!GEN:~1!"
+        goto trim
+    )
+    :trim_end
+    if "!GEN:~-1!"==" " (
+        set "GEN=!GEN:~0,-1!"
+        goto trim_end
+    )
+)
+set GENERATOR=!GEN!
+if "%GENERATOR%" == "" (
+    set GENERATOR=Visual Studio 17 2022
+)
 
 set SCRIPT_DIR=%~dp0
 set BUILD_DIR=build
@@ -53,8 +72,17 @@ if "%~1"=="--debug" (
 shift
 goto parse_args
 :end_parse
+
+set BIN_DIR=bin
+if "%GENERATOR:~0,13%"=="Visual Studio" (
+    set BIN_DIR=bin\%CONFIG_TYPE%
+) else if "%GENERATOR%"=="Ninja Multi-Config" (
+    set BIN_DIR=bin\%CONFIG_TYPE%
+)
+
 set CMAKE_OPTIONS=-G "%GENERATOR%"^
  -DCMAKE_CONFIGURATION_TYPES=%CONFIG_TYPE%^
+ -DCMAKE_BUILD_TYPE=%CONFIG_TYPE%^
  -DCMAKE_MSVC_RUNTIME_LIBRARY=%VCRUNTIME%^
  -DTEXCONV_BUILD_AS_EXE=%BUILD_AS_EXE%^
  -DTEXCONV_BUILD_TESTS=%TEST%^
@@ -65,8 +93,7 @@ set CMAKE_OPTIONS=-G "%GENERATOR%"^
 
 mkdir %SCRIPT_DIR%\..\%BUILD_DIR%
 @pushd %SCRIPT_DIR%\..\%BUILD_DIR%
-dir
-echo %CMAKE_OPTIONS%
+echo cmake %CMAKE_OPTIONS% ../
 cmake %CMAKE_OPTIONS% ../
 if errorlevel 1 exit /b 1
 cmake --build . --config %CONFIG_TYPE%
@@ -76,12 +103,12 @@ if "%TEST%"=="ON" (
     if errorlevel 1 exit /b 1
 )
 if "%BUILD_AS_EXE%"=="ON" (
-    copy bin\%CONFIG_TYPE%\texconv.exe ..\
+    copy %BIN_DIR%\texconv.exe ..\
     if "%USE_TEXASSEMBLE%"=="ON" (
-        copy bin\%CONFIG_TYPE%\texassemble.exe ..\
+        copy %BIN_DIR%\texassemble.exe ..\
     )
 ) else (
-    copy bin\%CONFIG_TYPE%\texconv.dll ..\
+    copy %BIN_DIR%\texconv.dll ..\
 )
 @popd
 
@@ -97,12 +124,13 @@ echo   --no-wic          disable WIC supported formats (JPEG, PNG, etc.)
 echo   --no-texassemble  do not build texassemble
 echo   --use-exr         support EXR format
 echo   --use-optional-formats  same as --use-exr
+echo   --generator       one of CMake Generators e.g. Visual Studio 17 2022
 echo.
 echo   Examples:
 echo     build.bat
 echo       generates texconv.dll in the project root (Texconv-Custom-DLL/)
 echo     build.bat --build-as-exe
 echo       generates texconv.exe and texassemble.exe in the project root.
-echo     build.bat --build-as-exe --no-texassemble --no-wic
-echo       generates texconv.exe without WIC support.
+echo     build.bat --build-as-exe --generator "MinGW Makefiles"
+echo       builds texconv.exe with MinGW's make
 exit /b 0

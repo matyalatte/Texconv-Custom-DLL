@@ -52,10 +52,6 @@ See here if you want to know how to use texconv.
 There is a document for Windows users.  
 [Building Workflow for Windows](./Build-on-Windows.md)  
 
-> [!warning]
-> Currently, we only supports Visual Studio 2022 and MSVC.
-> Other toolchains may require additional effort to resolve issues.
-
 ### Linux and Mac
 
 There is a document for Linux and Mac users.  

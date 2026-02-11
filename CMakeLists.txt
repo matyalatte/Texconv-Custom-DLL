@@ -5,26 +5,14 @@ cmake_minimum_required (VERSION 3.20)
 
 set(DIRECTXTEX_VERSION 2.0.9)
 
-project (DirectXTex
-  VERSION ${DIRECTXTEX_VERSION}
-  DESCRIPTION "DirectX Texture Library"
-  HOMEPAGE_URL "https://go.microsoft.com/fwlink/?LinkId=248926"
+project (Texconv-Custom-DLL
   LANGUAGES C CXX)
 
-option(BUILD_TOOLS "Build tex command-line tools" ON)
-
+set(BUILD_TOOLS OFF)
 set(BUILD_SAMPLE OFF)
-
-# Includes the functions for Direct3D 11 resources and DirectCompute compression
-option(BUILD_DX11 "Build with DirectX11 Runtime support (requires fxc.exe)" ON)
-
-# Includes the functions for creating Direct3D 12 resources at runtime
-option(BUILD_DX12 "Build with DirectX12 Runtime support" ON)
-
-# Enable the use of OpenMP for software BC6H/BC7 compression
-option(BC_USE_OPENMP "Build with OpenMP support" ON)
-
-option(USE_PREBUILT_SHADERS "Use externally built HLSL shaders" OFF)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(CMAKE_SKIP_INSTALL_RULES ON CACHE BOOL "" FORCE)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,91 +30,24 @@ endif()
 include(GNUInstallDirs)
 include("options.cmake")
 
-#--- Library
-set(LIBRARY_HEADERS
-    DirectXTex/DirectXTex/DirectXTex.h
-    DirectXTex/DirectXTex/DirectXTex.inl)
-
-set(LIBRARY_SOURCES
-    DirectXTex/DirectXTex/BC.h
-    DirectXTex/DirectXTex/DDS.h
-    DirectXTex/DirectXTex/DirectXTexP.h
-    DirectXTex/DirectXTex/filters.h
-    DirectXTex/DirectXTex/scoped.h
-    DirectXTex/DirectXTex/BC.cpp
-    DirectXTex/DirectXTex/BC4BC5.cpp
-    DirectXTex/DirectXTex/BC6HBC7.cpp
-    DirectXTex/DirectXTex/DirectXTexCompress.cpp
-    DirectXTex/DirectXTex/DirectXTexConvert.cpp
-    DirectXTex/DirectXTex/DirectXTexDDS.cpp
-    DirectXTex/DirectXTex/DirectXTexHDR.cpp
-    DirectXTex/DirectXTex/DirectXTexImage.cpp
-    DirectXTex/DirectXTex/DirectXTexMipmaps.cpp
-    DirectXTex/DirectXTex/DirectXTexMisc.cpp
-    DirectXTex/DirectXTex/DirectXTexNormalMaps.cpp
-    DirectXTex/DirectXTex/DirectXTexPMAlpha.cpp
-    DirectXTex/DirectXTex/DirectXTexResize.cpp
-    DirectXTex/DirectXTex/DirectXTexTGA.cpp
-    DirectXTex/DirectXTex/DirectXTexUtil.cpp)
-
-if(WIN32)
-   list(APPEND LIBRARY_SOURCES
-       DirectXTex/DirectXTex/DirectXTexFlipRotate.cpp
-       DirectXTex/DirectXTex/DirectXTexWIC.cpp)
-endif()
-
-set(SHADER_SOURCES
-    DirectXTex/DirectXTex/Shaders/BC6HEncode.hlsl
-    DirectXTex/DirectXTex/Shaders/BC7Encode.hlsl)
-
-if(BUILD_DX11 AND WIN32)
-   list(APPEND LIBRARY_SOURCES
-       DirectXTex/DirectXTex/BCDirectCompute.h
-       DirectXTex/DirectXTex/BCDirectCompute.cpp
-       DirectXTex/DirectXTex/DirectXTexCompressGPU.cpp
-       DirectXTex/DirectXTex/DirectXTexD3D11.cpp)
-endif()
-
-if(BUILD_DX12)
-   list(APPEND LIBRARY_SOURCES DirectXTex/DirectXTex/DirectXTexD3D12.cpp)
-
-   if(NOT (DEFINED XBOX_CONSOLE_TARGET))
-       list(APPEND LIBRARY_SOURCES DirectXTex/Common/d3dx12.h)
-   endif()
-endif()
-
-if(ENABLE_OPENEXR_SUPPORT)
-   list(APPEND LIBRARY_HEADERS DirectXTex/Auxiliary/DirectXTexEXR.h)
-   list(APPEND LIBRARY_SOURCES DirectXTex/Auxiliary/DirectXTexEXR.cpp)
-endif()
-
-if(ENABLE_LIBJPEG_SUPPORT)
-    if(WIN32)
-        message(STATUS "Use of the Windows Imaging Component (WIC) instead of libjpeg is recommended.")
-    endif()
-    list(APPEND LIBRARY_HEADERS DirectXTex/Auxiliary/DirectXTexJPEG.h)
-    list(APPEND LIBRARY_SOURCES DirectXTex/Auxiliary/DirectXTexJPEG.cpp)
-endif()
-
-if(ENABLE_LIBPNG_SUPPORT)
-    if(WIN32)
-        message(STATUS "Use of the Windows Imaging Component (WIC) instead of libpng is recommended.")
-    endif()
-    list(APPEND LIBRARY_HEADERS DirectXTex/Auxiliary/DirectXTexPNG.h)
-    list(APPEND LIBRARY_SOURCES DirectXTex/Auxiliary/DirectXTexPNG.cpp)
+#--- Third Party Libraries
+if(TEXCONV_USE_STATIC_LINK)
+    # We build third party libraries from source.
+    # So, let find_package() open fake .cmake files
+    list(PREPEND CMAKE_MODULE_PATH
+        "${CMAKE_SOURCE_DIR}/cmake/override")
 endif()
 
 if(ENABLE_OPENEXR_SUPPORT)
   if(TEXCONV_USE_STATIC_LINK)
     include(FetchContent)
-    set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_INSTALL        OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_BUILD_TOOLS    OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_TEST_LIBRARIES OFF CACHE BOOL "" FORCE)
-    set(OPENEXR_FORCE_INTERNAL_DEFLATE ON CACHE BOOL "" FORCE)
-    set(OPENEXR_FORCE_INTERNAL_OPENJPH ON CACHE BOOL "" FORCE)
-    set(OPENEXR_FORCE_INTERNAL_IMATH   ON CACHE BOOL "" FORCE)
+    set(OPENEXR_INSTALL OFF)
+    set(OPENEXR_BUILD_TOOLS OFF)
+    set(OPENEXR_BUILD_TOOLS OFF)
+    set(OPENEXR_BUILD_EXAMPLES OFF)
+    set(OPENEXR_FORCE_INTERNAL_DEFLATE ON)
+    set(OPENEXR_FORCE_INTERNAL_OPENJPH ON)
+    set(OPENEXR_FORCE_INTERNAL_IMATH ON)
     FetchContent_Declare(
         openexr
         GIT_REPOSITORY https://github.com/AcademySoftwareFoundation/openexr.git
@@ -136,65 +57,6 @@ if(ENABLE_OPENEXR_SUPPORT)
   else()
     find_package(OpenEXR REQUIRED)
   endif()
-endif()
-
-# Note: CompilerAndLinker.cmake should be called after getting OpenEXR::OpenEXR
-include(DirectXTex/build/CompilerAndLinker.cmake)
-
-if(BUILD_DX11 AND WIN32)
-    if(NOT COMPILED_SHADERS)
-        if(USE_PREBUILT_SHADERS)
-            message(FATAL_ERROR "ERROR: Using prebuilt shaders requires the COMPILED_SHADERS variable is set")
-        endif()
-        set(COMPILED_SHADERS ${CMAKE_CURRENT_BINARY_DIR}/Shaders/Compiled)
-        file(MAKE_DIRECTORY ${COMPILED_SHADERS})
-    else()
-        file(TO_CMAKE_PATH ${COMPILED_SHADERS} COMPILED_SHADERS)
-    endif()
-
-    list(APPEND LIBRARY_SOURCES ${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc)
-
-    if(NOT USE_PREBUILT_SHADERS)
-        find_program(DIRECTX_FXC_TOOL FXC.EXE
-          HINTS "C:/Program Files (x86)/Windows Kits/10/bin/${CMAKE_SYSTEM_VERSION}.0/${DIRECTX_HOST_ARCH}"
-                "C:/Program Files (x86)/Windows Kits/10/bin/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/${DIRECTX_HOST_ARCH}")
-        message(STATUS "Using LegacyShaderCompiler found in ${DIRECTX_FXC_TOOL}")
-        add_custom_command(
-            OUTPUT "${COMPILED_SHADERS}/BC6HEncode_EncodeBlockCS.inc"
-            MAIN_DEPENDENCY "${PROJECT_SOURCE_DIR}/DirectXTex/DirectXTex/Shaders/CompileShaders.cmd"
-            DEPENDS ${SHADER_SOURCES}
-            COMMENT "Generating HLSL shaders..."
-            COMMAND ${CMAKE_COMMAND} -E env CompileShadersOutput="${COMPILED_SHADERS}" $<$<BOOL:${DIRECTX_FXC_TOOL}>:LegacyShaderCompiler=${DIRECTX_FXC_TOOL}> CompileShaders.cmd > "${COMPILED_SHADERS}/compileshaders.log"
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/DirectXTex/DirectXTex/Shaders"
-            USES_TERMINAL)
-    endif()
-endif()
-
-add_library(${PROJECT_NAME} STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
-
-if(BUILD_DX11 AND WIN32)
-   target_include_directories(${PROJECT_NAME} PRIVATE ${COMPILED_SHADERS})
-endif()
-
-source_group(${PROJECT_NAME} REGULAR_EXPRESSION DirectXTex/DirectXTex/*.*)
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-  ${CMAKE_CURRENT_BINARY_DIR}
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DirectXTex/DirectXTex>)
-
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
-
-if(BC_USE_OPENMP)
-  find_package(OpenMP)
-  if(OpenMP_CXX_FOUND)
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
-  else()
-    set(BC_USE_OPENMP OFF)
-  endif()
-endif()
-
-if(ENABLE_OPENEXR_SUPPORT)
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenEXR::OpenEXR)
 endif()
 
 if(ENABLE_LIBJPEG_SUPPORT)
@@ -236,7 +98,6 @@ if(ENABLE_LIBJPEG_SUPPORT)
     else()
         find_package(JPEG REQUIRED)
     endif()
-    target_link_libraries(${PROJECT_NAME} PUBLIC JPEG::JPEG)
 endif()
 
 if(ENABLE_LIBPNG_SUPPORT)
@@ -278,43 +139,31 @@ if(ENABLE_LIBPNG_SUPPORT)
     else()
         find_package(PNG REQUIRED)
     endif()
-    target_link_libraries(${PROJECT_NAME} PUBLIC PNG::PNG)
 endif()
 
-if(NOT MINGW)
-    target_precompile_headers(${PROJECT_NAME} PRIVATE DirectXTex/DirectXTex/DirectXTexP.h)
-endif()
-
-if(WIN32)
+if(WIN32 AND NOT MINGW)
     find_package(directxmath CONFIG QUIET)
     find_package(directx-headers CONFIG QUIET)
-    if(MINGW)
-        if(NOT directxmath_FOUND)
-            add_subdirectory(unix_external/DirectXMath)
-            add_library(Microsoft::DirectXMath ALIAS DirectXMath)
-            set(directxmath_FOUND ON)
-        endif()
-        if(NOT directx-headers_FOUND)
-            find_package(directx-headers CONFIG QUIET)
-            add_subdirectory(unix_external/DirectX-Headers)
-            set(directx-headers_FOUND ON)
-        endif()
-    endif()
 else()
     message("INFO: Using a subdirectory 'unix_external' for DirectX-Headers, DirectXMath, and safestringlib.")
     add_subdirectory(unix_external)
+    set(directx-headers_FOUND ON)
+    set(directxmath_FOUND ON)
+    # We should override find_package() for directx-headers and directxmath
+    list(PREPEND CMAKE_PREFIX_PATH
+        "${CMAKE_SOURCE_DIR}/cmake/override")
 endif()
 
-if(directxmath_FOUND OR (NOT WIN32))
-    message(STATUS "Using DirectXMath package")
-    target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft::DirectXMath)
-endif()
+# Build DirectXTex
+add_subdirectory(DirectXTex)
 
-if(directx-headers_FOUND OR (NOT WIN32))
-    message(STATUS "Using DirectX-Headers package")
-    target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft::DirectX-Headers)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC USING_DIRECTX_HEADERS)
-endif()
+# Reset overwritten variables
+set(BUILD_TOOLS ON)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+include(DirectXTex/build/CompilerAndLinker.cmake)
 
 #--- Command-line tools
 set(TOOL_EXES "")
@@ -344,10 +193,10 @@ if (BUILD_TOOLS AND TEXCONV_USE_TEXASSEMBLE AND TEXCONV_BUILD_AS_EXE)
     add_executable(texassemble ${TEXASSEMBLE_FILES})
   target_compile_features(texassemble PRIVATE cxx_std_17)
   if (WIN32)
-    target_link_libraries(texassemble PRIVATE ${PROJECT_NAME} ole32.lib version.lib)
+    target_link_libraries(texassemble PRIVATE DirectXTex ole32.lib version.lib)
   else()
     # unix need a library for safe functions
-    target_link_libraries(texassemble PRIVATE ${PROJECT_NAME} safestring_static)
+    target_link_libraries(texassemble PRIVATE DirectXTex safestring_static)
   endif()
   source_group(texassemble FILES ${TEXASSEMBLE_FILES})
   list(APPEND TOOL_EXES texassemble)
@@ -393,17 +242,17 @@ if(BUILD_TOOLS)
   endif()
   target_compile_features(texconv PRIVATE cxx_std_17)
   if (WIN32)
-    target_link_libraries(texconv PRIVATE ${PROJECT_NAME} ole32.lib shell32.lib version.lib)
+    target_link_libraries(texconv PRIVATE DirectXTex ole32.lib shell32.lib version.lib)
   else()
     # unix need a library for safe functions
-    target_link_libraries(texconv PRIVATE ${PROJECT_NAME} safestring_static)
+    target_link_libraries(texconv PRIVATE DirectXTex safestring_static)
   endif()
   source_group(texconv FILES ${TEXCONV_FILES})
   list(APPEND TOOL_EXES texconv)
 endif()
 
-foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
-  target_include_directories(${t} PRIVATE DirectXTex/Common)
+foreach(t IN LISTS TOOL_EXES ITEMS)
+  target_include_directories(${t} PRIVATE DirectXTex/Common ${CMAKE_BINARY_DIR}/TexconvDLL)
 endforeach()
 
 if(BUILD_TOOLS)
@@ -437,12 +286,12 @@ if(directxmath_FOUND)
 endif()
 
 if(MSVC)
-    foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+    foreach(t IN LISTS TOOL_EXES ITEMS)
       target_compile_options(${t} PRIVATE /Wall /GR-)
     endforeach()
 endif()
 
-foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+foreach(t IN LISTS TOOL_EXES ITEMS)
   target_compile_definitions(${t} PRIVATE ${COMPILER_DEFINES})
   target_compile_options(${t} PRIVATE ${COMPILER_SWITCHES})
   target_link_options(${t} PRIVATE ${LINKER_SWITCHES})
@@ -460,29 +309,19 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|IntelLLVM")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0)
         list(APPEND WarningsLib "-Wno-unsafe-buffer-usage")
     endif()
-    target_compile_options(${PROJECT_NAME} PRIVATE ${WarningsLib})
 
     set(WarningsEXE ${WarningsLib} "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-switch" "-Wno-switch-enum" "-Wno-switch-default" "-Wno-covered-switch-default" "-Wno-language-extension-token" "-Wno-missing-prototypes" "-Wno-global-constructors" "-Wno-double-promotion")
     foreach(t IN LISTS TOOL_EXES)
       target_compile_options(${t} PRIVATE ${WarningsEXE})
     endforeach()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+    foreach(t IN LISTS TOOL_EXES ITEMS)
       target_compile_options(${t} PRIVATE "-Wno-ignored-attributes" "-Walloc-size-larger-than=4GB")
     endforeach()
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
-    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.37)
-       AND (NOT (${DIRECTX_ARCH} MATCHES "^arm"))
-       AND ((${DIRECTX_ARCH} MATCHES "x64") OR (CMAKE_SIZEOF_VOID_P EQUAL 8)))
-       # Enable since DirectXTex library has a lot of large switch statements
-      target_compile_options(${PROJECT_NAME} PRIVATE /jumptablerdata)
-    endif()
-
    if((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.26)
       AND BUILD_XBOX_EXTS_XBOXONE)
-        foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+        foreach(t IN LISTS TOOL_EXES ITEMS)
           target_compile_options(${t} PRIVATE /wd5104 /wd5204)
         endforeach()
     endif()
@@ -505,22 +344,15 @@ if(WIN32)
     else()
         message(STATUS "Building with Windows 7 compatibility")
         set(WINVER 0x0601)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN7_PLATFORM_UPDATE)
     endif()
 
-    foreach(t IN LISTS TOOL_EXES ITEMS ${PROJECT_NAME})
+    foreach(t IN LISTS TOOL_EXES ITEMS DirectXTex)
       target_compile_definitions(${t} PRIVATE _WIN32_WINNT=${WINVER})
     endforeach()
 endif()
 
 if(BUILD_TOOLS AND BUILD_DX11 AND WIN32)
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT texconv)
-endif()
-
-if(BUILD_TOOLS AND (NOT VCPKG_TOOLCHAIN))
-    foreach(t IN LISTS TOOL_EXES)
-      install(TARGETS ${t} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-    endforeach()
 endif()
 
 #--- Test suite

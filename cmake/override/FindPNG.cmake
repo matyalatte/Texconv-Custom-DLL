@@ -1,0 +1,1 @@
+set(PNG_FOUND TRUE)

@@ -4,24 +4,25 @@
 
 function usage() {
 cat <<EOF
-Usage: build.sh <options>
+Usage: build.cmd [options]
   --build-as-exe          build texconv and texassemble as executables
-  --use-optional-formats  use 3rd party libraries to support non-DDS formats
-  --use-dynamic-link      use dynamic linked 3rd party libraries
+  --use-optional-formats  support JPEG, PNG, and EXR formats
+  --use-dynamic-link      use system installed 3rd party libraries
+  --no-texassemble        do not build texassemble
   --debug                 enable debug build
   --test                  build and run tests
+  --generator <name>      specify a build system e.g. Ninja
   --universal             build universal binary for macOS
-  --no-texassemble        do not build texassemble
 
   Examples:
-    build.sh
-      -> generates libtexconv.so in the project root (Texconv-Custom-DLL/)
-    build.sh --build-as-exe
+    build.cmd
+      -> generates libtexconv in the project root (Texconv-Custom-DLL/)
+    build.cmd --build-as-exe
       -> generates texconv and texassemble in the project root.
-    build.sh --use-optional-formats
-      -> generates libtexconv.so with JPEG, PNG, and EXR support.
-    build.sh --use-optional-formats --build-as-exe
-      -> generates texconv and texassemble with JPEG, PNG, EXR support.
+    build.cmd --use-optional-formats
+      -> generates libtexconv with JPEG, PNG, and EXR support.
+    build.cmd --build-as-exe --generator "Unix Makefiles"
+      -> generates texconv and texassemble with make.
 EOF
 }
 
@@ -29,7 +30,7 @@ os="$(uname -s)"
 cmake_options=(
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 )
-debug=false
+config_type=Release
 build_universal=false
 use_dynamic_link=false
 use_optional_formats=false
@@ -37,11 +38,21 @@ build_as_exe=false
 use_texassemble=true
 build_dir=build
 test=false
+generator="$(
+  cmake --help \
+  | sed -nE 's/^\* (.*[^[:space:]])[[:space:]]*=.*/\1/p'
+)"
+next_arg_is_generator=false
 
 for arg in "$@"; do
+  if $next_arg_is_generator; then
+    generator="$arg"
+    next_arg_is_generator=false
+    continue
+  fi
   case "$arg" in
     --debug)
-      debug=true
+      config_type=Debug
       ;;
     --test)
       test=true
@@ -49,6 +60,8 @@ for arg in "$@"; do
     --universal)
       if [[ "$os" == "Darwin" ]]; then
         build_universal=true
+      else
+        echo "Warning: --universal is only available on macOS"
       fi
       ;;
     --use-dynamic-link)
@@ -70,6 +83,12 @@ for arg in "$@"; do
     --no-texassemble)
       use_texassemble=false
       ;;
+    --generator)
+      next_arg_is_generator=true
+      ;;
+    --runtime-dll|--no-wic|--use-exr)
+      echo Warning: $arg is only available on Windows.
+      ;;
     --help)
       usage
       exit 0
@@ -81,11 +100,7 @@ for arg in "$@"; do
       ;;
   esac
 done
-if $debug; then
-  cmake_options+=(-DCMAKE_BUILD_TYPE=Debug)
-else
-  cmake_options+=(-DCMAKE_BUILD_TYPE=Release)
-fi
+cmake_options+=("-DCMAKE_BUILD_TYPE=${config_type}")
 if $test; then
   if $build_universal; then
     echo "Error: You can NOT build tests for universal binaries."
@@ -108,9 +123,23 @@ if $use_texassemble; then
   cmake_options+=(-DTEXCONV_USE_TEXASSEMBLE=ON)
 fi
 
+echo "cmake -G \"${generator}\" ${cmake_options[@]} ../"
+cmake_options=(
+  -G "${generator}"
+  "${cmake_options[@]}"
+)
+
+bin_dir=bin
+lib_dir=lib
+if [[ "$generator" == "Xcode" ||
+      "$generator" == "Ninja Multi-Config" ]]; then
+  bin_dir="bin/${config_type}"
+  lib_dir="lib/${config_type}"
+fi
+
 strip_symbols() {
   local obj=$1
-  if [[ "$debug" == "false" ]]; then
+  if [[ "$config_type" == "Release" ]]; then
     if [[ "$os" == "Linux" ]]; then
       strip --strip-all $obj
     elif [[ "$os" == "Darwin" ]]; then
@@ -121,12 +150,12 @@ strip_symbols() {
 
 strip_texconv() {
   if $build_as_exe; then
-    strip_symbols bin/texconv
+    strip_symbols "${bin_dir}/texconv"
     if $use_texassemble; then
-      strip_symbols bin/texassemble
+      strip_symbols "${bin_dir}/texassemble"
     fi
   else
-    strip_symbols lib/libtexconv.*
+    strip_symbols "${lib_dir}/libtexconv.*"
   fi
 }
 
@@ -150,12 +179,12 @@ pushd $(dirname "$0")/../ > /dev/null
     cross_build arm64
 
     if $build_as_exe; then
-      lipo -create -output texconv "${build_dir}_x86_64/bin/texconv" "${build_dir}_arm64/bin/texconv"
+      lipo -create -output texconv "${build_dir}_x86_64/${bin_dir}/texconv" "${build_dir}_arm64/${bin_dir}/texconv"
       if $use_texassemble; then
-        lipo -create -output texassemble "${build_dir}_x86_64/bin/texassemble" "${build_dir}_arm64/bin/texassemble"
+        lipo -create -output texassemble "${build_dir}_x86_64/${bin_dir}/texassemble" "${build_dir}_arm64/${bin_dir}/texassemble"
       fi
     else
-      lipo -create -output libtexconv.dylib "${build_dir}_x86_64/lib/libtexconv.dylib" "${build_dir}_arm64/lib/libtexconv.dylib"
+      lipo -create -output libtexconv.dylib "${build_dir}_x86_64/${lib_dir}/libtexconv.dylib" "${build_dir}_arm64/${lib_dir}/libtexconv.dylib"
     fi
   else
     # standard build
@@ -170,12 +199,12 @@ pushd $(dirname "$0")/../ > /dev/null
 
     # copy binaries
     if $build_as_exe; then
-      cp bin/texconv ../
+      cp "${bin_dir}/texconv" ../
       if $use_texassemble; then
-        cp bin/texassemble ../
+        cp "${bin_dir}/texassemble" ../
       fi
     else
-      cp lib/libtexconv.* ../
+      cp "${lib_dir}/libtexconv."* ../
     fi
   fi
 popd > /dev/null

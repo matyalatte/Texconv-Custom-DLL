@@ -33,6 +33,7 @@ set BUILD_AS_EXE=OFF
 set VCRUNTIME=MultiThreaded
 set USE_WIC=ON
 set USE_EXR=OFF
+set USE_STATIC=ON
 set USE_TEXASSEMBLE=ON
 set TEST=OFF
 
@@ -63,6 +64,10 @@ if "%~1"=="--debug" (
     set USE_EXR=ON
 ) else if "%~1"=="--use-optional-formats" (
     set USE_EXR=ON
+) else if "%~1"=="--use-dynamic-link" (
+    set USE_STATIC=OFF
+) else if "%~1"=="--universal" (
+    echo Warning: --universal is only available on macOS
 ) else if "%~1"=="--help" (
     goto usage
 ) else (
@@ -88,7 +93,7 @@ set CMAKE_OPTIONS=-G "%GENERATOR%"^
  -DTEXCONV_BUILD_TESTS=%TEST%^
  -DTEXCONV_USE_WIC=%USE_WIC%^
  -DTEXCONV_USE_TEXASSEMBLE=%USE_TEXASSEMBLE%^
- -DTEXCONV_USE_STATIC_LINK=ON^
+ -DTEXCONV_USE_STATIC_LINK=%USE_STATIC%^
  -DENABLE_OPENEXR_SUPPORT=%USE_EXR%
 
 mkdir %SCRIPT_DIR%\..\%BUILD_DIR%
@@ -115,22 +120,25 @@ if "%BUILD_AS_EXE%"=="ON" (
 exit /b 0
 
 :usage
-echo Usage: build.bat ^<options^>
-echo   --build-as-exe    build texconv and texassemble as executables
-echo   --runtime-dll     use dynamic linked vcruntime
-echo   --debug           enable debug build
-echo   --test            build and run tests
-echo   --no-wic          disable WIC supported formats (JPEG, PNG, etc.)
-echo   --no-texassemble  do not build texassemble
-echo   --use-exr         support EXR format
-echo   --use-optional-formats  same as --use-exr
-echo   --generator       one of CMake Generators e.g. Visual Studio 17 2022
+echo Usage: build.cmd ^[options^]
+echo   --build-as-exe          build texconv and texassemble as executables
+echo   --use-optional-formats  support EXR format
+echo   --use-dynamic-link      use system installed OpenEXR
+echo   --no-texassemble        do not build texassemble
+echo   --debug                 enable debug build
+echo   --test                  build and run tests
+echo   --generator ^<name^>      specify a build system e.g. Ninja
+echo   --runtime-dll           use dynamic linked vcruntime
+echo   --no-wic                disable WIC supported formats (JPEG, PNG, etc.)
+echo   --use-exr               same as --use-optional-formats
 echo.
 echo   Examples:
-echo     build.bat
+echo     build.cmd
 echo       generates texconv.dll in the project root (Texconv-Custom-DLL/)
-echo     build.bat --build-as-exe
+echo     build.cmd --build-as-exe
 echo       generates texconv.exe and texassemble.exe in the project root.
-echo     build.bat --build-as-exe --generator "MinGW Makefiles"
+echo     build.cmd --use-optional-formats
+echo       generates texconv.dll with EXR support
+echo     build.cmd --build-as-exe --generator "MinGW Makefiles"
 echo       builds texconv.exe with MinGW's make
 exit /b 0

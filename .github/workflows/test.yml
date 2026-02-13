@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test_windows:
+  test:
     strategy:
       matrix:
         include:
@@ -16,25 +16,19 @@ jobs:
             arch: x64
           - os: windows-11-arm
             arch: arm64
+          - os: macos-latest
+            arch: ""
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init --recursive DirectXTex
+      - run: git submodule update --init --recursive --recommend-shallow --depth 1
+
+      - name: install nasm
+        if: runner.os == 'macOS'
+        run: brew install nasm
 
       - name: build and run tests
-        run: batch_files/test.bat
-
-  test_macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          git submodule update --init --recursive --recommend-shallow --depth 1
-
-      - name: build texconv
-        run: |
-          brew install nasm
-          ./shell_scripts/test.sh
+        run: ./build.cmd --test
 
   test_linux:
     runs-on: ubuntu-latest

@@ -28,7 +28,7 @@ if(APPLE)
 endif()
 
 include(GNUInstallDirs)
-include("options.cmake")
+include("cmake/options.cmake")
 
 #--- Third Party Libraries
 if(TEXCONV_USE_STATIC_LINK)

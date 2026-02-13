@@ -6,11 +6,6 @@ However, please note that there are some limitations.
 -   Unable to use GPU for conversion.
 -   Unable to use WIC supported formats (e.g. `.bmp`) except for `.jpg` and `.png`.
 
-Also, the offical Texconv only supports Windows. I made sure I could build it with the following platforms and compilers but it might not work on your environment.  
-
--   Ubuntu 20.04 + GCC 9.4
--   MacOS 11 + AppleClang 13.0
-
 ## 0. Requirements
 
 - c++17 compiler
@@ -21,20 +16,18 @@ Also, the offical Texconv only supports Windows. I made sure I could build it wi
 
 ## 1. Get submodules
 
-Move to `./Texconv-Custom-DLL` and run `git submodule update --init --recursive`.
+Move to `./Texconv-Custom-DLL` and get submodules.
 
 ```
 git submodule update --init --recursive
 ```
 
-It downloads DirectX related files on the repository.
-
 ## 2. Build the binary
 
-You can build `libtexconv.so` (or `libtexconv.dylib`) with `./shell_scripts/build.sh`.
+You can build `libtexconv.so` (or `libtexconv.dylib`) with `./build.cmd`.
 
 ```
-./shell_scripts/build.sh --use-optional-formats
+./build.cmd --use-optional-formats
 ```
 
 It generates `libtexconv.so` (or `libtexconv.dylib`) in `./Texconv-Custom-DLL/`.  
@@ -44,7 +37,7 @@ It generates `libtexconv.so` (or `libtexconv.dylib`) in `./Texconv-Custom-DLL/`.
 If you want executables, add `--build-as-exe` to options.
 
 ```
-./shell_scripts/build.sh --use-optional-formats --build-as-exe
+./build.cmd --use-optional-formats --build-as-exe
 ```
 
 It generates `texconv` and `texassemble` in `./Texconv-Custom-DLL/`.  
@@ -52,26 +45,27 @@ You can use the built binaries on the terminal. (e.g. `./texconv -ft tga -y -o o
 
 ## 4. More options
 
-There are more options for `build.sh`.
+There are more options for `build.cmd`.
 
 ```console
-> ./shell_scripts/build.sh --help
-Usage: build.sh <options>
+> ./build.cmd --help
+Usage: build.cmd [options]
   --build-as-exe          build texconv and texassemble as executables
-  --use-optional-formats  use 3rd party libraries to support non-DDS formats
-  --use-dynamic-link      use dynamic linked 3rd party libraries
+  --use-optional-formats  support JPEG, PNG, and EXR formats
+  --use-dynamic-link      use system installed 3rd party libraries
+  --no-texassemble        do not build texassemble
   --debug                 enable debug build
   --test                  build and run tests
+  --generator <name>      specify a build system e.g. Ninja
   --universal             build universal binary for macOS
-  --no-texassemble        do not build texassemble
 
   Examples:
-    build.sh
-      -> generates libtexconv.so in the project root (Texconv-Custom-DLL/)
-    build.sh --build-as-exe
+    build.cmd
+      -> generates libtexconv in the project root (Texconv-Custom-DLL/)
+    build.cmd --build-as-exe
       -> generates texconv and texassemble in the project root.
-    build.sh --use-optional-formats
-      -> generates libtexconv.so with JPEG, PNG, and EXR support.
-    build.sh --use-optional-formats --build-as-exe
-      -> generates texconv and texassemble with JPEG, PNG, EXR support.
+    build.cmd --use-optional-formats
+      -> generates libtexconv with JPEG, PNG, and EXR support.
+    build.cmd --build-as-exe --generator "Unix Makefiles"
+      -> generates texconv and texassemble with make.
 ```

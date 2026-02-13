@@ -33,6 +33,14 @@ if(TEXCONV_BUILD_TESTS AND TEXCONV_BUILD_AS_EXE)
   message(FATAL_ERROR "You can NOT build both tests and executables at the same time.")
 endif()
 
+if(TEXCONV_BUILD_TESTS)
+  set(ENABLE_OPENEXR_SUPPORT ON)
+  if(NOT WIN32)
+    set(ENABLE_LIBJPEG_SUPPORT ON)
+    set(ENABLE_LIBPNG_SUPPORT ON)
+  endif()
+endif()
+
 # enable all options
 if(TEXCONV_USE_ALL)
   set(TEXCONV_USE_WIC ON)

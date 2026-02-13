@@ -57,8 +57,8 @@ jobs:
 
       - name: build exe
         run: |
-          batch_files/build.bat --use-optional-formats
-          batch_files/build.bat --use-optional-formats --build-as-exe
+          .\build.cmd --use-optional-formats
+          .\build.cmd --use-optional-formats --build-as-exe
 
       - name: Copy files
         run: |
@@ -103,8 +103,8 @@ jobs:
       - name: build texconv
         run: |
           brew install nasm
-          ./shell_scripts/build.sh --use-optional-formats ${{ matrix.flag }}
-          ./shell_scripts/build.sh --use-optional-formats --build-as-exe  ${{ matrix.flag }}
+          ./build.cmd --use-optional-formats ${{ matrix.flag }}
+          ./build.cmd --use-optional-formats --build-as-exe  ${{ matrix.flag }}
 
       - name: Copy files
         run: |

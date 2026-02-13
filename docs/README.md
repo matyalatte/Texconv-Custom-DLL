@@ -47,23 +47,26 @@ See here if you want to know how to use texconv.
 
 ## Building
 
-### Windows
+### Wrapper script
 
-There is a document for Windows users.  
-[Building Workflow for Windows](./Build-on-Windows.md)  
+We provide a CMake wrapper [`./build.cmd`](../build.cmd) to build texconv with a single command.
+See the following pages for the details.  
 
-### Linux and Mac
-
-There is a document for Linux and Mac users.  
-[Building Workflow for Linux and MacOS](./Build-on-Unix.md)  
+- [Building Workflow for Windows](./Build-on-Windows.md)
+- [Building Workflow for Linux and MacOS](./Build-on-Unix.md)
 
 ### Docker
 
-Linux users can use docker files to build the binary.  
-See the files for the details.  
+Linux users can use docker to build the binaries.
+See the docker files for the details.  
 
 - [Dockerfile_Ubuntu](../Dockerfile_Ubuntu): Build texconv with GCC and glibc on Ubuntu
 - [Dockerfile_Alpine](../Dockerfile_Alpine): Build texconv with GCC and musl on Alpine Linux
+
+### CMake
+
+Of course, you can run CMake commands yourself.
+See [CMake-Options.md](./CMake-Options.md) for available options.
 
 ## Licenses
 

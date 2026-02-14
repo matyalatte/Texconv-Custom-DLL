@@ -1,14 +1,14 @@
-# Texconv-Custom-DLL v0.5.0
+# Texconv-Custom-DLL v0.6.0
 
-Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).  
-And you can use it as a DLL (or a shared library).  
+Cross-platform implementation for [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv) and [Texassemble](https://github.com/Microsoft/DirectXTex/wiki/Texassemble).
+You can use it as a DLL (or a shared library).  
 
 ## What's Texconv?
 
 [Texconv](https://github.com/microsoft/DirectXTex/wiki/Texconv)
-is a DDS converter developed by Microsoft.  
-It supports all dds formats.  
-There are some dds formats common tools can't handle properly, but Texconv can.  
+is a DDS converter developed by Microsoft.
+It supports all dds formats.
+There are some dds formats common tools can't handle properly, but Texconv can.
 It's the best DDS converter as far as I know.  
 
 ## Extra features
@@ -20,7 +20,7 @@ You can add some features by [cmake options](./CMake-Options.md).
 
 ## Platform
 
-The official texconv only supports Windows.  
+The official texconv only supports Windows.
 But the custom build supports the following platforms and compilers.
 
 -   Windows 10 (or later) + MSVC
@@ -33,8 +33,8 @@ You can download built binaries from [the release page](https://github.com/matya
 Each zip file has a DLL and executables. The executables don't refer the DLL.
 
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
--   `TexconvCustomDLL*-macOS.tar.bz2` is for macOS (10.15 or later).
--   `TexconvCustomDLL*-Linux.tar.bz2` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
+-   `TexconvCustomDLL*-macOS.tar.xz` is for macOS (10.15 or later).
+-   `TexconvCustomDLL*-Linux.tar.xz` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
 
 > [!Note]
 > The linux build only supports distributions using GLIBC.  

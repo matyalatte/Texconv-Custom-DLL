@@ -3,8 +3,6 @@
 
 cmake_minimum_required (VERSION 3.20)
 
-set(DIRECTXTEX_VERSION 2.0.9)
-
 project (Texconv-Custom-DLL
   LANGUAGES C CXX)
 

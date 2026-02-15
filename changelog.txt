@@ -1,3 +1,16 @@
+v0.6.0
+- Updated DirectXTex to Oct2025 release. (#25)
+  (includes PNG and JPEG fixes for Linux/macOS.)
+- Added support for EXR format (HDR textures with alpha) (#32)
+- Third-party libraries are now static linked. (#26, #27)
+  - Linux/macOS now requires nasm to build libjpeg.
+  - You must retain THIRD_PARTY_LICENSES.txt when redistributing binaries.
+- Added universal binares to release packages. (#29)
+- Added a new build script: build.cmd. (#30, #36)
+  (The legacy scripts will be removed from 2027 onward.)
+- And other changes for building workflow improvements.
+  (#28, #31, #33, #34, #35, #37)
+
 v0.5.0
 - Fixed a bug where GPU was used only for the first call. (e3268a6)
 - Added support for Windows on ARM64. (7311da7)

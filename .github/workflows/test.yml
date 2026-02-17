@@ -40,3 +40,9 @@ jobs:
       - name: build texconv
         run: |
           docker build --build-arg TEST=true -t texconv -f Dockerfile_Ubuntu ./
+
+      - name: check glibc compatibility
+        run: |
+          docker run --name texconv texconv
+          docker cp texconv:/Texconv-Custom-DLL/libtexconv.so .
+          ./scripts/check_glibc_compatibility.sh ./libtexconv.so

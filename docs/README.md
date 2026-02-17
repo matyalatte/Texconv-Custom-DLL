@@ -34,7 +34,7 @@ Each zip file has a DLL and executables. The executables don't refer the DLL.
 
 -   `TexconvCustomDLL*-Windows.zip` is for Windows.
 -   `TexconvCustomDLL*-macOS.tar.xz` is for macOS (10.15 or later).
--   `TexconvCustomDLL*-Linux.tar.xz` is for Linux with GLIBC 2.27+ and GLIBCXX 3.4.26+.
+-   `TexconvCustomDLL*-Linux.tar.xz` is for Linux with GLIBC 2.29+ and GLIBCXX 3.4.26+.
 
 > [!Note]
 > The linux build only supports distributions using GLIBC.  

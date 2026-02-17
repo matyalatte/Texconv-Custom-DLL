@@ -29,4 +29,6 @@ out
 !batch_files/*.bat
 *.sh
 !shell_scripts/*.sh
+!scripts/*.bat
+!scripts/*.sh
 memo*

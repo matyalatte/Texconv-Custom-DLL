@@ -1666,11 +1666,15 @@ extern "C" __attribute__((visibility("default"))) int texassemble(int argc, wcha
                 && HasAlpha(info.format)
                 && info.format != DXGI_FORMAT_A8_UNORM)
             {
+                if (info.GetAlphaMode() == TEX_ALPHA_MODE_UNKNOWN) {
+                    printf("\nWARNING: Image missing alpha mode metadata. Premultiplied alpha assumed.\n");
+                    info.SetAlphaMode(TEX_ALPHA_MODE_PREMULTIPLIED);
+                }
                 if (info.GetAlphaMode() == TEX_ALPHA_MODE_STRAIGHT)
                 {
                     printf("\nWARNING: Image is already using straight alpha\n");
                 }
-                else if (!info.IsPMAlpha() && info.GetAlphaMode() != TEX_ALPHA_MODE_UNKNOWN)
+                else if (!info.IsPMAlpha())
                 {
                     printf("\nWARNING: Image is not using premultipled alpha\n");
                 }
